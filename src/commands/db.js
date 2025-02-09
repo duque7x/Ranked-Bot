@@ -1,6 +1,7 @@
 const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
 const BotClient = require("..");
 const Bet = require("../structures/database/bet");
+const User = require("../structures/database/User");
 
 module.exports = {
     name: "db", // Command name
@@ -19,7 +20,8 @@ module.exports = {
 
         if (reset === "reset" && !bet) {
             await Bet.deleteMany({});
-
+            await User.deleteMany({});
+            
             return message.reply("`Dado de bases recomeçada com sucesso!`");
         }
         if (bet === "bet" && !id) {

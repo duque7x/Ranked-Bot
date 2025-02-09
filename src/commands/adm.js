@@ -15,7 +15,7 @@ module.exports = {
     async execute(message, args, client) {
         if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
 
-        const amounts = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 7, 10, 12, 15, 17, 20, 25, 30, 35, 50, 75, 100];
+        const amounts = [1, 2, 3, 5, 7, 10, 25, 50, 100];
         const categories = [
             { name: "🚩│ APOSTAS EMU", id: "emu" },
             { name: "🚩│ APOSTAS MISTAS", id: "mistas" },
