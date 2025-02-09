@@ -2,6 +2,7 @@ const { Client, IntentsBitField, Collection } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
 const { Low, JSONFile } = require('lowdb');
+require("dotenv").config();
 
 class BotClient extends Client {
     constructor(options) {
@@ -12,9 +13,6 @@ class BotClient extends Client {
         this.loadEvents();
         this.loadCommands();
         this.handleProcessErrors()
-
-        
-
     }
 
     loadEvents() {
@@ -72,6 +70,6 @@ const client = new BotClient({
 // Handle slash command interactions
 
 // Log in to Discord
-//client.login("");
+//client.login("MTMyMzA2ODIzNDMyMDE4MzQwNw.GMajhH.JC8ijxr2a_PpHCYIMuEvywjGOpFViKJ04XcmsM");
 client.login(process.env.DISCORD_TOKEN);
 module.exports = BotClient;

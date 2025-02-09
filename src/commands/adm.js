@@ -54,7 +54,7 @@ module.exports = {
     async createBet(message, channel, amount, client) {
         try {
             const betType = `${channel.name.split("・")[1]}`; // Extract the bet type from the channel name
-            console.log(betType);
+           
             
             const newBet = new Bet({
                 betType: betType,
@@ -68,6 +68,8 @@ module.exports = {
             await newBet.save(); // Save the bet to MongoDB
 
             await this.sendBetEmbed(message, betType, newBet, amount, channel, client);
+
+            console.log("Criando aposta: " + {  betType, amount })
         } catch (err) {
             console.error(`Error creating bet in channel ${channel.name}:`, err);
         }
