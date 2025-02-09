@@ -72,6 +72,6 @@ const client = new BotClient({
 // Handle slash command interactions
 
 // Log in to Discord
-client.login("MTMyMzA2ODIzNDMyMDE4MzQwNw.GMajhH.JC8ijxr2a_PpHCYIMuEvywjGOpFViKJ04XcmsM");
-//client.login(process.env.DISCORD_TOKEN);
+//client.login("");
+client.login(process.env.DISCORD_TOKEN);
 module.exports = BotClient;
