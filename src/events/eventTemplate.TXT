@@ -1,0 +1,29 @@
+const {
+    Collection,
+    EmbedBuilder,
+    ActionRowBuilder,
+    StringSelectMenuBuilder,
+    StringSelectMenuOptionBuilder,
+    EmbedType,
+    Interaction,
+} = require("discord.js");
+const BotClient = require("..");
+
+module.exports = class interactionEvent {
+    /**
+     *
+     * @param {Client} client
+     */
+    constructor(client) {
+        this.name = "interactionCreate";
+    }
+    /**
+     * 
+     * @param {Interaction} interaction 
+     * @param {BotClient} cl
+     * @returns 
+     */
+    execute(interaction, cl) {
+
+    }
+};

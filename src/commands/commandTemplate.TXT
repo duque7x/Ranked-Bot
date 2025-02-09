@@ -1,0 +1,25 @@
+const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
+const BotClient = require("..");
+
+module.exports = {
+    name: "embed", // Command name
+
+    /**
+     * @param {Message} message 
+     * @param {string[]} args 
+     * @param {BotClient} client 
+     */
+    execute(message, args, client) {
+        /*const embed = new EmbedBuilder()
+        .setColor(Colors.DarkButNotBlack)
+        message.reply({ embeds: [embed] });
+        **/
+    },
+    sendTemporaryMessage(msg, content) {
+        msg.reply(content).then(mg => {
+            setTimeout(() => {
+                mg.delete();
+            }, 2000);
+        });
+    }
+};
