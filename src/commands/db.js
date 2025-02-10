@@ -40,7 +40,7 @@ module.exports = {
                 .addFields([
                     {
                         name: `Aposta ${bet._id}`,
-                        value: `**ID:** ${bet._id}\n**Jogadores:** ${bet.players.join(", ")}\n**Canal:** <#${bet.betChannel?.id}>\n**Estado:** ${bet.status}\n**Ganhador:** ${winner}`
+                        value: `**ID:** ${bet._id}\n**Jogadores:** ${bet.players.join(", ")}\n**Canal:** <#${bet.betChannel?.id}>\n**Estado:** ${bet.status}\n**Ganhador:** ${winner}\n**Dinheiro ganho**: ${bet.amount}€!`
                     }
                 ])
 

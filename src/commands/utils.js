@@ -81,6 +81,13 @@ module.exports = {
             }, 2000);
         });
     },
+    /**
+     * 
+     * @param {string} userId 
+     * @param {string} amount 
+     * @param {import("discord.js").Interaction} interaction 
+     * @returns 
+     */
     async addWins(userId, amount, interaction) {
         // Fetch the existing user profile
         const existingUser = await User.findOne({ "player.id": userId });
@@ -100,6 +107,8 @@ module.exports = {
         }
         const user = interaction.guild.members.cache.get(userId)
         // Create a new user profile if not found
+        console.log(user);
+
         const winnerUserProfile = new User({
             player: {
                 name: user.user.username,
@@ -110,11 +119,11 @@ module.exports = {
         await winnerUserProfile.save(); // Save the new user profile
 
         const embed = new EmbedBuilder()
-            .setDescription(`Vitoria(s) adicionada a <@${userId}>!`)
+            .setDescription(`# Gerenciador de vitoria\nVitoria(s) adicionada a <@${userId}>!`)
             .setColor(Colors.DarkRed)
             .setTimestamp();
 
-        return interaction.channel.send({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed] });
     }
 
 };

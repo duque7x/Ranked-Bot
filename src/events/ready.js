@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { Client, Collection, ChannelType, PermissionsBitField } = require("discord.js");
+const { Client, Collection, ChannelType, PermissionsBitField, ActivityType, ActivityFlags } = require("discord.js");
 const BotClient = require("..");
 
 module.exports = class ReadyEvent {
@@ -13,8 +13,15 @@ module.exports = class ReadyEvent {
     this.once = true; // Run only once
   }
 
-  execute(event) {
-    // Dynamically load command files
+  execute(event, client) {
+    client.user.setActivity({
+      name: "JOGANDO APOSTA DE 150€ EM LIVE BROTA",
+      type: ActivityType.Streaming,
+      url: "https://www.twitch.tv/sigmaboy"
+
+  });
+  
+    
     const commandsPath = path.join(__dirname, "..", "commands");
     const commandFiles = fs
       .readdirSync(commandsPath)

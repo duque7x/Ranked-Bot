@@ -30,7 +30,22 @@ module.exports = {
                 break;
         }
     },
+   async statusChanger(message, args, client) {
+        const betId = args[0];
+        const statusToChange = args[1];
 
+        if (!betId || !statusToChange) return this.sendTemporaryMessage(message, "# Use o comando da seguinte forma: `!manage bet status BET_ID STATUS`");
+
+        const bet = await Bet.findOne({ "_id": betId });
+
+
+        if (!bet) return this.sendTemporaryMessage(message, "# Esta aposta não existe!");
+
+        bet.status = statusToChange;
+        bet.save();
+
+        message.reply("# Estado da aposta mudada!")
+    },
     /**
      * Sends a temporary message that deletes itself after a delay.
      * @param {Message} msg 
@@ -56,11 +71,13 @@ module.exports = {
         const possibleActions = {
             addwin: this.addWin.bind(this),
             removewin: this.removeWin.bind(this),
+            status: this.statusChanger.bind(this)
         };
 
         if (!possibleActions[action]) {
             return this.sendTemporaryMessage(message, `❌ Ação de aposta inválida! Ações disponíveis: ${Object.keys(possibleActions).join(", ")}`);
         }
+        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return this.sendTemporaryMessage(message, "# Você não tem as permissões necessárias!");
 
         // Execute the corresponding action
         possibleActions[action](message, args.slice(1), client);
@@ -79,7 +96,7 @@ module.exports = {
         if (!userId) {
             return this.sendTemporaryMessage(message, "❌ Por favor, forneça o ID da aposta para adicionar uma vitória!");
         }
-       
+
         addWins(userId, amount, message);
     },
 

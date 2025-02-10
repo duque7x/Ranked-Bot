@@ -60,7 +60,7 @@ module.exports = class InteractionEvent {
                 await bet.save();
 
                 const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-                    .setDescription(`## Aposta **${betType}**\n> Jogadores entrando! Aguarde a partida começar.`)
+                    .setDescription(`## Aposta **${betType}** | ${bet.amount}€\n> Jogadores entrando! Aguarde a partida começar.`)
                     .setColor(Colors.White)
                     .setFields([
                         {
@@ -109,7 +109,7 @@ module.exports = class InteractionEvent {
                 if (!bet || bet.status[0] === "off") {
                     return interaction.reply({ content: "# Essa aposta foi fechada!", flags: 64 });
                 }
-                if (bet.status[0] === "started") return interaction.reply({ content: "# Essa aposta já foi iniciada!", flags: 64 });
+                if (bet.status[0] === "started") return interaction.reply({ content: "# Essa aposta já foi iniciada! " + bet._id, flags: 64 });
                 if (handler[value]) {
                     await handler[value](bet, client, interaction);
                     bet.status = "started";
@@ -119,12 +119,12 @@ module.exports = class InteractionEvent {
                 return
             }
             if (customId.startsWith("end_bet-")) {
-                if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return this.sendReply(interaction, "Voce nao tem permissoes...");;
+                if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return this.sendReply(interaction, "# Você não tem as permissões necessárias!");
                 const [action, betId] = customId.split("-");
                 const bet = await Bet.findOne({ "_id": betId });
 
-                if (!bet) return this.sendReply(interaction, "# Esta aposta nao exite!");
-                if (!bet.winner) return this.sendReply(interaction, "# Voce precisa definir quem foi o vencedor!");
+                if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
+                if (!bet.winner) return this.sendReply(interaction, "# Você precisa definir o vencedor!");
 
                 return this.endBet(bet, client, interaction);
             }
@@ -132,7 +132,7 @@ module.exports = class InteractionEvent {
                 const [action, betId] = customId.split("-");
                 const bet = await Bet.findOne({ "_id": betId });
 
-                if (!bet) return this.sendReply(interaction, "# Esta aposta nao exite!");
+                if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
 
                 const team1Btn = new ButtonBuilder().setCustomId(`btn_set_winner-${bet._id}-team1`).setLabel("Time 1 vencedor").setStyle(ButtonStyle.Secondary);
                 const team2Btn = new ButtonBuilder().setCustomId(`btn_set_winner-${bet._id}-team2`).setLabel("Time 2 vencedor").setStyle(ButtonStyle.Secondary);
@@ -151,7 +151,9 @@ module.exports = class InteractionEvent {
                 if (!bet) return this.sendReply(interaction, "# Esta aposta nao exite!");
                 if (bet.winner) return this.sendReply(interaction, "# Esta aposta ja tem um ganhador! Foi um engano? Chame um adm para o ajudar.");
 
-                const winnerTeam = parseInt(team.replace("team", ""));
+                const winnerTeam = parseInt(team.replace("team", "")) === 1
+                    ? 0
+                    : 1;
                 const winingPlayer = bet.players[winnerTeam];
                 const winningUser = interaction.guild.members.cache.get(winingPlayer);
 
@@ -159,7 +161,7 @@ module.exports = class InteractionEvent {
                 bet.winner = bet.players[winnerTeam];
                 bet.save();
 
-                addWins(winingPlayer, 1, interaction)
+                addWins(winingPlayer, 1, interaction);
             }
         } catch (error) {
             console.error("Erro inesperado no evento interactionCreate:", error);
@@ -204,8 +206,9 @@ module.exports = class InteractionEvent {
             parent: "1337588697280942131"
         });
         const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-            .setDescription(`## Aposta fechada\nObrigado por jogar na **FIRE APOSTAS**! Volte sempre.`)
+            .setDescription(`## Aposta fechada\nObrigado por jogar na **BLOOD APOSTAS 🩸**! Volte sempre.`)
             .setColor(Colors.DarkAqua)
+            .setFields();
 
         return await interaction.update({ embeds: [updatedEmbed], components: [], content: "" });
     }
@@ -278,12 +281,12 @@ module.exports = class InteractionEvent {
 
         bet.betChannel = { id: channel.id, name: channel.name };
         await bet.save();
-
-        let msg = await interaction.channel.send({ embeds: [embed] });
-
+        await interaction.replied || interaction.deferred
+            ? interaction.followUp({ embeds: [embed], flags: 64 })
+            : interaction.reply({ embeds: [embed], flags: 64 });
 
         interaction.message.delete();
-        msg.delete()
+
         const embedForChannel = new EmbedBuilder()
             .setColor(0xff9933)
             .setDescription(`# Aposta ${bet.betType}: valor ${bet.amount}€\n> Converse com um dos nossos mediadores para avançar com a aposta.`)
