@@ -11,7 +11,7 @@ module.exports = {
      * @param {BotClient} client 
      */
     async execute(message, args, client) {
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return this.sendTemporaryMessage(message, "Voce nao tem permissoes...");;
+        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
         const { member, guild } = message;
         const fila = args[0];
         const id = args[1];

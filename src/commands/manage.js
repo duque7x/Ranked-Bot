@@ -77,7 +77,7 @@ module.exports = {
         if (!possibleActions[action]) {
             return this.sendTemporaryMessage(message, `❌ Ação de aposta inválida! Ações disponíveis: ${Object.keys(possibleActions).join(", ")}`);
         }
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return this.sendTemporaryMessage(message, "# Você não tem as permissões necessárias!");
+        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
 
         // Execute the corresponding action
         possibleActions[action](message, args.slice(1), client);
