@@ -21,32 +21,31 @@ module.exports = {
         if (reset === "reset" && !bet) {
             await Bet.deleteMany({});
             await User.deleteMany({});
-            
+
             return message.reply("`Dado de bases recomeçada com sucesso!`");
         }
         if (bet === "bet" && !id) {
             await Bet.updateMany({}, { $set: { players: [] } });
             return message.reply("`Todos jogadores removidos das suas apostas.`");
         }
-        if (id && bet=== "bet") {
+        if (id && bet === "bet") {
             const bet = await Bet.findOne({ "_id": id });
 
             if (!bet) return this.sendTemporaryMessage(message, "# Esta aposta nao exite!");
-            const winner = bet.winner ? `<@${bet.winner}>` : `<@877598927149490186>`
+            const winner = bet.winner ? `<@${bet.winner}>` : `Nao se sabe quem ganhou...`
             const embed = new EmbedBuilder()
                 .setColor(Colors.DarkButNotBlack)
-                .setTitle("Aposta no banco de Dados")
-                .setDescription("Aqui esta a aposta:")
+                .setDescription(`# Aposta ${bet._id}`)
                 .addFields([
                     {
-                        name: `Aposta ${bet._id}`,
-                        value: `**ID:** ${bet._id}\n**Jogadores:** ${bet.players.join(", ")}\n**Canal:** <#${bet.betChannel?.id}>\n**Estado:** ${bet.status}\n**Ganhador:** ${winner}\n**Dinheiro ganho**: ${bet.amount}€!`
+                        name: `\n`,
+                        value: `**Estado:** ${bet.status}\n\n**Jogadores:** ${bet.players.join(", ")}\n\n**Ganhador:** ${winner}\n\n**Dinheiro ganho**: ${bet.amount}€\n\n**Canal:** <#${bet.betChannel?.id}>`
                     }
-                ])
+                ]);
 
             return message.reply({
                 embeds: [embed]
-            })
+            });
         };
 
         if (allBets.length === 0) {

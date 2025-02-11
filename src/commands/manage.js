@@ -3,6 +3,7 @@ const BotClient = require("..");
 const User = require("../structures/database/User");
 const Bet = require("../structures/database/bet");
 const { addWins } = require("./utils");
+const Config = require("../structures/database/configs");
 
 module.exports = {
     name: "manage", // Command name
@@ -24,13 +25,64 @@ module.exports = {
             case "bet":
                 this.betHandler(message, args.slice(1), client);
                 break;
-
+            case "config":
+                this.configHandler(message, args.slice(1), client);
+                break;
             default:
                 this.sendTemporaryMessage(message, "❌ Situação não reconhecida!");
                 break;
         }
     },
-   async statusChanger(message, args, client) {
+    async configHandler(message, args, client) {
+        const action = args[0]?.toLowerCase();
+        console.log(action);
+
+        const possibleActions = {
+            /**
+             * 
+             * @param {Message} message 
+             * @returns 
+             */
+            changestatus: async (message) => {
+                let { guildId, guild} = message;
+                let serverConfig = await Config.findOne({ "guild.id": message.guildId });
+                if (!serverConfig) {
+                    serverConfig = new Config({
+                        guild: { id: guildId, name: guild.name },
+                        state: { bets: { status: "on" }, rank: { status: "on" } }
+                    });
+
+                    await serverConfig.save();
+                }
+
+
+                const subjects = ["bets", "rank"];
+                console.log(args);
+
+                if (!subjects.includes(args[1])) return this.sendTemporaryMessage(message, "# Argumentos errados! Use o comando na seguinte forma: `!manage config changeStatus bet||rank`");
+
+
+                const status = serverConfig.state[args[1]].status;
+
+                const newStatus = serverConfig.state[args[1]].status = status == "on" ? "off" : "on";
+
+                serverConfig.state[args[1]].status = newStatus;
+                serverConfig.save();
+
+                const embed = new EmbedBuilder()
+                    .setColor(0xff4d50)
+                    .setTitle("Mudança de estado das: " + args[1].toUpperCase())
+                    .setDescription(`**${args[1]}** foi(ram) de **${status}** para **${newStatus}**.`)
+                    .setTimestamp();
+
+                message.reply({ embeds: [embed] })
+            }
+
+        }
+
+        if (possibleActions[action]) return possibleActions[action](message);
+    },
+    async statusChanger(message, args, client) {
         const betId = args[0];
         const statusToChange = args[1];
 

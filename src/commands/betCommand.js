@@ -1,6 +1,7 @@
 const { EmbedBuilder, Message, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const BotClient = require("..");
 const Bet = require("../structures/database/bet"); // Import your Mongoose model
+const Config = require("../structures/database/configs");
 
 module.exports = {
     name: "bet",
@@ -17,6 +18,10 @@ module.exports = {
         let amount = args[2] ?? "1";
         const userId = author.id;
 
+        const serverConfig = Config.findOne({ "guild.id": guildId }) ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
+
+        if (serverConfig.state.bet.status == "off") return this.sendTemporaryMessage("# As apostas estão fechadas no momento!");
+        
         if (!this.validBet(betType)) {
             return this.sendTemporaryMessage(message, "Bet não é válida!");
         }
@@ -30,7 +35,7 @@ module.exports = {
         if (activeBet && activeBet.status !== "off" && !restrictedUsers.includes(userId)) {
             const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel?.id : "";
             console.log("NIgga");
-            
+
             return this.sendTemporaryMessage(message, `# ❌ Você já está em outra aposta! <#${channelIdActive}>`);
         }
 

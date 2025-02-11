@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Message } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Message, Colors } = require("discord.js");
 const BotClient = require("..");
 const User = require("../structures/database/User");
 
@@ -14,11 +14,20 @@ module.exports = {
     async execute(message, args, client) {
         try {
             const allUsers = await User.find().sort({ wins: -1 });
+            const { guildId, guild } = message;
+            let serverConfig = await Config.findOne({ "guild.id": message.guildId });
+            if (!serverConfig) {
+                serverConfig = new Config({
+                    guild: { id: guildId, name: guild.name },
+                    state: { bets: { status: "on" }, rank: { status: "on" } }
+                });
 
-            if (!allUsers.length) {
-                return message.reply("❌ Não há jogadores no ranking ainda!");
+                await serverConfig.save();
             }
 
+            if (serverConfig.state.rank.status == "off") return this.sendTemporaryMessage("# A tabela estão fechadas no momento!");
+            if (!allUsers.length) return message.reply("❌ Não há jogadores na leaderboard ainda!");
+            
             let page = 0;
             const itemsPerPage = 10;
             const totalPages = Math.ceil(allUsers.length / itemsPerPage);
@@ -33,7 +42,7 @@ module.exports = {
 
                 return new EmbedBuilder()
                     .setTitle("🏆 **Ranking de Vitórias**")
-                    .setColor(0xFFD700)
+                    .setColor(Colors.DarkButNotBlack)
                     .setDescription(leaderboard)
                     .setFooter({ text: `Página ${page + 1} de ${totalPages}`, iconURL: message.guild.iconURL() })
                     .setTimestamp();
@@ -72,7 +81,7 @@ module.exports = {
             });
 
             collector.on("end", () => {
-                leaderboardMessage.edit({ components: [] }).catch(() => {});
+                leaderboardMessage.edit({ components: [] }).catch(() => { });
             });
 
         } catch (error) {

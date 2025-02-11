@@ -1,5 +1,5 @@
 
-const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, Interaction } = require("discord.js");
 const BotClient = require("..");
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
@@ -98,12 +98,7 @@ module.exports = {
             existingUser.wins = parseInt(existingUser.wins) + parseInt(amount);
             await existingUser.save(); // Ensure to save asynchronously
 
-            const embed = new EmbedBuilder()
-                .setDescription(`Vitoria(s) adicionada a <@${userId}>!`)
-                .setColor(Colors.DarkRed)
-                .setTimestamp();
-
-            return interaction.channel.send({ embeds: [embed] });
+            return this.sendAddWinEmbed(interaction, userId);
         }
         const user = interaction.guild.members.cache.get(userId)
         // Create a new user profile if not found
@@ -118,12 +113,21 @@ module.exports = {
         });
         await winnerUserProfile.save(); // Save the new user profile
 
+        return this.sendAddWinEmbed(interaction, userId);
+    },
+    /**
+     * 
+     * @param {Interaction} interaction 
+     * @param {string} userId 
+     */
+    sendAddWinEmbed(interaction, userId) {
         const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de vitoria\nVitoria(s) adicionada a <@${userId}>!`)
+            .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
             .setColor(Colors.DarkRed)
             .setTimestamp();
 
-        return interaction.reply({ embeds: [embed] });
+        interaction.replied || interaction.deffered ?
+            interaction.followUp({ embeds: [embed] }) :
+            interaction.reply({ embeds: [embed] });
     }
-
 };

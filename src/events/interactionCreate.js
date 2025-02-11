@@ -7,12 +7,12 @@ const {
 const BotClient = require("../index");
 const Bet = require("../structures/database/bet");
 const User = require('../structures/database/User');
+const Config = require('../structures/database/configs');
 const addWins = require("../commands/utils").addWins;
 module.exports = class InteractionEvent {
     constructor(client) {
         this.name = 'interactionCreate';
     }
-
     /**
      * @param {Interaction} interaction 
      * @param {BotClient} client 
@@ -23,7 +23,20 @@ module.exports = class InteractionEvent {
             const { customId } = interaction;
             const [action, betType, betId, ammount] = interaction.customId.split("-");
             const userId = interaction.user.id;
+            const { guildId, guild } = interaction;
             if (action === "enter_bet") {
+                let serverConfig = await Config.findOne({ "guild.id": guildId });
+                if (!serverConfig) {
+                    serverConfig = new Config({
+                        guild: { id: guildId, name: guild.name },
+                        state: { bets: { status: "on" }, rank: { status: "on" } }
+                    });
+
+                    await serverConfig.save();
+                }
+
+                if (serverConfig.state.bets.status == "off") return this.sendReply(interaction, "# As apostas estão fechadas no momento!");
+
                 const activeBet = await Bet.findOne({ players: userId });
 
                 const restrictedUsers = ["877598927149490186", "1323068234320183407", "1031313654475395072"];
@@ -112,7 +125,7 @@ module.exports = class InteractionEvent {
                 if (bet.status[0] === "started") return interaction.reply({ content: "# Essa aposta já foi iniciada! " + bet._id, flags: 64 });
                 if (handler[value]) {
                     await handler[value](bet, client, interaction);
-                    
+
                     return;
                 }
                 return
@@ -205,7 +218,7 @@ module.exports = class InteractionEvent {
             parent: "1337588697280942131"
         });
         const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-            .setDescription(`## Aposta fechada\nObrigado por jogar na **BLOOD APOSTAS 🩸**! Volte sempre.`)
+            .setDescription(`## Aposta fechada\nObrigado por jogar na **BLOOD APOSTAS 🩸**!\n-# Volte sempre.`)
             .setColor(Colors.DarkAqua)
             .setFields();
 
@@ -287,7 +300,7 @@ module.exports = class InteractionEvent {
 
         interaction.message.delete();
 
-        const embedForChannel = new EmbedBuilder()
+        /**const embedForChannel = new EmbedBuilder()
             .setColor(0xff9933)
             .setDescription(`# Aposta ${bet.betType}: valor ${bet.amount}€\n> Converse com um dos nossos mediadores para avançar com a aposta.`)
             .addFields([
@@ -302,7 +315,7 @@ module.exports = class InteractionEvent {
                     inline: true
                 }
             ])
-            .setTimestamp();
+            .setTimestamp(); */
 
         const endBet = new ButtonBuilder()
             .setCustomId(`end_bet-${bet._id}`)
