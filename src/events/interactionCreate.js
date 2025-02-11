@@ -112,8 +112,7 @@ module.exports = class InteractionEvent {
                 if (bet.status[0] === "started") return interaction.reply({ content: "# Essa aposta já foi iniciada! " + bet._id, flags: 64 });
                 if (handler[value]) {
                     await handler[value](bet, client, interaction);
-                    bet.status = "started";
-                    await bet.save();
+                    
                     return;
                 }
                 return
@@ -225,6 +224,7 @@ module.exports = class InteractionEvent {
         const replaceOldBet = require("../commands/utils");
 
         bet.betChannel = { id: channel.id, name: channel.name };
+        bet.status = "started";
         await bet.save();
 
         replaceOldBet.createBet(interaction, interaction.channel, bet.amount, client);
