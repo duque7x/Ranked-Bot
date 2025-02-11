@@ -300,7 +300,7 @@ module.exports = class InteractionEvent {
 
         interaction.message.delete();
 
-        /**const embedForChannel = new EmbedBuilder()
+        const embedForChannel = new EmbedBuilder()
             .setColor(0xff9933)
             .setDescription(`# Aposta ${bet.betType}: valor ${bet.amount}€\n> Converse com um dos nossos mediadores para avançar com a aposta.`)
             .addFields([
@@ -315,7 +315,7 @@ module.exports = class InteractionEvent {
                     inline: true
                 }
             ])
-            .setTimestamp(); */
+            .setTimestamp(); 
 
         const endBet = new ButtonBuilder()
             .setCustomId(`end_bet-${bet._id}`)
