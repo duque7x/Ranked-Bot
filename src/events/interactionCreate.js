@@ -139,8 +139,8 @@ module.exports = class InteractionEvent {
                 const row = new ActionRowBuilder().addComponents(team1Btn, team2Btn);
 
                 return interaction.replied || interaction.deferred
-                    ? interaction.followUp({ components: [row], flags: 64 })
-                    : interaction.reply({ components: [row], flags: 64 });
+                    ? interaction.followUp({ components: [row] })
+                    : interaction.reply({ components: [row] });
             }
             if (customId.startsWith("btn_set_winner")) {
                 const [action, betId, team] = customId.split("-");
