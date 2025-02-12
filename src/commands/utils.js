@@ -120,8 +120,11 @@ module.exports = {
                 ]);
 
             const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
+
             winLogChannel.send({ embeds: [logEmbed] });
-            return interaction.channel.send({ embeds: [embed] });
+            interaction.channel.send({ embeds: [embed] });
+
+            return { logEmbed, embed };
         }
         const user = interaction.guild.members.cache.get(userId)
         // Create a new user profile if not found
