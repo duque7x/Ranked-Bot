@@ -86,9 +86,10 @@ module.exports = {
      * @param {string} userId 
      * @param {string} amount 
      * @param {import("discord.js").Interaction} interaction 
+     * @param { Bet } bet
      * @returns 
      */
-    async addWins(userId, amount, interaction) {
+    async addWins(userId, amount, interaction, bet) {
         // Fetch the existing user profile
         const existingUser = await User.findOne({ "player.id": userId });
         amount = amount ?? 1; // Default to 1 if amount is not provided
@@ -103,6 +104,23 @@ module.exports = {
                 .setColor(Colors.Aqua)
                 .setTimestamp();
 
+            const logEmbed = new EmbedBuilder()
+                .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
+                .setColor(Colors.Aqua)
+                .setTimestamp()
+                .addFields([
+                    {
+                        name: "Id da aposta:",
+                        value: `${bet._id}`
+                    },
+                    {
+                        name: "Valor ganho",
+                        value: `${bet.amount}`
+                    }
+                ]);
+
+            const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
+            winLogChannel.send({ embeds: [logEmbed] });
             return interaction.channel.send({ embeds: [embed] });
         }
         const user = interaction.guild.members.cache.get(userId)
@@ -123,7 +141,27 @@ module.exports = {
             .setColor(Colors.Aqua)
             .setTimestamp();
 
-        return interaction.reply({ embeds: [embed] });
+        const logEmbed = new EmbedBuilder()
+            .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
+            .setColor(Colors.Aqua)
+            .setTimestamp()
+            .addFields([
+                {
+                    name: "Id da aposta:",
+                    value: `${bet._id}`
+                },
+                {
+                    name: "Valor ganho",
+                    value: `${bet.amount}`
+                }
+            ]);
+
+        const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
+
+        winLogChannel.send({ embeds: [logEmbed] });
+        interaction.reply({ embeds: [embed] });
+
+        return { logEmbed, embed }
     }
 
 };

@@ -147,14 +147,18 @@ module.exports = class InteractionEvent {
 
                 if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
 
+                const setWinnerEmbed = new EmbedBuilder()
+                    .setColor(0xff9933)
+                    .setDescription(`# Adicionar o vencedor da aposta!\n-# Caso o vencedor foi mal selecionado, por favor chame um dos nossos ADMs!`)
+                    .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" })
+                    .setColor(Colors.NotQuiteBlack)
+
                 const team1Btn = new ButtonBuilder().setCustomId(`btn_set_winner-${bet._id}-team1`).setLabel("Time 1 vencedor").setStyle(ButtonStyle.Secondary);
                 const team2Btn = new ButtonBuilder().setCustomId(`btn_set_winner-${bet._id}-team2`).setLabel("Time 2 vencedor").setStyle(ButtonStyle.Secondary);
 
                 const row = new ActionRowBuilder().addComponents(team1Btn, team2Btn);
 
-                return interaction.replied || interaction.deferred
-                    ? interaction.followUp({ components: [row] })
-                    : interaction.reply({ components: [row] });
+                interaction.channel.send({ embeds: [setWinnerEmbed], components: [row] })
             }
             if (customId.startsWith("btn_set_winner")) {
                 const [action, betId, team] = customId.split("-");
@@ -162,7 +166,7 @@ module.exports = class InteractionEvent {
 
 
                 if (!bet) return this.sendReply(interaction, "# Esta aposta nao exite!");
-                if (bet.winner) return this.sendReply(interaction, "# Esta aposta ja tem um ganhador! Foi um engano? Chame um adm para o ajudar.");
+                if (bet.winner) return this.sendReply(interaction, "# Esta aposta ja tem um ganhador!\n-# Foi um engano?\n-# Chame um adm para o ajudar.");
 
                 const winnerTeam = parseInt(team.replace("team", "")) === 1
                     ? 0
@@ -171,11 +175,15 @@ module.exports = class InteractionEvent {
                 const winningUser = interaction.guild.members.cache.get(winingPlayer);
 
                 console.log(`PLayer ${winingPlayer} won the bet: ${betId}.`);
-                
+
                 bet.winner = bet.players[winnerTeam];
                 bet.save();
 
-                addWins(winingPlayer, 1, interaction);
+                const logEmbedObj = await addWins(winingPlayer, 1, interaction, bet);
+
+                return interaction.replied || interaction.deferred
+                    ? interaction.followUp({ embeds: [logEmbedObj.logEmbed], flags: 64 })
+                    : interaction.reply({ embeds: [logEmbedObj.logEmbed], flags: 64 });
             }
         } catch (error) {
             console.error("Erro inesperado no evento interactionCreate:", error);
@@ -228,7 +236,7 @@ module.exports = class InteractionEvent {
             parent: "1337588697280942131"
         });
         const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-            .setDescription(`## Aposta fechada\nObrigado por jogar na **BLOOD APOSTAS 🩸**!\n-# Volte sempre.`)
+            .setDescription(`## Aposta fechada\nObrigado por jogar na **BLOOD APOSTAS 🩸**\n\n-# Volte sempre.`)
             .setColor(Colors.DarkAqua)
             .setFields();
 
@@ -247,8 +255,6 @@ module.exports = class InteractionEvent {
         replaceOldBet.createBet(interaction, interaction.channel, bet.amount, client);
 
         const channel = await this.createBetChannel(interaction, bet);
-
-        
 
 
         bet.betChannel = { id: channel.id, name: channel.name };
@@ -310,6 +316,7 @@ module.exports = class InteractionEvent {
                 }
             ]
         });
+
         const embed = new EmbedBuilder()
             .setColor(0xff9933)
             .setDescription(`# Aposta ${bet.betType}\n> Aposta criada com sucesso, vá para o [canal](https://discord.com/channels/1336809872884371587/${channel.id}) e consulte as informações.`)
@@ -318,7 +325,6 @@ module.exports = class InteractionEvent {
 
         bet.betChannel = { id: channel.id, name: channel.name };
         await bet.save();
-
 
         interaction.message.delete();
 

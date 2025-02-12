@@ -18,7 +18,7 @@ module.exports = {
 
         for (let index = 1; index < 16; index++) {
             guild.channels.create({
-                name: `🩸・JOGANDO・${index}`,
+                name: `apostas・on・${index}`,
                 type: ChannelType.GuildVoice,
                 permissionOverwrites: [
                     {
