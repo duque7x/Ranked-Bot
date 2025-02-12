@@ -170,7 +170,7 @@ module.exports = class InteractionEvent {
                 const winingPlayer = bet.players[winnerTeam];
                 const winningUser = interaction.guild.members.cache.get(winingPlayer);
 
-                console.log({ team, winnerTeam, winingPlayer });
+                console.log(``);
                 bet.winner = bet.players[winnerTeam];
                 bet.save();
 
