@@ -146,6 +146,7 @@ module.exports = class InteractionEvent {
                 const bet = await Bet.findOne({ "_id": betId });
 
                 if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
+                if (bet.winner) return this.sendReply(interaction, "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar.");
 
                 const setWinnerEmbed = new EmbedBuilder()
                     .setColor(0xff9933)
@@ -164,9 +165,7 @@ module.exports = class InteractionEvent {
                 const [action, betId, team] = customId.split("-");
                 const bet = await Bet.findOne({ "_id": betId });
 
-
                 if (!bet) return this.sendReply(interaction, "# Esta aposta nao exite!");
-                if (bet.winner) return this.sendReply(interaction, "# Esta aposta ja tem um ganhador!\n-# Foi um engano?\n-# Chame um adm para o ajudar.");
 
                 const winnerTeam = parseInt(team.replace("team", "")) === 1
                     ? 0
@@ -182,8 +181,8 @@ module.exports = class InteractionEvent {
                 const logEmbedObj = await addWins(winingPlayer, 1, interaction, bet);
 
                 return interaction.replied || interaction.deferred
-                    ? interaction.followUp({ embeds: [logEmbedObj.logEmbed], flags: 64 })
-                    : interaction.reply({ embeds: [logEmbedObj.logEmbed], flags: 64 });
+                    ? interaction.followUp({ embeds: [logEmbedObj.embed], flags: 64 })
+                    : interaction.reply({ embeds: [logEmbedObj.embed], flags: 64 });
             }
         } catch (error) {
             console.error("Erro inesperado no evento interactionCreate:", error);

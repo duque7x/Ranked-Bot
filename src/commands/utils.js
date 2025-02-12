@@ -115,16 +115,15 @@ module.exports = {
                     },
                     {
                         name: "Valor ganho",
-                        value: `${bet.amount}`
+                        value: `${bet.amount}€`
                     }
                 ]);
 
             const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
 
             winLogChannel.send({ embeds: [logEmbed] });
-            interaction.channel.send({ embeds: [embed] });
 
-            return { logEmbed, embed };
+            return { embed };
         }
         const user = interaction.guild.members.cache.get(userId)
         // Create a new user profile if not found
@@ -155,14 +154,13 @@ module.exports = {
                 },
                 {
                     name: "Valor ganho",
-                    value: `${bet.amount}`
+                    value: `${bet.amount}€`
                 }
             ]);
 
         const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
 
         winLogChannel.send({ embeds: [logEmbed] });
-        interaction.reply({ embeds: [embed] });
 
         return { logEmbed, embed }
     }
