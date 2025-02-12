@@ -1,5 +1,6 @@
 const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
 const BotClient = require("..");
+const myColous = require("../structures/colours");
 
 module.exports = {
     name: "embed", // Command name
@@ -58,8 +59,11 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor(Colors.DarkButNotBlack)
             .setDescription(rules);
-
-        message.channel.send({ embeds: [embed] });
+        const setWinnerEmbed = new EmbedBuilder()
+            .setColor(myColous.rich_black)
+            .setDescription(`# Adicionar o vencedor da aposta!\n-# Caso o vencedor foi mal selecionado, por favor chame um dos nossos ADMs!`)
+            .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" });
+        message.channel.send({ embeds: [setWinnerEmbed] });
 
     },
     sendTemporaryMessage(msg, content) {
