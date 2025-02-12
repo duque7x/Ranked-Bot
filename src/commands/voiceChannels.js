@@ -12,13 +12,13 @@ module.exports = {
     async execute(message, args, client) {
         const { guild, member } = message;
         if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
-        guild.channels.cache.filter(c => c.name.startsWith("🎯・aposta")).forEach(c => c.delete())
+        guild.channels.cache.filter(c => c.name.startsWith("🩸・JOGANDO・")).forEach(c => c.delete())
 
         const parentChannel = guild.channels.cache.get("1338988719914618892");
 
-        for (let index = 1; index < 11; index++) {
+        for (let index = 1; index < 16; index++) {
             guild.channels.create({
-                name: `🎯・aposta・${index}`,
+                name: `🩸・JOGANDO・${index}`,
                 type: ChannelType.GuildVoice,
                 permissionOverwrites: [
                     {

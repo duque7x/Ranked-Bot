@@ -1,13 +1,24 @@
+const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
+const BotClient = require("..");
+
+module.exports = {
+    name: "embed", // Command name
+
+    /**
+     * @param {Message} message 
+     * @param {string[]} args 
+     * @param {BotClient} client 
+     */
+    execute(message, args, client) {
+        const rules = `
 # BEM-VINDOS A BLOOD APOSTAS!
-`LEIAM AS REGRAS PARA EVITAR QUALQUER TIPO DE W.O!`
+\`LEIAM AS REGRAS PARA EVITAR QUALQUER TIPO DE W.O!\`
 ## PERSONAGENS
 > VALE APENAS ALOK 
 > VALE KELLY
 > VALE MOCO
 > VALE MAXIM
 > VALE LEON
-`PERSONAGENS QUE NÃO ESTÃO ACIMA NÃO VALEM`
-`﻿PERSONAGENS ERRADOS REFAZER ATÉ O 3a0 OU 3A3`
 ## PETS
 > SEM DRAKINHO
 > SEM ETZIN
@@ -36,7 +47,26 @@
 > REVANCHE: PODE TROCAR JOGADOR, NÃO PRECISA SER O MESMO TIME, A NÃO SER QUE O ADVERSÁRIO SOLICITE "REVANCHE MESMO TIME"
 > PEDIDO DE TELA PÓS REVANCHE: NÃO PODE PEDIR TELA DEPOIS DO ADVERSÁRIO RECUSAR REVANCHE
 # ATENÇÃO
-`REPLAY OBRIGATÓRIO`
-`NÍVEL MÍNIMO 15`
-﻿﻿﻿`ARMAS QUE NÃO ESTÃO ACIMA NÃO VALEM`
-`﻿PET ERRADO REFAZER ATÉ O 3a0 OU 3A3`
+\`PERSONAGENS QUE NÃO ESTÃO ACIMA NÃO VALEM\`
+\`﻿PERSONAGENS ERRADOS REFAZER ATÉ O 3a0 OU 3A3\`
+\`REPLAY OBRIGATÓRIO\`
+\`NÍVEL MÍNIMO 15\`
+﻿﻿﻿\`ARMAS QUE NÃO ESTÃO ACIMA NÃO VALEM\`
+\`﻿PET ERRADO REFAZER ATÉ O 3a0 OU 3A3\`
+`;
+
+        const embed = new EmbedBuilder()
+            .setColor(Colors.DarkButNotBlack)
+            .setDescription(rules);
+
+        message.channel.send({ embeds: [embed] });
+
+    },
+    sendTemporaryMessage(msg, content) {
+        msg.reply(content).then(mg => {
+            setTimeout(() => {
+                mg.delete();
+            }, 2000);
+        });
+    }
+};

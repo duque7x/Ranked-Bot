@@ -35,7 +35,6 @@ module.exports = {
     },
     async configHandler(message, args, client) {
         const action = args[0]?.toLowerCase();
-        console.log(action);
 
         const possibleActions = {
             /**
@@ -55,9 +54,7 @@ module.exports = {
                     await serverConfig.save();
                 }
 
-
                 const subjects = ["bets", "rank"];
-                console.log(args);
 
                 if (!subjects.includes(args[1])) return this.sendTemporaryMessage(message, "# Argumentos errados! Use o comando na seguinte forma: `!manage config changeStatus bet||rank`");
 

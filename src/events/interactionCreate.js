@@ -9,6 +9,7 @@ const Bet = require("../structures/database/bet");
 const User = require('../structures/database/User');
 const Config = require('../structures/database/configs');
 const addWins = require("../commands/utils").addWins;
+
 module.exports = class InteractionEvent {
     constructor(client) {
         this.name = 'interactionCreate';
@@ -204,7 +205,7 @@ module.exports = class InteractionEvent {
         await bet.save();
 
         await channel.edit({
-            name: "closed-" + channel.name,
+            name: "🔒・" + channel.name,
             permissionOverwrites: [
                 {
                     id: interaction.guild.id, // @everyone
@@ -213,7 +214,15 @@ module.exports = class InteractionEvent {
                 ...bet.players.filter(Boolean).map(playerId => ({
                     id: playerId,
                     deny: [PermissionFlagsBits.SendMessages]
-                }))
+                })),
+                {
+                    id: "1336838133030977666", // @everyone (default permissions)
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // Hide from everyone
+                },
+                {
+                    id: "1339009613105856603", // @everyone (default permissions)
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // Hide from everyone
+                }
             ],
             parent: "1337588697280942131"
         });
@@ -233,14 +242,20 @@ module.exports = class InteractionEvent {
      */
     async startBet(bet, client, interaction) {
         if (bet.players.length !== 2) return this.sendReply(interaction, "# A aposta não está preenchida!");
-        const channel = await this.createBetChannel(interaction, bet);
         const replaceOldBet = require("../commands/utils");
+        replaceOldBet.createBet(interaction, interaction.channel, bet.amount, client);
+
+        const channel = await this.createBetChannel(interaction, bet);
+
+        
+
 
         bet.betChannel = { id: channel.id, name: channel.name };
+
         bet.status = "started";
+
         await bet.save();
 
-        replaceOldBet.createBet(interaction, interaction.channel, bet.amount, client);
 
         return channel;
     }
@@ -268,7 +283,7 @@ module.exports = class InteractionEvent {
 
         const channel = await guild.channels.create({
             name: `aposta-${formattedTotalBets}`,
-            parent: interaction.channel.parentId,
+            parent: "1339324693110329458",
             type: ChannelType.GuildText,
             topic: `Id da aposta: ${bet._id}`,
             permissionOverwrites: [
@@ -283,6 +298,14 @@ module.exports = class InteractionEvent {
                 {
                     id: bet.players[1], // Second player
                     allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                },
+                {
+                    id: "1336838133030977666", // @everyone (default permissions)
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // Hide from everyone
+                },
+                {
+                    id: "1339009613105856603", // @everyone (default permissions)
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // Hide from everyone
                 }
             ]
         });
@@ -294,9 +317,7 @@ module.exports = class InteractionEvent {
 
         bet.betChannel = { id: channel.id, name: channel.name };
         await bet.save();
-        await interaction.replied || interaction.deferred
-            ? interaction.followUp({ embeds: [embed], flags: 64 })
-            : interaction.reply({ embeds: [embed], flags: 64 });
+
 
         interaction.message.delete();
 
@@ -315,7 +336,7 @@ module.exports = class InteractionEvent {
                     inline: true
                 }
             ])
-            .setTimestamp(); 
+            .setTimestamp();
 
         const endBet = new ButtonBuilder()
             .setCustomId(`end_bet-${bet._id}`)
@@ -333,6 +354,9 @@ module.exports = class InteractionEvent {
             embeds: [embedForChannel],
             components: [row]
         });
+        await interaction.replied || interaction.deferred
+            ? interaction.followUp({ embeds: [embed], flags: 64 })
+            : interaction.reply({ embeds: [embed], flags: 64 });
         return channel;
     }
 };
