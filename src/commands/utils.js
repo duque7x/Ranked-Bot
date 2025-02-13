@@ -104,7 +104,6 @@ module.exports = {
                 .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
                 .setColor(myColous.bright_blue_ocean)
                 .setTimestamp();
-
             const logEmbed = new EmbedBuilder()
                 .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
                 .setColor(myColous.bright_blue_ocean)
@@ -125,6 +124,7 @@ module.exports = {
             winLogChannel.send({ embeds: [logEmbed] });
 
             return { embed };
+            return interaction.channel.send({ embeds: [embed] });
         }
         const user = interaction.guild.members.cache.get(userId)
         // Create a new user profile if not found

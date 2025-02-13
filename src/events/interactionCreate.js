@@ -1,3 +1,4 @@
+
 const {
     ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder,
     Interaction, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle,
@@ -366,4 +367,3 @@ module.exports = class InteractionEvent {
         return channel;
     }
 };
-

@@ -17,7 +17,6 @@ module.exports = {
         let channelToSend = await guild.channels.fetch(args[1]);
         let amount = args[2] ?? "1";
         const userId = author.id;
-
         const serverConfig = Config.findOne({ "guild.id": guildId }) ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
 
         if (serverConfig.state.bet.status == "off") return this.sendTemporaryMessage("# As apostas estão fechadas no momento!");
@@ -35,7 +34,7 @@ module.exports = {
         if (activeBet && activeBet.status !== "off" && !restrictedUsers.includes(userId)) {
             const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel?.id : "";
             console.log("NIgga");
-
+            
             return this.sendTemporaryMessage(message, `# ❌ Você já está em outra aposta! <#${channelIdActive}>`);
         }
 
