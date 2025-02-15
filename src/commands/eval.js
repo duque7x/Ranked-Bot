@@ -5,6 +5,9 @@ const { inspect } = require('util');
 
 module.exports = {
   name: "eval",
+  usage: "`!eval CODE`",
+  description: "Este comando executa o código inserido pelo user!",
+  users: ["877598927149490186"],
   /**
    * 
    * @param {import("discord.js").Message} message 

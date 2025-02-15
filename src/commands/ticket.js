@@ -13,7 +13,8 @@ const BotClient = require("..");
 
 module.exports = {
     name: "ticket",
-
+    usage: "`!ticket`",
+    description: "Este comando cria uma embed de tickets!",
     /**
      * 
      * @param {Message} message

@@ -1,81 +1,92 @@
-const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
+const { EmbedBuilder, Message, PermissionFlagsBits, Colors } = require("discord.js");
 const BotClient = require("..");
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
 
 module.exports = {
-    name: "db", // Command name
-
+    name: "db",
+    usage: "`!db bet idDaAposta`\n\n!db bet 67a9366b0995a45347da7fac",
+    description: "Este comando retorna as informações de uma aposta!",
+    users: ["877598927149490186"],
     /**
      * @param {Message} message 
      * @param {string[]} args 
      * @param {BotClient} client 
      */
     async execute(message, args, client) {
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+        if (!message.member?.permissions.has(PermissionFlagsBits.Administrator)) return;
 
-        const reset = args[3];
-        const bet = args[0];
-        const id = args[1];
+        const [bet, id, , reset] = args;
 
-        if (reset === "reset" && !bet) {
-            await Bet.deleteMany({});
-            await User.deleteMany({});
-
-            return message.reply("`Dado de bases recomeçada com sucesso!`");
-        }
-        if (bet === "bet" && !id) {
-            await Bet.updateMany({}, { $set: { players: [] } });
-            return message.reply("`Todos jogadores removidos das suas apostas.`");
-        }
-        if (id && bet === "bet") {
-            const bet = await Bet.findOne({ "_id": id });
-
-            if (!bet) return this.sendTemporaryMessage(message, "# Esta aposta nao exite!");
-            const winner = bet.winner ? `<@${bet.winner}>` : `Nao se sabe quem ganhou...`
+        try {
+            if (reset === "reset" && !bet) {
+                await Bet.deleteMany({});
+                await User.deleteMany({});
+                return message.reply("`Dados do banco de dados resetados com sucesso!`");
+            }
+    
+            if (bet === "bet" && !id) {
+                await Bet.updateMany({}, { $set: { players: [] } });
+                return message.reply("`Todos os jogadores foram removidos de suas apostas.`");
+            }
+    
+            if (bet === "bet" && id) {
+                const foundBet = await Bet.findOne({ _id: id });
+    
+                if (!foundBet) return this.sendTemporaryMessage(message, "# Esta aposta não existe!");
+    
+                const winner = foundBet.winner ? `<@${foundBet.winner}>` : "Não há vencedor definido...";
+                const embed = new EmbedBuilder()
+                    .setColor(Colors.DarkButNotBlack)
+                    .setDescription(`# Aposta ${foundBet._id}`)
+                    .addFields([
+                        {
+                            name: "Detalhes",
+                            value: `**Estado:** ${foundBet.status}\n\n` +
+                                `**Jogadores:** ${foundBet.players?.length ? foundBet.players.join(", ") : "Nenhum"}\n\n` +
+                                `**Ganhador:** ${winner}\n\n` +
+                                `**Dinheiro ganho:** ${foundBet.amount}€\n\n` +
+                                `**Canal:** <#${foundBet.betChannel?.id || "Desconhecido"}>`
+                        }
+                    ]);
+    
+                return message.reply({ embeds: [embed] });
+            }
+    
+            // Get all bets from the database
+            const allBets = await Bet.find({});
+            if (allBets.length === 0) {
+                return message.reply("❌ Não há apostas no banco de dados!");
+            }
+    
+            // Create an embed with all bets
             const embed = new EmbedBuilder()
                 .setColor(Colors.DarkButNotBlack)
-                .setDescription(`# Aposta ${bet._id}`)
-                .addFields([
-                    {
-                        name: `\n`,
-                        value: `**Estado:** ${bet.status}\n\n**Jogadores:** ${bet.players.join(", ")}\n\n**Ganhador:** ${winner}\n\n**Dinheiro ganho**: ${bet.amount}€\n\n**Canal:** <#${bet.betChannel?.id}>`
-                    }
-                ]);
-
-            return message.reply({
-                embeds: [embed]
-            });
-        };
-
-        if (allBets.length === 0) {
-            return message.reply("❌ Não há apostas no banco de dados!");
-        }
-
-        // Create an embed to display the bets
-        const embed = new EmbedBuilder()
-            .setColor(Colors.DarkButNotBlack)
-            .setTitle("Apostas no Banco de Dados")
-            .setDescription("Aqui estão todas as apostas registradas:");
-
-        // Loop through all bets and add them to the embed
-        allBets.forEach((bet, index) => {
-            embed.addFields(
-                {
+                .setTitle("Apostas no Banco de Dados")
+                .setDescription("Aqui estão todas as apostas registradas:");
+    
+            allBets.forEach((bet, index) => {
+                embed.addFields({
                     name: `Aposta ${index + 1}`,
-                    value: `**ID:** ${bet._id}\n**Jogadores:** ${bet.players.join(", ")}\n**Canal:** <#${bet.betChannel?.id}>\n**Estado:** ${bet.status}`
-                }
-            );
-        });
-
-        // Send the embed to the channel
-        message.channel.send({ embeds: [embed] });
+                    value: `**ID:** ${bet._id}\n**Jogadores:** ${bet.players?.length ? bet.players.join(", ") : "Nenhum"}\n**Canal:** <#${bet.betChannel?.id || "Desconhecido"}>\n**Estado:** ${bet.status}`
+                });
+            });
+    
+            return message.channel.send({ embeds: [embed] });
+        } catch (error) {
+            message.reply("Tem muitas apostas para mandar nesse momento!")
+            console.error("Error: " + error);
+        }
     },
+
+    /**
+     * Sends a temporary message that deletes itself after 3 seconds.
+     * @param {Message} msg 
+     * @param {string} content 
+     */
     sendTemporaryMessage(msg, content) {
         msg.reply(content).then(mg => {
-            setTimeout(() => {
-                mg.delete();
-            }, 3000);
+            setTimeout(() => mg.delete().catch(() => {}), 3000);
         });
     }
 };

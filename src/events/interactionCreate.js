@@ -26,7 +26,7 @@ module.exports = class InteractionEvent {
             const { customId } = interaction;
             const [action, betType, betId, ammount] = interaction.customId.split("-");
             const userId = interaction.user.id;
-            const { guildId, guild } = interaction;
+            const { guildId, guild, member, channel } = interaction;
             if (action === "enter_bet") {
                 let serverConfig = await Config.findOne({ "guild.id": guildId });
                 if (!serverConfig) {
@@ -185,6 +185,7 @@ module.exports = class InteractionEvent {
                     ? interaction.followUp({ embeds: [logEmbedObj.embed] })
                     : interaction.reply({ embeds: [logEmbedObj.embed] });
             }
+
         } catch (error) {
             console.error("Erro inesperado no evento interactionCreate:", error);
             if (interaction.replied || interaction.deferred) {
@@ -353,13 +354,9 @@ module.exports = class InteractionEvent {
             .setCustomId(`set_winner-${bet._id}`)
             .setLabel("Definir ganhador")
             .setStyle(ButtonStyle.Success);
-        const pedirSala = new ButtonBuilder()
-            .setCustomId(`pedir_sala-${bet._id}`)
-            .setLabel("Pedir sala")
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji("<:SALAS:1339713525194686544:>");
 
-        const row = new ActionRowBuilder().addComponents(setWinner, endBet, pedirSala);
+
+        const row = new ActionRowBuilder().addComponents(setWinner, endBet);
 
         channel.send({
             content: `<@&1336838133030977666>, <@${bet.players[0]}>, <@${bet.players[1]}>`,

@@ -7,7 +7,9 @@ const Config = require("../structures/database/configs");
 
 module.exports = {
     name: "manage", // Command name
-
+    usage: "`!manage bet||config`",
+    description: "Este comando altera configurações da aposta! No momento ele está desativado!",
+    users: ["877598927149490186"],
     /**
      * Executes the command.
      * @param {Message} message 
@@ -15,6 +17,7 @@ module.exports = {
      * @param {BotClient} client 
      */
     execute(message, args, client) {
+        if (!message.author.id !== this.users[0]) return;
         const situation = args[0]?.toLowerCase();
 
         if (!situation) {
@@ -43,7 +46,7 @@ module.exports = {
              * @returns 
              */
             changestatus: async (message) => {
-                let { guildId, guild} = message;
+                let { guildId, guild } = message;
                 let serverConfig = await Config.findOne({ "guild.id": message.guildId });
                 if (!serverConfig) {
                     serverConfig = new Config({

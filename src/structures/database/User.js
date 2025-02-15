@@ -8,7 +8,15 @@ const userSchema = new mongoose.Schema({
     wins: {
         type: Number,
         default: 0
-    }
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
+    },
+    adminPoints: {
+        type: Number,
+        default: 0
+    },
 });
 
 const User = mongoose.model("User", userSchema);

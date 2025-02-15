@@ -4,7 +4,8 @@ const myColous = require("../structures/colours");
 
 module.exports = {
     name: "embed", // Command name
-
+    usage: "`!embed`",
+    description: "Este comando retorna uma embed com as regras do server!",
     /**
      * @param {Message} message 
      * @param {string[]} args 

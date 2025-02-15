@@ -18,10 +18,9 @@ module.exports = class ReadyEvent {
       name: "JOGANDO APOSTA DE 150€ EM LIVE BROTA",
       type: ActivityType.Streaming,
       url: "https://www.twitch.tv/sigmaboy"
+    });
 
-  });
-  
-    
+
     const commandsPath = path.join(__dirname, "..", "commands");
     const commandFiles = fs
       .readdirSync(commandsPath)

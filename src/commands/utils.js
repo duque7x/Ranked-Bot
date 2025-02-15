@@ -6,8 +6,9 @@ const User = require("../structures/database/User");
 const myColous = require("../structures/colours");
 
 module.exports = {
-    name: "nigga", // Command name
-
+    name: "utils", // Command name
+    usage: "`!utils`",
+    description: "Este arquivo tem várias funções úteis.",
     /**
      * @param {Message} message 
      * @param {string[]} args 

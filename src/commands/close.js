@@ -4,7 +4,8 @@ const Bet = require("../structures/database/bet");
 
 module.exports = {
     name: "close", // Command name
-
+    usage: "`!close idDaAposta`\n\n!bet 67a9366b0995a45347da7fac",
+    description: "Este comando fecha uma aposta, você pode encontrar o id da aposta na descrição!",
     /**
      * @param {Message} message 
      * @param {string[]} args 

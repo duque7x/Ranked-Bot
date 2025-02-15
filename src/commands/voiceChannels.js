@@ -3,7 +3,8 @@ const BotClient = require("..");
 
 module.exports = {
     name: "voiceChannels", // Command name
-
+    usage: "`!voiceChannels`",
+    description: "Cria canais de vos",
     /**
      * @param {Message} message 
      * @param {string[]} args 

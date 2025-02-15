@@ -5,7 +5,8 @@ const Config = require("../structures/database/configs");
 
 module.exports = {
     name: "bet",
-
+    usage: "`!bet tipoDaAposta idCanalDaAposta quantidade`\n\n!bet 4v4 1337961426962088027 10",
+    description: "Este comando cria uma aposta com as seguintes direções.",
     /**
      * @param {Message} message 
      * @param {string[]} args 
@@ -20,7 +21,7 @@ module.exports = {
         const serverConfig = Config.findOne({ "guild.id": guildId }) ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
 
         if (serverConfig.state.bet.status == "off") return this.sendTemporaryMessage("# As apostas estão fechadas no momento!");
-        
+
         if (!this.validBet(betType)) {
             return this.sendTemporaryMessage(message, "Bet não é válida!");
         }
@@ -33,7 +34,7 @@ module.exports = {
 
         if (activeBet && activeBet.status !== "off" && !restrictedUsers.includes(userId)) {
             const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel?.id : "";
-            
+
             return this.sendTemporaryMessage(message, `# ❌ Você já está em outra aposta! <#${channelIdActive}>`);
         }
 

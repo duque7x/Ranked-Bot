@@ -9,12 +9,17 @@ const {
 } = require("discord.js");
 const Bet = require("../structures/database/bet");
 
+
 module.exports = {
-    name: "adm", // Command name
+    name: "create_bets_category", // Command name
+    usage: "`!create_bets_category`",
+    description: "Este comando cria as categorias como apostas: emu, mistas, mob!",
+    users: ["877598927149490186"],
 
     async execute(message, args, client) {
         if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
-
+        if (!message.author.id !== this.users[0]) return;
+        
         const amounts = [1, 2, 3, 5, 7, 10, 25, 50, 100];
         const categories = [
             { name: "🚩│ APOSTAS EMU", id: "emu" },
