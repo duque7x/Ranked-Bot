@@ -21,7 +21,6 @@ module.exports = {
     async createBet(message, channel, amount, client) {
         try {
             const betType = `${channel.name.split("・")[1]}`; // Extract the bet type from the channel name
-            console.log(betType);
 
             const newBet = new Bet({
                 betType: betType,

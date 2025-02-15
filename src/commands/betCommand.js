@@ -33,7 +33,6 @@ module.exports = {
 
         if (activeBet && activeBet.status !== "off" && !restrictedUsers.includes(userId)) {
             const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel?.id : "";
-            console.log("NIgga");
             
             return this.sendTemporaryMessage(message, `# ❌ Você já está em outra aposta! <#${channelIdActive}>`);
         }

@@ -353,8 +353,13 @@ module.exports = class InteractionEvent {
             .setCustomId(`set_winner-${bet._id}`)
             .setLabel("Definir ganhador")
             .setStyle(ButtonStyle.Success);
+        const pedirSala = new ButtonBuilder()
+            .setCustomId(`pedir_sala-${bet._id}`)
+            .setLabel("Pedir sala")
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji("<:SALAS:1339713525194686544:>");
 
-        const row = new ActionRowBuilder().addComponents(setWinner, endBet);
+        const row = new ActionRowBuilder().addComponents(setWinner, endBet, pedirSala);
 
         channel.send({
             content: `<@&1336838133030977666>, <@${bet.players[0]}>, <@${bet.players[1]}>`,
