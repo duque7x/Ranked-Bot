@@ -13,8 +13,10 @@ module.exports = {
      * @param {BotClient} client 
      */
     execute(message, args, client) {
+        const link = "https://discord.gg/HApztNnbvw";
+
         const embed = new EmbedBuilder()
-        .setDescription("# https://discord.gg/HApztNnbvw")
+        .setDescription(`# ${link}`)
         .setColor(myColous.bright_blue_ocean)
         .setTimestamp()
         .setFooter({ text: "Por APOSTAS" });
@@ -22,7 +24,7 @@ module.exports = {
         const linkButton = new ButtonBuilder()
         .setEmoji("🔗")
         .setStyle(ButtonStyle.Link)
-        .setURL("https://discord.gg/HApztNnbvw")
+        .setURL(link)
         .setLabel("DISCORD");
 
         const row = new ActionRowBuilder().addComponents(linkButton);
