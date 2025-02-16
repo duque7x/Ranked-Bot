@@ -56,16 +56,22 @@ module.exports = {
 ﻿﻿﻿\`ARMAS QUE NÃO ESTÃO ACIMA NÃO VALEM\`
 \`﻿PET ERRADO REFAZER ATÉ O 3a0 OU 3A3\`
 `;
+        const occassions = {
+            winner: new EmbedBuilder()
+                .setColor(myColours.rich_black)
+                .setDescription(`# Adicionar o vencedor da aposta!\n-# Caso o vencedor foi mal selecionado, por favor chame um dos nossos ADMs!`)
+                .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" }),
+            rules: new EmbedBuilder()
+                .setColor(Colors.DarkButNotBlack)
+                .setDescription(rules)
+        }
+        
+        if (!args[0]) return message.reply(`Tem exatamente ${Object.keys(occassions).length} embeds disponíveis, elas sendo: **${Object.keys(occassions).join(", ")}**!\nQual você quer?`)
 
-        const embed = new EmbedBuilder()
-            .setColor(Colors.DarkButNotBlack)
-            .setDescription(rules);
-        const setWinnerEmbed = new EmbedBuilder()
-            .setColor(myColours.rich_black)
-            .setDescription(`# Adicionar o vencedor da aposta!\n-# Caso o vencedor foi mal selecionado, por favor chame um dos nossos ADMs!`)
-            .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" });
-        message.channel.send({ embeds: [setWinnerEmbed] });
-
+        args[0] = args[0].toLowerCase().trim();
+        if (occassions[args[0]]) {
+            return message.channel.send({ embeds: [occassions[args[0]]] });
+        }
     },
     sendTemporaryMessage(msg, content) {
         msg.reply(content).then(mg => {
