@@ -3,7 +3,7 @@ const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder, St
 const BotClient = require("..");
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
-const myColous = require("../structures/colours");
+const myColours = require("../structures/colours");
 
 module.exports = {
     name: "utils", // Command name
@@ -102,11 +102,11 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
-                .setColor(myColous.bright_blue_ocean)
+                .setColor(myColours.bright_blue_ocean)
                 .setTimestamp();
             const logEmbed = new EmbedBuilder()
                 .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
-                .setColor(myColous.bright_blue_ocean)
+                .setColor(myColours.bright_blue_ocean)
                 .setTimestamp()
                 .addFields([
                     {
@@ -141,12 +141,12 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
-            .setColor(myColous.bright_blue_ocean)
+            .setColor(myColours.bright_blue_ocean)
             .setTimestamp();
 
         const logEmbed = new EmbedBuilder()
             .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
-            .setColor(myColous.bright_blue_ocean)
+            .setColor(myColours.bright_blue_ocean)
             .setTimestamp()
             .addFields([
                 {

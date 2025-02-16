@@ -1,6 +1,6 @@
 const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const BotClient = require("..");
-const myColous = require("../structures/colours");
+const myColours = require("../structures/colours");
 
 module.exports = {
     name: "link", // Command name
@@ -17,7 +17,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
         .setDescription(`# ${link}`)
-        .setColor(myColous.bright_blue_ocean)
+        .setColor(myColours.bright_blue_ocean)
         .setTimestamp()
         .setFooter({ text: "Por APOSTAS" });
 

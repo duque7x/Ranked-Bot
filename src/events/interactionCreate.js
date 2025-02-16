@@ -10,7 +10,7 @@ const Bet = require("../structures/database/bet");
 const User = require('../structures/database/User');
 const Config = require('../structures/database/configs');
 const addWins = require("../commands/utils").addWins;
-const myColous = require("../structures/colours");
+const myColours = require("../structures/colours");
 
 module.exports = class InteractionEvent {
     constructor(client) {
@@ -151,7 +151,7 @@ module.exports = class InteractionEvent {
                 if (bet.winner) return this.sendReply(interaction, "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar.");
 
                 const setWinnerEmbed = new EmbedBuilder()
-                    .setColor(myColous.rich_black)
+                    .setColor(myColours.rich_black)
                     .setDescription(`# Adicionar o vencedor da aposta!\n-# Caso o vencedor foi mal selecionado, por favor chame um dos nossos ADMs!`)
                     .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" });
 
@@ -238,7 +238,7 @@ module.exports = class InteractionEvent {
         });
         const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
             .setDescription(`## Aposta fechada\nObrigado por jogar na **BLOOD APOSTAS 🩸**\n\n-# Volte sempre.`)
-            .setColor(myColous.eerie_black_green)
+            .setColor(myColours.eerie_black_green)
             .setFields();
 
         return await interaction.update({ embeds: [updatedEmbed], components: [], content: "" });
@@ -319,7 +319,7 @@ module.exports = class InteractionEvent {
         });
 
         const embed = new EmbedBuilder()
-            .setColor(myColous.gun_metal)
+            .setColor(myColours.gun_metal)
             .setDescription(`# Aposta ${bet.betType}\n> Aposta criada com sucesso, vá para o [canal](https://discord.com/channels/1336809872884371587/${channel.id}) e consulte as informações.`)
             .setTimestamp();
 
@@ -330,7 +330,7 @@ module.exports = class InteractionEvent {
         interaction.message.delete();
 
         const embedForChannel = new EmbedBuilder()
-            .setColor(myColous.rich_black)
+            .setColor(myColours.rich_black)
             .setDescription(`# Aposta ${bet.betType}: valor ${bet.amount}€\n> Converse com um dos nossos mediadores para avançar com a aposta.`)
             .addFields([
                 {
