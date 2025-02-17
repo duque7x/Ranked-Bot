@@ -91,21 +91,27 @@ module.exports = {
      * @returns 
      */
     async addWins(userId, amount, interaction, bet) {
+        if (bet.winner) return interaction.reply(interaction, "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar.");
         // Fetch the existing user profile
         const existingUser = await User.findOne({ "player.id": userId });
+        const user = interaction.guild.members.cache.get(userId);
         amount = amount ?? 1; // Default to 1 if amount is not provided
 
         if (existingUser) {
             // Update existing user's wins
-            existingUser.wins = parseInt(existingUser.wins) + parseInt(amount);
+            existingUser.credit = parseInt(existingUser.credit) + parseInt(amount);
+            existingUser.isAdmin = user.permissions.has(PermissionFlagsBits.Administrator);
+            bet.status = "won";
+
             await existingUser.save(); // Ensure to save asynchronously
+            await bet.save();
 
             const embed = new EmbedBuilder()
-                .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
+                .setDescription(`# Gerenciador de credito\nVitoria(s) adicionada a <@${userId}>!`)
                 .setColor(myColours.bright_blue_ocean)
                 .setTimestamp();
             const logEmbed = new EmbedBuilder()
-                .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
+                .setDescription(`# Gerenciador de credito\nVitoria(s) adicionada a <@${userId}>!`)
                 .setColor(myColours.bright_blue_ocean)
                 .setTimestamp()
                 .addFields([
@@ -114,7 +120,7 @@ module.exports = {
                         value: `${bet._id}`
                     },
                     {
-                        name: "Valor ganho",
+                        name: "Credito adicionado",
                         value: `${bet.amount}€`
                     }
                 ]);
@@ -124,28 +130,26 @@ module.exports = {
             winLogChannel.send({ embeds: [logEmbed] });
 
             return { embed };
-            return interaction.channel.send({ embeds: [embed] });
+
         }
-        const user = interaction.guild.members.cache.get(userId)
-        // Create a new user profile if not found
-        console.log(user);
 
         const winnerUserProfile = new User({
             player: {
                 name: user.user.username,
                 id: userId
             },
-            wins: parseInt(amount)
+            credit: parseInt(amount),
+            isAdmin: user.permissions.has(PermissionFlagsBits.Administrator)
         });
         await winnerUserProfile.save(); // Save the new user profile
 
         const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
+            .setDescription(`# Gerenciador de credito\nCredito de ${bet.amount} adicionado a <@${userId}>!`)
             .setColor(myColours.bright_blue_ocean)
             .setTimestamp();
 
         const logEmbed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de vitorias\nVitoria(s) adicionada a <@${userId}>!`)
+            .setDescription(`# Gerenciador de credito\nCredito de ${bet.amount} adicionado a <@${userId}>!`)
             .setColor(myColours.bright_blue_ocean)
             .setTimestamp()
             .addFields([
@@ -162,7 +166,8 @@ module.exports = {
         const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
 
         winLogChannel.send({ embeds: [logEmbed] });
-
+        bet.status = "won";
+        await bet.save();
         return { logEmbed, embed }
     }
 

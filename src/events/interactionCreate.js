@@ -42,18 +42,18 @@ module.exports = class InteractionEvent {
 
                 const activeBet = await Bet.findOne({ players: userId });
 
-                const restrictedUsers = ["877598927149490186", "1323068234320183407", "1031313654475395072"];
+                const restrictedUsers = serverConfig.blacklist;
+                
+                if (restrictedUsers.includes(interaction.user.id)) return interaction.reply({ content: "Você está na *blacklist*!\nDeseja sair? Abra um ticket <#1339284682902339594>", flags: 64 });
 
-
-                if (activeBet && (activeBet.status[0] !== "off") && !restrictedUsers.includes(userId)) {
+                if (activeBet && activeBet.status[0] !== "off") {
                     const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel?.id : "";
                     return interaction.reply({ content: `# ❌ Você já está em outra aposta! <#${channelIdActive}>`, flags: 64 });
                 }
 
-
                 let bet = await Bet.findById(betId);
 
-                if (!bet || bet.status[0] === "off") {
+                if (!bet) {
                     return interaction.reply({ content: "# Essa aposta foi fechada!", flags: 64 });
                 }
 
@@ -134,7 +134,6 @@ module.exports = class InteractionEvent {
                 return
             }
             if (customId.startsWith("end_bet-")) {
-                if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return this.sendReply(interaction, "# Você não tem as permissões necessárias!");
                 const [action, betId] = customId.split("-");
                 const bet = await Bet.findOne({ "_id": betId });
 
@@ -179,7 +178,7 @@ module.exports = class InteractionEvent {
                 bet.winner = bet.players[winnerTeam];
                 bet.save();
 
-                const logEmbedObj = await addWins(winingPlayer, 1, interaction, bet);
+                const logEmbedObj = await addWins(winingPlayer, bet.amount, interaction, bet);
 
                 return interaction.replied || interaction.deferred
                     ? interaction.followUp({ embeds: [logEmbedObj.embed] })
@@ -211,7 +210,7 @@ module.exports = class InteractionEvent {
 
         const channel = await client.channels.fetch(bet.betChannel.id);
         if (!channel) return console.error("Erro: O canal não foi encontrado.");
-        bet.status = "off";
+        bet.status = ["off"];
         await bet.save();
 
         await channel.edit({
@@ -260,7 +259,7 @@ module.exports = class InteractionEvent {
 
         bet.betChannel = { id: channel.id, name: channel.name };
 
-        bet.status = "started";
+        bet.status = ["started"];
 
         await bet.save();
 

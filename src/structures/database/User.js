@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
         name: String,
         id: String
     },
-    wins: {
+    credit: {
         type: Number,
         default: 0
     },
@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    blacklisted: Boolean
 });
 
 const User = mongoose.model("User", userSchema);

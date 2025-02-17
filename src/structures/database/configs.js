@@ -20,6 +20,9 @@ const configSchema = new mongoose.Schema({
                 default: "on"
             }
         }
+    },
+    blacklist: {
+        type: Array,
     }
 });
 

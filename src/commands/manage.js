@@ -4,12 +4,13 @@ const User = require("../structures/database/User");
 const Bet = require("../structures/database/bet");
 const { addWins } = require("./utils");
 const Config = require("../structures/database/configs");
+const myColours = require("../structures/colours");
 
 module.exports = {
     name: "manage", // Command name
     usage: "`!manage bet||config`",
     description: "Este comando altera configurações da aposta! No momento ele está desativado!",
-    users: ["877598927149490186"],
+
     /**
      * Executes the command.
      * @param {Message} message 
@@ -17,7 +18,8 @@ module.exports = {
      * @param {BotClient} client 
      */
     execute(message, args, client) {
-        if (!message.author.id !== this.users[0]) return;
+        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+
         const situation = args[0]?.toLowerCase();
 
         if (!situation) {
@@ -31,10 +33,83 @@ module.exports = {
             case "config":
                 this.configHandler(message, args.slice(1), client);
                 break;
+            case "blacklist":
+                this.blacklistHandler(message, args.slice(1), client);
+                break;
             default:
                 this.sendTemporaryMessage(message, "❌ Situação não reconhecida!");
                 break;
         }
+    },
+    logChannel(message) {
+        return message.guild.channels.cache.get("1340360434414522389");
+    },
+    async blacklistHandler(message, args, client) {
+        const { guildId, guild } = message;
+        let serverConfig = await Config.findOne({ "guild.id": guildId });
+        const logChannel = this.logChannel(message);
+
+        if (!serverConfig) {
+            serverConfig = new Config({
+                guild: { id: guildId, name: guild.name },
+                state: { bets: { status: "on" }, rank: { status: "on" } },
+                blacklist: []
+            });
+
+            await serverConfig.save();
+        }
+
+        const action = {
+            add: (message, args) => {
+                const formatUser = args.match(/^<@!?(\d+)>$/)[1];
+
+                if (serverConfig.blacklist.includes(formatUser)) {
+                    const embed = new EmbedBuilder()
+                        .setColor(myColours.rich_black)
+                        .setDescription(`Jogador ${args} ja se encontra na blacklist!`)
+                        .setTimestamp();
+
+                    return message.reply({ embeds: [embed] });
+                }
+
+                serverConfig.blacklist.push(formatUser);
+                serverConfig.save();
+
+                const embed = new EmbedBuilder()
+                    .setColor(myColours.rich_black)
+                    .setDescription(`Jogador ${args} foi adicionado a blacklist!`)
+                    .setFooter({ text: "Nota: Para sair da blacklist você precisa de pagar 1,50€" })
+                    .setTimestamp();
+
+                logChannel.send({ embeds: [embed] });
+                return message.reply({ embeds: [embed] });
+            },
+            remove: (message, args) => {
+                const formatUser = args.match(/^<@!?(\d+)>$/)[1];
+                const newBlacklist = serverConfig.blacklist.filter(id => id !== formatUser);  // Correct filtering
+
+                if (!serverConfig.blacklist.includes(formatUser)) {
+                    const embed = new EmbedBuilder()
+                        .setColor(myColours.rich_black)
+                        .setDescription(`Jogador ${args} não está na blacklist!`)
+                        .setTimestamp();
+                    return message.reply({ embeds: [embed] });
+                }
+
+                serverConfig.blacklist = newBlacklist;
+                serverConfig.save();
+
+                const embed = new EmbedBuilder()
+                    .setColor(myColours.rich_black)
+                    .setDescription(`Jogador ${args} foi removido da blacklist!`)
+                    .setTimestamp();
+                logChannel.send({ embeds: [embed] });
+                message.reply({ embeds: [embed] });
+            }
+        }
+        
+        if (Object.keys(action).includes(args[0])) return action[args[0]](message, args.slice(1)[0])
+        else return message.reply("Use o comando na seguinte forma: `!manage blacklist add||remove <@877598927149490186>`");
     },
     async configHandler(message, args, client) {
         const action = args[0]?.toLowerCase();
@@ -96,7 +171,7 @@ module.exports = {
         bet.status = statusToChange;
         bet.save();
 
-        message.reply("# Estado da aposta mudada!")
+        message.reply("# Estado da aposta mudada!");
     },
     /**
      * Sends a temporary message that deletes itself after a delay.
