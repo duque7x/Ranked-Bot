@@ -136,7 +136,7 @@ module.exports = class InteractionEvent {
                 const bet = await this.getBetById(betId);
 
                 if (!bet.winner) return this.sendReply(interaction, "# Você precisa definir o vencedor!");
-
+                if (!member?.permissions.has(PermissionFlagsBits.Administrator) || !member.roles.cache.has("1336838133030977666")) return; this.sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para fechar a aposta!")
                 return this.endBet(bet, client, interaction);
             }
             if (customId.startsWith("set_winner")) {
