@@ -23,10 +23,9 @@ module.exports = class InteractionEvent {
      */
     async execute(interaction, client) {
         try {
-            const { customId } = interaction;
             const [action, betType, betId, ammount] = interaction.customId.split("-");
             const userId = interaction.user.id;
-            const { guildId, guild, member, channel } = interaction;
+            const { guildId, guild, member, channel, customId } = interaction;
             if (action === "enter_bet") {
                 let serverConfig = await Config.findOne({ "guild.id": guildId });
                 if (!serverConfig) {
@@ -43,7 +42,7 @@ module.exports = class InteractionEvent {
                 const activeBet = await Bet.findOne({ players: userId });
 
                 const restrictedUsers = serverConfig.blacklist;
-                
+
                 if (restrictedUsers.includes(interaction.user.id)) return interaction.reply({ content: "Você está na *blacklist*!\nDeseja sair? Abra um ticket <#1339284682902339594>", flags: 64 });
 
                 if (activeBet && activeBet.status[0] !== "off") {
@@ -95,9 +94,14 @@ module.exports = class InteractionEvent {
 
             if (action === "out_bet") {
                 let bet = await Bet.findById(betId);
-                if (!bet || bet.status[0] == "off") return this.sendReply(interaction, "# Essa aposta foi fechada!");
-                if (!bet.players?.includes(userId)) return this.sendReply(interaction, "# Você não se encontra nesta aposta!");
+                let errorTypes = [];
 
+                // Check all potential errors and add corresponding types to the array
+                if (!bet || bet.status[0] == "off") errorTypes.push('bet_off');
+                if (!bet.players?.includes(userId)) errorTypes.push('bet_not_in');
+
+                // If there are errors, return them all in a single response
+                if (errorTypes.length > 0) return this.returnErrorToMember(interaction, errorTypes);
                 // Remover jogador e salvar aposta
                 bet.players = this.removeItemOnce(bet.players, userId);
                 await bet.save();
@@ -122,31 +126,23 @@ module.exports = class InteractionEvent {
                 };
                 let bet = await Bet.findById(betId);
 
-                if (!bet || bet.status[0] === "off") {
-                    return interaction.reply({ content: "# Essa aposta foi fechada!", flags: 64 });
-                }
+                if (!bet || bet.status[0] === "off") return interaction.reply({ content: "# Essa aposta foi fechada!", flags: 64 });
                 if (bet.status[0] === "started") return interaction.reply({ content: "# Essa aposta já foi iniciada! " + bet._id, flags: 64 });
-                if (handler[value]) {
-                    await handler[value](bet, client, interaction);
+                if (handler[value]) return await handler[value](bet, client, interaction);
 
-                    return;
-                }
-                return
             }
             if (customId.startsWith("end_bet-")) {
                 const [action, betId] = customId.split("-");
-                const bet = await Bet.findOne({ "_id": betId });
+                const bet = await this.getBetById(betId);
 
-                if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
                 if (!bet.winner) return this.sendReply(interaction, "# Você precisa definir o vencedor!");
 
                 return this.endBet(bet, client, interaction);
             }
             if (customId.startsWith("set_winner")) {
                 const [action, betId] = customId.split("-");
-                const bet = await Bet.findOne({ "_id": betId });
+                const bet = await this.getBetById(betId);
 
-                if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
                 if (bet.winner) return this.sendReply(interaction, "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar.");
 
                 const setWinnerEmbed = new EmbedBuilder()
@@ -159,30 +155,34 @@ module.exports = class InteractionEvent {
 
                 const row = new ActionRowBuilder().addComponents(team1Btn, team2Btn);
 
-                interaction.channel.send({ embeds: [setWinnerEmbed], components: [row] })
+                interaction.reply({ embeds: [setWinnerEmbed], components: [row] })
             }
             if (customId.startsWith("btn_set_winner")) {
                 const [action, betId, team] = customId.split("-");
-                const bet = await Bet.findOne({ "_id": betId });
+                const bet = await this.getBetById(betId);
 
                 if (!bet) return this.sendReply(interaction, "# Esta aposta não exite!");
+                if (bet.winner) return this.sendReply(interaction, "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar. **MANDE PROVAS!**");
 
-                const winnerTeam = parseInt(team.replace("team", "")) === 1
-                    ? 0
-                    : 1;
+                const winnerTeam = parseInt(team.replace("team", "")) === 1 ? 0 : 1;
                 const winingPlayer = bet.players[winnerTeam];
                 const winningUser = interaction.guild.members.cache.get(winingPlayer);
 
-                console.log(`Player ${winingPlayer} won the bet: ${betId}.`);
+                console.log(`Player ${winningUser.user.username}|${winningUser.user.id} won the bet: ${betId}.`);
+
+                const addedWinObj = await addWins(winningUser.id, interaction, bet);
+                console.log(addedWinObj);
+
+                if (!addedWinObj) return this.sendReply(interaction, "# Ocorreu um erro ao processar a aposta.");
 
                 bet.winner = bet.players[winnerTeam];
                 bet.save();
+                if (interaction.replied || interaction.deferred) {
+                    return interaction.followUp({ embeds: [addedWinObj.embed] }).catch(console.error);
+                } else {
+                    return interaction.reply({ embeds: [addedWinObj.embed] }).catch(console.error);
+                }
 
-                const logEmbedObj = await addWins(winingPlayer, bet.amount, interaction, bet);
-
-                return interaction.replied || interaction.deferred
-                    ? interaction.followUp({ embeds: [logEmbedObj.embed] })
-                    : interaction.reply({ embeds: [logEmbedObj.embed] });
             }
 
         } catch (error) {
@@ -194,8 +194,32 @@ module.exports = class InteractionEvent {
             }
         }
     }
+    async returnErrorToMember(interaction, errorTypes) {
+        const errorMessages = {
+            'bet_off': "# Essa aposta foi fechada!\n-# Aguarde antes de tentar novamente.",
+            'bet_started': "# A aposta já foi iniciada.\n-# Aguarde a conclusão antes de tentar novamente.",
+            'bet_won': "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar. **MANDE PROVAS!**",
+            'blacklist': "# Você está na *blacklist*!\n-# Deseja sair? Abra um ticket <#1339284682902339594>",
+            'bet_in': "# Você já está na aposta...",
+            'bet_full': "# A aposta já está cheia!",
+            'bet_not_full': "# A aposta não está preenchida!",
+            'bet_not_in': "# Você não se encontra nesta aposta!",
+            'bet_no_winner': "# Você precisa definir o vencedor!",
+            'bets_off': "# As apostas estão fechadas no momento!\n-# Aguarde antes de tentar novamente.",
+        };
+
+        // Collect all error messages for each errorType
+        const messages = errorTypes.map(type => errorMessages[type] || "Erro desconhecido. Tente novamente.");
+
+        // Join all error messages with a line break
+        const message = messages.join('\n\n');  // Adds a newline between multiple errors
+
+        // Send the error messages as a reply
+        return this.sendReply(interaction, message);
+    }
+
     goBack(bet, client, interaction) {
-        this.sendReply(interaction, "# Voltando, selecione a opcao de iniciar quando a aposta estiver cheia.")
+        return this.sendReply(interaction, "# Voltando, selecione a opcao de iniciar quando a aposta estiver cheia.")
     }
     /**
      * 
@@ -367,4 +391,11 @@ module.exports = class InteractionEvent {
             : interaction.reply({ embeds: [embed], flags: 64 });
         return channel;
     }
+    async getBetById(betId) {
+        const bet = await Bet.findById(betId);
+        if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
+        return bet;
+    }
+
+
 };

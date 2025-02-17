@@ -65,6 +65,7 @@ module.exports = {
 
                 if (serverConfig.blacklist.includes(formatUser)) {
                     const embed = new EmbedBuilder()
+                        .setTitle("Gerenciador da blacklist")
                         .setColor(myColours.rich_black)
                         .setDescription(`Jogador ${args} ja se encontra na blacklist!`)
                         .setTimestamp();
@@ -76,6 +77,7 @@ module.exports = {
                 serverConfig.save();
 
                 const embed = new EmbedBuilder()
+                    .setTitle("Gerenciador da blacklist")
                     .setColor(myColours.rich_black)
                     .setDescription(`Jogador ${args} foi adicionado a blacklist!`)
                     .setFooter({ text: "Nota: Para sair da blacklist você precisa de pagar 1,50€" })
@@ -90,6 +92,7 @@ module.exports = {
 
                 if (!serverConfig.blacklist.includes(formatUser)) {
                     const embed = new EmbedBuilder()
+                        .setTitle("Gerenciador da blacklist")
                         .setColor(myColours.rich_black)
                         .setDescription(`Jogador ${args} não está na blacklist!`)
                         .setTimestamp();
@@ -100,6 +103,7 @@ module.exports = {
                 serverConfig.save();
 
                 const embed = new EmbedBuilder()
+                    .setTitle("Gerenciador da blacklist")
                     .setColor(myColours.rich_black)
                     .setDescription(`Jogador ${args} foi removido da blacklist!`)
                     .setTimestamp();
@@ -107,7 +111,7 @@ module.exports = {
                 message.reply({ embeds: [embed] });
             }
         }
-        
+
         if (Object.keys(action).includes(args[0])) return action[args[0]](message, args.slice(1)[0])
         else return message.reply("Use o comando na seguinte forma: `!manage blacklist add||remove <@877598927149490186>`");
     },
