@@ -1,7 +1,6 @@
 const { Client, IntentsBitField, Collection } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
-const { Low, JSONFile } = require('lowdb');
 require("dotenv").config();
 
 class BotClient extends Client {
