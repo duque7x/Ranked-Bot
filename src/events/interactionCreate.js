@@ -229,7 +229,7 @@ module.exports = class InteractionEvent {
      * @returns 
      */
     async endBet(bet, client, interaction) {
-        if (!bet) return this.sendReply(interaction, "# ❌ Nenhuma aposta encontrada com esse ID.");
+        if (!bet) return this.sendReply(interaction, "# Nenhuma aposta encontrada com esse ID.");
         if (bet.status[0] == "off") return this.sendReply(interaction, "# Esta aposta já esta fechada!");
 
         const channel = await client.channels.fetch(bet.betChannel.id);
