@@ -85,8 +85,7 @@ module.exports = {
      * @returns 
      */
     async addWins(userId, interaction, bet) {
-        console.log("bet._id:", bet._id);
-        console.log("amount:", amount);
+
 
         const user = interaction.guild.members.cache.get(userId);
         const amount = bet.amount ?? 1; // Default to 1 if amount is not provided
@@ -107,7 +106,8 @@ module.exports = {
 
         const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
         const existingUser = await User.findOne({ "player.id": userId });
-
+        console.log("bet._id:", bet._id);
+        console.log("amount:", amount);
         if (existingUser) {
             existingUser.credit = parseInt(existingUser.credit) + parseInt(amount);
             existingUser.isAdmin = user.permissions.has(PermissionFlagsBits.Administrator);
