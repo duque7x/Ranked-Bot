@@ -100,7 +100,8 @@ module.exports = {
             .setTimestamp()
             .addFields(
                 { name: "Id da aposta:", value: bet._id ? bet._id.toString() : 'ID inválido' }, // Ensure bet._id is a valid value
-                { name: "Valor ganho", value: amount && !isNaN(amount) ? `${amount}€` : 'Valor inválido' } // Check if amount is valid
+                { name: "Valor ganho", value: amount && !isNaN(amount) ? `${amount}€` : 'Valor inválido' }, // Check if amount is valid
+                { name: "Canal da aposta", value: `<#${bet.betChannel.id}>` } // Check if amount is valid
             );
 
 
