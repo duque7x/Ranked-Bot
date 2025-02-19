@@ -18,6 +18,7 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // Apenas quem pode gerenciar cargos pode usar
 
     async execute(interaction) {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
         const role = interaction.options.getRole("cargo");
         const member = interaction.guild.members.cache.get(interaction.options.getUser("usuario").id);
 
