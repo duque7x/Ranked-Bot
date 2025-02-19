@@ -19,26 +19,26 @@ module.exports = {
 
         const { guild } = message;
 
-        const roleMatch = args[0].match(/^<@&(\d+)>$/);
-        const userMatch = args[1].match(/^<@!?(\d+)>$/);
+        const roleMatch = args[0];
+        const memberMatch = args[1];
 
-        if (!roleMatch || !userMatch) {
-            return message.reply("Formato inválido! Certifique-se de mencionar corretamente o cargo e o usuário.");
+        if (!roleMatch || !memberMatch) {
+            return message.reply("Formato inválido! Certifique-se de usar o comando assim: !addRole ID_DO_CARGO ID_DO_USER");
         }
 
-        const role = guild.roles.cache.get(roleMatch[1]);
-        const user = guild.members.cache.get(userMatch[1]);
+        const role = guild.roles.cache.get(roleMatch);
+        const member = guild.members.cache.get(memberMatch);
 
         if (!role) {
             const roleNames = guild.roles.cache
                 .map(r => r.name)
-                .filter(r => !r.includes("DONO") && !r.includes("everyone"))
+                .filter(r => !r.includes("DONO") && !r.includes("everyone") && !r.includes("CEO"))
                 .join(', ');
 
             return message.reply(`Cargo não encontrado! Cargos disponíveis:\n ${roleNames}`);
         }
 
-        if (!user) {
+        if (!member) {
             return message.reply("Usuário não encontrado! Certifique-se de mencioná-lo corretamente.");
         }
 
@@ -48,11 +48,11 @@ module.exports = {
 
         // Definição de rótulos para os cargos
         const prematives = {
-            administrador: "[ADM]",
-            staff: "[STAFF]",
-            mediadores: "[MED]",
-            team: "[SS]",
-            analista: "[ANALISE]",
+            administrador: "ADM │",
+            staff: "STAFF │",
+            mediadores: "MED │",
+            team: "SS │",
+            analista: "ANALISE │",
         };
 
         // Verifica se o cargo tem um rótulo correspondente
@@ -63,18 +63,32 @@ module.exports = {
                 break;
             }
         }
+        const displayName = `${roleTag} ${member.user.username.toUpperCase()}`;
+        const logChannel = this.logChannel(message);
 
-        user.roles.add(role).then(() => {
-            const displayName = `${roleTag} ${user.user.username}`;
-            const logChannel = this.logChannel(message);
+        if (member.roles.cache.has(role.id) && member.nickname !== displayName) {
             const embed = new EmbedBuilder()
                 .setTitle("Gerenciador de cargos!")
-                .setDescription(`O cargo <@&${role.id}> foi adicionado a ${user}!\n\n-# Por: <@${message.author.id}>`)
+                .setDescription(`O ${member} ja tinha esse cargo, mas não o nome!\n\n-# Por: <@${message.author.id}>`)
                 .setColor(myColours.bright_blue_ocean)
                 .setTimestamp()
                 .setFooter({ text: "Por APOSTAS" });
 
-            user.setNickname(displayName, `Cargo ${role.name} adicionado!`).catch(_ => this.sendTemporaryMessage(message, "Ocorreu um erro ao tentar mudar o nome."));
+            member.setNickname(displayName, `Nome alterado!`).catch(_ => this.sendTemporaryMessage(message, "Ocorreu um erro ao tentar mudar o nome."));
+            message.channel.send({ embeds: [embed] });
+            logChannel.send({ embeds: [embed] });
+            return;
+        }
+
+        member.roles.add(role).then(() => {
+            const embed = new EmbedBuilder()
+                .setTitle("Gerenciador de cargos!")
+                .setDescription(`O cargo <@&${role.id}> foi adicionado a ${member}!\n\n-# Por: <@${message.author.id}>`)
+                .setColor(myColours.bright_blue_ocean)
+                .setTimestamp()
+                .setFooter({ text: "Por APOSTAS" });
+
+            member.setNickname(displayName, `Cargo ${role.name} adicionado!`).catch(_ => this.sendTemporaryMessage(message, "Ocorreu um erro ao tentar mudar o nome."));
             message.channel.send({ embeds: [embed] });
             logChannel.send({ embeds: [embed] });
         }).catch(err => {

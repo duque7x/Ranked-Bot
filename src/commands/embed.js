@@ -12,6 +12,8 @@ module.exports = {
      * @param {BotClient} client 
      */
     execute(message, args, client) {
+        console.log("Sigma");
+        
         const rules = `
 # BEM-VINDOS A BLOOD APOSTAS!
 \`LEIAM AS REGRAS PARA EVITAR QUALQUER TIPO DE W.O!\`
@@ -56,6 +58,26 @@ module.exports = {
 ﻿﻿﻿\`ARMAS QUE NÃO ESTÃO ACIMA NÃO VALEM\`
 \`﻿PET ERRADO REFAZER ATÉ O 3a0 OU 3A3\`
 `;
+        const taticosRule = `# REGRAS TÁTICO
+## ARMAS QUE NÃO VALEM
+> AC80
+> GRANADA 
+## PETS QUE NÃO VALEM
+> DRAKINHO
+> MANDRAKO
+## PERSONAGENS QUE NÃO VALEM
+> SKYLER
+> ÁLVARO
+> HOMERO
+> A124
+> ORION
+> SONIA
+> IGNIS
+
+\`TODOS OS SKIPS VALE\`
+\`PLATAFORMA DE OBS E TODOS OS CONTAINERS VALE\`
+\`VÁLIDO SUBIR NOS CAMINHÕES\`
+\`SE AMBOS TIMES CONCORDAREM SOBRE USO DE AC80/GRANADA, ESSAS ARMAS SERAM PERMITIDAS!\``;
         const occassions = {
             winner: new EmbedBuilder()
                 .setColor(myColours.rich_black)
@@ -63,9 +85,15 @@ module.exports = {
                 .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" }),
             rules: new EmbedBuilder()
                 .setColor(Colors.DarkButNotBlack)
-                .setDescription(rules)
+                .setDescription(rules),
+            tatico: new EmbedBuilder()
+                .setColor(Colors.DarkButNotBlack)
+                .setDescription(taticosRule),
+            play: new EmbedBuilder()
+                .setDescription(`# Como jogar?\n-# Você não tem que se inscrever em nada!\n-# Você simplesmente precisa entrar e jogar, por exemplo em: <#1338286584126247013>\n\nNota: Leia as <#1338244626984992788> antes de jogar!`)
+                .setColor(Colors.DarkButNotBlack)
         }
-        
+
         if (!args[0]) return message.reply(`Tem exatamente ${Object.keys(occassions).length} embeds disponíveis, elas sendo: **${Object.keys(occassions).join(", ")}**!\nQual você quer?`)
 
         args[0] = args[0].toLowerCase().trim();
