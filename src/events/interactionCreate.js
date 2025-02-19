@@ -35,6 +35,7 @@ module.exports = class InteractionEvent {
                 }
 
             }
+            await interaction.deferReply();
             const [action, betType, betId, amount] = interaction.customId.split("-");
             const userId = interaction.user.id;
             const { guildId, guild, member, channel, customId } = interaction;
