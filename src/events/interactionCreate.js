@@ -35,13 +35,14 @@ module.exports = class InteractionEvent {
                 }
 
             }
-            await interaction.deferReply({ flags: 64 });
+
             const [action, betType, betId, amount] = interaction.customId.split("-");
             const userId = interaction.user.id;
             const { guildId, guild, member, channel, customId } = interaction;
             const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
 
             if (action === "enter_bet") {
+                await interaction.deferReply({ flags: 64 });
                 const serverConfig = await Config.findOneAndUpdate(
                     { "guild.id": guildId },
                     {
@@ -87,7 +88,7 @@ module.exports = class InteractionEvent {
                     embeds: [
                         new EmbedBuilder()
                             .setDescription(`# O jogador <@${userId}> entrou na fila de ${betType}\n-# Id da aposta: ${betId}.`)
-                            .setColor(Colors.Orange)
+                            .setColor(Colors.Aqua)
                             .setTimestamp()
                     ]
                 });
@@ -119,7 +120,16 @@ module.exports = class InteractionEvent {
                     { name: "Equipe 2", value: team2 ? `<@${team2}>` : "Slot vazio", inline: true }
                 ]);
 
-                return await interaction.message.edit({ embeds: [updatedEmbed] });
+                await interaction.message.edit({ embeds: [updatedEmbed] });
+                await logChannel.send({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setDescription(`# O jogador <@${userId}> saiu da fila ${betType}\n-# Id da aposta: ${betId}.`)
+                            .setColor(Colors.Red)
+                            .setTimestamp()
+                    ]
+                });
+                return;
             }
             if (customId.startsWith("select_menu")) {
                 const [action, betType, betId] = interaction.customId.split("-");
@@ -133,7 +143,6 @@ module.exports = class InteractionEvent {
                 if (!bet || bet.status[0] === "off") return this.sendReply(interaction, "# Essa aposta foi fechada!");
                 if (bet.status[0] === "started") return this.sendReply(interaction, "# Essa aposta já foi iniciada! " + bet._id);
                 if (handler[value]) return await handler[value](bet, client, interaction);
-
             }
             if (customId.startsWith("end_bet-")) {
                 if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return this.sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para fechar a aposta!");
