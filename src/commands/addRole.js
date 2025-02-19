@@ -22,11 +22,11 @@ module.exports = {
         const member = interaction.guild.members.cache.get(interaction.options.getUser("usuario").id);
 
         if (!role || !member) {
-            return interaction.reply({ content: "Cargo ou usuário não encontrado.", ephemeral: true });
+            return interaction.reply({ content: "Cargo ou usuário não encontrado.", flags: 64 });
         }
 
         if (role.name.toLowerCase().includes("dono")) {
-            return interaction.reply({ content: "Você não pode atribuir esse cargo.", ephemeral: true });
+            return interaction.reply({ content: "Você não pode atribuir esse cargo.", flags: 64 });
         }
 
         // Definição de rótulos para os cargos
@@ -76,7 +76,7 @@ module.exports = {
             if (logChannel) logChannel.send({ embeds: [embed] });
         }).catch(err => {
             console.error(err);
-            interaction.reply({ content: "Ocorreu um erro ao tentar adicionar o cargo.", ephemeral: true });
+            interaction.reply({ content: "Ocorreu um erro ao tentar adicionar o cargo.", flags: 64 });
         });
     },
 

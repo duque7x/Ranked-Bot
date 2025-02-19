@@ -9,7 +9,7 @@ const BotClient = require("../index");
 const Bet = require("../structures/database/bet");
 const User = require('../structures/database/User');
 const Config = require('../structures/database/configs');
-const addWins = require("../commands/utils").addWins;
+const { addWins, getBetById } = require("../commands/utils");
 const myColours = require("../structures/colours");
 
 module.exports = class InteractionEvent {
@@ -23,23 +23,25 @@ module.exports = class InteractionEvent {
      */
     async execute(interaction, client) {
         try {
-            const [action, betType, betId, ammount] = interaction.customId.split("-");
-            const userId = interaction.user.id;
-            const { guildId, guild, member, channel, customId } = interaction;
             if (interaction.isChatInputCommand()) {
                 const command = client.commands.get(interaction.commandName);
                 if (!command) return;
-            
+
                 try {
-                    await command.execute(interaction, client);
+                    return await command.execute(interaction, client);
                 } catch (error) {
                     console.error(error);
-                    interaction.reply({ content: "Erro ao executar o comando.", flags: 64 });
+                    return this.sendReply(interaction, "Erro ao executar o comando.");
                 }
-                return;
+
             }
-            
+            const [action, betType, betId, ammount] = interaction.customId.split("-");
+            const userId = interaction.user.id;
+            const { guildId, guild, member, channel, customId } = interaction;
+            const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
+
             if (action === "enter_bet") {
+
                 let serverConfig = await Config.findOne({ "guild.id": guildId });
                 if (!serverConfig) {
                     serverConfig = new Config({
@@ -56,24 +58,22 @@ module.exports = class InteractionEvent {
 
                 const restrictedUsers = serverConfig.blacklist;
 
-                if (restrictedUsers.includes(interaction.user.id)) return interaction.reply({ content: "Você está na *blacklist*!\nDeseja sair? Abra um ticket <#1339284682902339594>", flags: 64 });
-
+                if (restrictedUsers.includes(interaction.user.id)) return this.sendReply(interaction, "Você está na *blacklist*!\nDeseja sair? Abra um ticket <#1339284682902339594>");
                 if (activeBet && activeBet.status[0] !== "off") {
                     const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel?.id : "";
-                    return interaction.reply({ content: `# ❌ Você já está em outra aposta! <#${channelIdActive}>`, flags: 64 });
+                    return this.sendReply(interaction, `# Você já está em outra aposta! <#${channelIdActive}>`);
                 }
 
                 let bet = await Bet.findById(betId);
 
-                if (!bet) {
-                    return interaction.reply({ content: "# Essa aposta foi fechada!", flags: 64 });
-                }
+                if (!bet) return this.sendReply(interaction, "# Essa aposta foi fechada!");
+
 
                 let team1 = bet.players[0] || null;
                 let team2 = bet.players[1] || null;
 
                 if (bet.players.includes(userId)) {
-                    return interaction.reply({ content: "# ✅ Você já está na aposta!", flags: 64 });
+                    return this.sendReply(interaction, "# Você já está na aposta!");
                 }
 
                 if (!team1) {
@@ -81,7 +81,7 @@ module.exports = class InteractionEvent {
                 } else if (!team2) {
                     team2 = userId;
                 } else {
-                    return interaction.reply({ content: "# ✔️ A aposta já está cheia!", flags: 64 });
+                    return this.sendReply(interaction, "# A aposta já está cheia!");
                 }
 
                 bet.players = [team1, team2].filter(Boolean);
@@ -102,6 +102,13 @@ module.exports = class InteractionEvent {
                             inline: true
                         }
                     ]);
+                const logEmbed = new EmbedBuilder()
+                    .setDescription(`# O jogador <@${interaction.user.id}> entrou na fila de ${betType}\n-# Id da aposta: ${betId}.`)
+                    .setColor(Colors.Orange)
+                    .setTimestamp();
+
+                await logChannel.send({ embeds: [logEmbed] });
+
                 return await interaction.update({ embeds: [updatedEmbed] });
             }
 
@@ -128,7 +135,7 @@ module.exports = class InteractionEvent {
                     { name: "Equipe 2", value: team2 ? `<@${team2}>` : "Slot vazio", inline: true }
                 ]);
 
-                return await interaction.update({ embeds: [updatedEmbed] });
+                return await interaction.message.edit({ embeds: [updatedEmbed] });
             }
             if (customId.startsWith("select_menu")) {
                 const [action, betType, betId] = interaction.customId.split("-");
@@ -139,17 +146,17 @@ module.exports = class InteractionEvent {
                 };
                 let bet = await Bet.findById(betId);
 
-                if (!bet || bet.status[0] === "off") return interaction.reply({ content: "# Essa aposta foi fechada!", flags: 64 });
-                if (bet.status[0] === "started") return interaction.reply({ content: "# Essa aposta já foi iniciada! " + bet._id, flags: 64 });
+                if (!bet || bet.status[0] === "off") return this.sendReply(interaction, "# Essa aposta foi fechada!");
+                if (bet.status[0] === "started") return this.sendReply(interaction, "# Essa aposta já foi iniciada! " + bet._id);
                 if (handler[value]) return await handler[value](bet, client, interaction);
 
             }
             if (customId.startsWith("end_bet-")) {
+                if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return this.sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para fechar a aposta!");
                 const [action, betId] = customId.split("-");
                 const bet = await this.getBetById(betId);
-
                 if (!bet.winner) return this.sendReply(interaction, "# Você precisa definir o vencedor!");
-                if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return this.sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para fechar a aposta!");
+                
                 return this.endBet(bet, client, interaction);
             }
             if (customId.startsWith("set_winner")) {
@@ -183,8 +190,7 @@ module.exports = class InteractionEvent {
 
                 console.log(`Player ${winningUser.user.username}|${winningUser.user.id} won the bet: ${betId}.`);
 
-                const addedWinObj = await addWins(winningUser.id, interaction, bet);
-                console.log(addedWinObj);
+                const addedWinObj = await addWins(winningUser.id, interaction);
 
                 if (!addedWinObj) return this.sendReply(interaction, "# Ocorreu um erro ao processar a aposta.");
 
@@ -206,6 +212,11 @@ module.exports = class InteractionEvent {
                 await interaction.reply({ content: "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.", flags: 64 });
             }
         }
+    }
+    async getBetById(betId) {
+        const bet = await Bet.findById(betId);
+        if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
+        return bet;
     }
     async returnErrorToMember(interaction, errorTypes) {
         const errorMessages = {
@@ -404,11 +415,5 @@ module.exports = class InteractionEvent {
             : interaction.reply({ embeds: [embed], flags: 64 });
         return channel;
     }
-    async getBetById(betId) {
-        const bet = await Bet.findById(betId);
-        if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
-        return bet;
-    }
-
 
 };

@@ -108,7 +108,7 @@ module.exports = {
         if (!tipo) {
             return interaction.reply({
                 content: `Tem exatamente ${Object.keys(occassions).length} embeds disponíveis, elas sendo: **${Object.keys(occassions).join(", ")}**!\nQual você quer?`,
-                ephemeral: true
+                flags: 64
             });
         }
 
@@ -116,6 +116,6 @@ module.exports = {
             return interaction.reply({ embeds: [occassions[tipo]] });
         }
 
-        return interaction.reply({ content: "Comando inválido. Tente novamente.", ephemeral: true });
+        return interaction.reply({ content: "Comando inválido. Tente novamente.", flags: 64 });
     }
 };

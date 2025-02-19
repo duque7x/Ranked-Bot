@@ -11,7 +11,6 @@ class BotClient extends Client {
         this.commandArray = []; // Store commands for registration
         this.loadEvents();
         this.loadCommands();
-        this.registerSlashCommands();
         this.handleProcessErrors();
     }
 
@@ -48,22 +47,25 @@ class BotClient extends Client {
     }
 
     async registerSlashCommands() {
-        if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID) {
-            console.error("Missing DISCORD_TOKEN or CLIENT_ID in environment variables.");
-            return;
-        }
+        console.log("Registering commands: ");
 
-        const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
+        const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN);
 
-        try {
-            console.log("Registering slash commands...");
-            await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
-                body: this.commandArray,
-            });
-            console.log("Slash commands registered successfully.");
-        } catch (error) {
-            console.error("Error registering slash commands:", error);
-        }
+        (async () => {
+            try {
+                console.log('Started refreshing application (/) commands.');
+
+                await rest.put(
+                    Routes.applicationGuildCommands(process.env.CLIENT_ID, "1336809872884371587"),
+                    { body: this.commandArray },
+                );
+
+                console.log('Successfully reloaded application (/) commands.');
+            } catch (error) {
+                console.error(error);
+            }
+        })();
+        console.log("Registered.");
     }
 
     handleProcessErrors() {
@@ -90,5 +92,5 @@ const client = new BotClient({
 });
 
 client.login(process.env.DISCORD_TOKEN);
-
+client.registerSlashCommands();
 module.exports = BotClient;

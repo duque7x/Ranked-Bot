@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const Config = require("../structures/database/configs");
 const Bet = require("../structures/database/bet");
-const { addWins } = require("./utils");
+const { addWins, removeWin } = require("./utils");
 const myColours = require("../structures/colours");
 
 module.exports = {
@@ -28,7 +28,7 @@ module.exports = {
                         .setRequired(false)
                 )
                 .addIntegerOption(option =>
-                    option.setName("amount")
+                    option.setName("quantidade")
                         .setDescription("Quantidade (caso necessário para a ação).")
                         .setRequired(false)
                 )
@@ -44,6 +44,29 @@ module.exports = {
                             { name: "Apostas", value: "bets" },
                             { name: "Ranking", value: "rank" }
                         )
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand.setName("credito")
+                .setDescription("Adiciona ou remove o credito do usuario")
+                .addStringOption(option =>
+                    option.setName("acão")
+                        .setDescription("Adicionar ou remover?")
+                        .setRequired(true)
+                        .addChoices(
+                            { name: "Adicionar", value: "add" },
+                            { name: "Remover", value: "remove" }
+                        )
+                )
+                .addUserOption(option =>
+                    option.setName("user")
+                        .setDescription("Usuário a ser adicionado/removido manipulado.")
+                        .setRequired(true)
+                )
+                .addIntegerOption(option =>
+                    option.setName("quantidade")
+                        .setDescription("Quantidade de dinheiro a ser adicionada ou removida.")
+                        .setRequired(true)
                 )
         )
         .addSubcommand(subcommand =>
@@ -63,10 +86,16 @@ module.exports = {
                         .setDescription("Usuário a ser adicionado/removido da blacklist.")
                         .setRequired(true)
                 )
+
         ),
 
     async execute(interaction) {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+
         const subcommand = interaction.options.getSubcommand();
+
+        console.log(subcommand);
+
         switch (subcommand) {
             case "bet":
                 return this.betHandler(interaction);
@@ -74,24 +103,29 @@ module.exports = {
                 return this.configHandler(interaction);
             case "blacklist":
                 return this.blacklistHandler(interaction);
+            case "credito":
+                return this.creditoHandler(interaction);
         }
     },
 
     async betHandler(interaction) {
         const action = interaction.options.getString("action");
         const user = interaction.options.getUser("user") || interaction.user;
-        const amount = interaction.options.getInteger("amount") || 1;
+        const amount = interaction.options.getInteger("quantidade") || 1;
 
         switch (action) {
             case "addwin":
-                addWins(user.id, amount, interaction);
-                interaction.reply({ content: `✅ ${amount} vitória(s) adicionada(s) para ${user}!`, ephemeral: false });
+                const result = await addWins(user.id, interaction);
+                if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result.embed] }).catch(console.error);
+                else interaction.reply({ embeds: [result.embed] }).catch(console.error);
                 break;
             case "removewin":
-                interaction.reply({ content: "❌ Ainda não implementado!", ephemeral: true });
+                const result2 = await removeWin(user.id, interaction);
+                if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result2.embed] }).catch(console.error);
+                else interaction.reply({ embeds: [result2.embed] }).catch(console.error);
                 break;
             case "status":
-                interaction.reply({ content: "❌ Ainda não implementado!", ephemeral: true });
+                interaction.reply({ content: "❌ Ainda não implementado!", flags: 64 });
                 break;
         }
     },
@@ -129,7 +163,7 @@ module.exports = {
 
         if (action === "add") {
             if (serverConfig.blacklist.includes(user.id)) {
-                return interaction.reply({ content: `❌ ${user} já está na blacklist!`, ephemeral: true });
+                return interaction.reply({ content: `❌ ${user} já está na blacklist!`, flags: 64 });
             }
 
             serverConfig.blacklist.push(user.id);
@@ -146,7 +180,7 @@ module.exports = {
 
         } else if (action === "remove") {
             if (!serverConfig.blacklist.includes(user.id)) {
-                return interaction.reply({ content: `❌ ${user} não está na blacklist!`, ephemeral: true });
+                return interaction.reply({ content: `❌ ${user} não está na blacklist!`, flags: 64 });
             }
 
             serverConfig.blacklist = serverConfig.blacklist.filter(id => id !== user.id);
@@ -160,6 +194,22 @@ module.exports = {
 
             logChannel.send({ embeds: [embed] });
             interaction.reply({ embeds: [embed] });
+        }
+    },
+    async creditoHandler(interaction) {
+        const action = interaction.options.getString("acão");
+        const user = interaction.options.getUser("user");
+        const amount = interaction.options.getInteger("quantidade");
+
+        if (action === "add") {
+            const result = await addWins(user.id, interaction, "manage", amount);
+            if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result.embed] }).catch(console.error);
+            else interaction.reply({ embeds: [result.embed] }).catch(console.error);
+
+        } else if (action === "remove") {
+            const result2 = await removeWin(user.id, amount, interaction, "manage");
+            if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result2.embed] }).catch(console.error);
+            else interaction.reply({ embeds: [result2.embed] }).catch(console.error);
         }
     }
 };

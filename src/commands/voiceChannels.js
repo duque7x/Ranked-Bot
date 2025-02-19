@@ -9,7 +9,7 @@ module.exports = {
         .setName("crate_voicechannels")
         .setDescription("Cria canais de voz para apostas.")
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-    
+
     /**
      * @param {import("discord.js").ChatInputCommandInteraction} interaction 
      */
@@ -24,7 +24,7 @@ module.exports = {
         const parentChannel = guild.channels.cache.get("1338988719914618892");
 
         if (!parentChannel) {
-            return interaction.reply({ content: "Categoria não encontrada.", ephemeral: true });
+            return interaction.reply({ content: "Categoria não encontrada.", flags: 64 });
         }
 
         for (let index = 1; index < 16; index++) {
@@ -42,6 +42,6 @@ module.exports = {
             });
         }
 
-        interaction.reply({ content: "Canais de voz criados com sucesso!", ephemeral: true });
+        interaction.reply({ content: "Canais de voz criados com sucesso!", flags: 64 });
     }
 };
