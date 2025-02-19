@@ -52,48 +52,11 @@ module.exports = {
             });
 
             await newBet.save();
-            await this.sendBetEmbed(interaction, betType, newBet, amount, channel);
+            await sendBetEmbed(interaction, betType, newBet, amount, channel);
         } catch (err) {
             console.error(`Erro ao criar aposta no canal ${channel.name}:`, err);
         }
     },
-
-    async sendBetEmbed(interaction, betType, betData, amount, channelToSend) {
-        const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
-        const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
-
-        const embed = new EmbedBuilder()
-            .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
-            .addFields([
-                { name: "Equipa 1", value: "Slot vazio", inline: true },
-                { name: "Equipa 2", value: "Slot vazio", inline: true }
-            ])
-            .setColor(Colors.White);
-
-        const enterBet = new ButtonBuilder()
-            .setCustomId(enterBetId)
-            .setLabel("Entrar na aposta")
-            .setStyle(ButtonStyle.Success);
-
-        const outBet = new ButtonBuilder()
-            .setCustomId(outBetId)
-            .setLabel("Sair da aposta")
-            .setStyle(ButtonStyle.Danger);
-
-        const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId(`select_menu-${betType}-${betData._id}`)
-            .addOptions([
-                { label: "Iniciar aposta", value: "start_bet_value" },
-                { label: "Voltar", value: "go_back" }
-            ]);
-
-        const row1 = new ActionRowBuilder().addComponents(enterBet, outBet);
-        const row2 = new ActionRowBuilder().addComponents(selectMenu);
-
-        await channelToSend.send({ embeds: [embed], components: [row2, row1] });
-        interaction.reply({ content: `Aposta criada em ${channelToSend}`, flags: 64 });
-    },
-
     async addWins(userId, interaction, option, optAmount) {
         const bet = await getBetById(interaction.channel.topic?.replace("Id da aposta: ", ""));
         if (!bet) return this.sendReply(interaction, "Aposta não encontrada.");
@@ -227,4 +190,39 @@ async function getBetById(betId) {
     const bet = await Bet.findById(betId);
     if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
     return bet;
+}
+async function sendBetEmbed(interaction, betType, betData, amount, channelToSend) {
+    const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
+    const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
+
+    const embed = new EmbedBuilder()
+        .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
+        .addFields([
+            { name: "Equipa 1", value: "Slot vazio", inline: true },
+            { name: "Equipa 2", value: "Slot vazio", inline: true }
+        ])
+        .setColor(Colors.White);
+
+    const enterBet = new ButtonBuilder()
+        .setCustomId(enterBetId)
+        .setLabel("Entrar na aposta")
+        .setStyle(ButtonStyle.Success);
+
+    const outBet = new ButtonBuilder()
+        .setCustomId(outBetId)
+        .setLabel("Sair da aposta")
+        .setStyle(ButtonStyle.Danger);
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`select_menu-${betType}-${betData._id}`)
+        .addOptions([
+            { label: "Iniciar aposta", value: "start_bet_value" },
+            { label: "Voltar", value: "go_back" }
+        ]);
+
+    const row1 = new ActionRowBuilder().addComponents(enterBet, outBet);
+    const row2 = new ActionRowBuilder().addComponents(selectMenu);
+
+    await channelToSend.send({ embeds: [embed], components: [row2, row1] });
+    interaction.channel.send({ content: `Aposta criada em ${channelToSend}`, flags: 64 });
 }

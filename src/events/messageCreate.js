@@ -33,6 +33,7 @@ module.exports = class MessageEvent {
     const command = cl.commands.get(commandName);
 
     // Find the command in the Collection
+    console.log({ command, commandName });
 
     if (!cl.commands) {
       console.error('Commands collection is not defined!');
