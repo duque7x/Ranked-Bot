@@ -35,82 +35,65 @@ module.exports = class InteractionEvent {
                 }
 
             }
-            const [action, betType, betId, ammount] = interaction.customId.split("-");
+            const [action, betType, betId, amount] = interaction.customId.split("-");
             const userId = interaction.user.id;
             const { guildId, guild, member, channel, customId } = interaction;
             const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
 
             if (action === "enter_bet") {
+                const serverConfig = await Config.findOneAndUpdate(
+                    { "guild.id": guildId },
+                    {
+                        $setOnInsert: {
+                            guild: { id: guildId, name: guild.name },
+                            state: { bets: { status: "on" }, rank: { status: "on" } }
+                        }
+                    },
+                    { upsert: true, new: true }
+                );
 
-                let serverConfig = await Config.findOne({ "guild.id": guildId });
-                if (!serverConfig) {
-                    serverConfig = new Config({
-                        guild: { id: guildId, name: guild.name },
-                        state: { bets: { status: "on" }, rank: { status: "on" } }
-                    });
+                if (serverConfig.state.bets.status === "off")
+                    return this.sendReply(interaction, "# As apostas estão fechadas no momento!");
 
-                    await serverConfig.save();
-                }
+                if (serverConfig.blacklist.includes(userId))
+                    return this.sendReply(interaction, "Você está na *blacklist*!\nDeseja sair? Abra um ticket <#1339284682902339594>");
 
-                if (serverConfig.state.bets.status == "off") return this.sendReply(interaction, "# As apostas estão fechadas no momento!");
+                const [activeBet, bet] = await Promise.all([
+                    Bet.findOne({ players: userId }),
+                    Bet.findById(betId)
+                ]);
 
-                const activeBet = await Bet.findOne({ players: userId });
-
-                const restrictedUsers = serverConfig.blacklist;
-
-                if (restrictedUsers.includes(interaction.user.id)) return this.sendReply(interaction, "Você está na *blacklist*!\nDeseja sair? Abra um ticket <#1339284682902339594>");
-                if (activeBet && activeBet.status[0] !== "off") {
-                    const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel?.id : "";
-                    return this.sendReply(interaction, `# Você já está em outra aposta! <#${channelIdActive}>`);
-                }
-
-                let bet = await Bet.findById(betId);
+                if (activeBet && activeBet.status[0] !== "off")
+                    return this.sendReply(interaction, `# Você já está em outra aposta! <#${activeBet.betChannel?.id || ""}>`);
 
                 if (!bet) return this.sendReply(interaction, "# Essa aposta foi fechada!");
+                if (bet.players.includes(userId)) return this.sendReply(interaction, "# Você já está na aposta!");
 
+                if (bet.players.length >= 2) return this.sendReply(interaction, "# A aposta já está cheia!");
 
-                let team1 = bet.players[0] || null;
-                let team2 = bet.players[1] || null;
-
-                if (bet.players.includes(userId)) {
-                    return this.sendReply(interaction, "# Você já está na aposta!");
-                }
-
-                if (!team1) {
-                    team1 = userId;
-                } else if (!team2) {
-                    team2 = userId;
-                } else {
-                    return this.sendReply(interaction, "# A aposta já está cheia!");
-                }
-
-                bet.players = [team1, team2].filter(Boolean);
+                bet.players.push(userId);
                 await bet.save();
 
                 const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
                     .setDescription(`## Aposta **${betType}** | ${bet.amount}€\n> Jogadores entrando! Aguarde a partida começar.`)
                     .setColor(Colors.White)
                     .setFields([
-                        {
-                            name: "Equipe 1",
-                            value: team1 ? `<@${team1}>` : "Slot vazio",
-                            inline: true
-                        },
-                        {
-                            name: "Equipe 2",
-                            value: team2 ? `<@${team2}>` : "Slot vazio",
-                            inline: true
-                        }
+                        { name: "Equipe 1", value: bet.players[0] ? `<@${bet.players[0]}>` : "Slot vazio", inline: true },
+                        { name: "Equipe 2", value: bet.players[1] ? `<@${bet.players[1]}>` : "Slot vazio", inline: true }
                     ]);
-                const logEmbed = new EmbedBuilder()
-                    .setDescription(`# O jogador <@${interaction.user.id}> entrou na fila de ${betType}\n-# Id da aposta: ${betId}.`)
-                    .setColor(Colors.Orange)
-                    .setTimestamp();
 
-                await logChannel.send({ embeds: [logEmbed] });
+                await logChannel.send({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setDescription(`# O jogador <@${userId}> entrou na fila de ${betType}\n-# Id da aposta: ${betId}.`)
+                            .setColor(Colors.Orange)
+                            .setTimestamp()
+                    ]
+                });
 
                 return await interaction.update({ embeds: [updatedEmbed] });
             }
+
 
             if (action === "out_bet") {
                 let bet = await Bet.findById(betId);
@@ -156,7 +139,7 @@ module.exports = class InteractionEvent {
                 const [action, betId] = customId.split("-");
                 const bet = await this.getBetById(betId);
                 if (!bet.winner) return this.sendReply(interaction, "# Você precisa definir o vencedor!");
-                
+
                 return this.endBet(bet, client, interaction);
             }
             if (customId.startsWith("set_winner")) {
