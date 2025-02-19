@@ -6,8 +6,10 @@ const {
   StringSelectMenuOptionBuilder,
   EmbedType,
   Message,
+  Colors,
 } = require("discord.js");
 const BotClient = require("..");
+const Config = require("../structures/database/configs");
 
 module.exports = class MessageEvent {
   /**
@@ -23,14 +25,38 @@ module.exports = class MessageEvent {
    * @param {BotClient} cl
    * @returns 
    */
-  execute(message, cl) {
-    const prefix = "!";
-    if (!message.content.startsWith(prefix)) return;
+  async execute(message, cl) {
+    if (message.author.bot) return;
 
+    const prefix = "!";
     // Get the command and arguments
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift();
     const command = cl.commands.get(commandName);
+
+    if (message.channel.id == "1338575355665186856") {
+      const serverInfo = await Config.findOne({ "guild.id": message.guildId });
+      const blacklist = serverInfo.blacklist;
+      if (blacklist.includes(message.content)) {
+        const embed = new EmbedBuilder()
+          .setDescription(`O id **${message.content}** esta na blacklist.\n-# Abra um ticket <#1339284682902339594> para sair.`)
+          .setTimestamp()
+          .setColor(Colors.Aqua)
+          .setFooter({ text: "Nota: para sair da blacklist você precisa pagar 1,50€" });
+
+        message.reply({ embeds: [embed] })
+      } else {
+        const embed = new EmbedBuilder()
+          .setDescription(`O id **${message.content}** não esta blacklist.`)
+          .setTimestamp()
+          .setColor(Colors.Red)
+          .setFooter({ text: "Nota: para sair da blacklist você precisa pagar 1,50€" });
+
+        message.reply({ embeds: [embed] })
+      }
+    }
+
+    if (!message.content.startsWith(prefix)) return;
 
     // Find the command in the Collection
     console.log({ command, commandName });

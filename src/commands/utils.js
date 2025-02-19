@@ -224,5 +224,5 @@ async function sendBetEmbed(interaction, betType, betData, amount, channelToSend
     const row2 = new ActionRowBuilder().addComponents(selectMenu);
 
     await channelToSend.send({ embeds: [embed], components: [row2, row1] });
-    interaction.reply({ content: `Aposta criada em ${channelToSend}`, flags: 64 });
+    return;
 }

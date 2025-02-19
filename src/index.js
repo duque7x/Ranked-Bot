@@ -1,4 +1,4 @@
-const { Client, IntentsBitField, Collection, REST, Routes } = require("discord.js");
+const { Client, IntentsBitField, Collection, REST, Routes, Partials } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
@@ -88,7 +88,12 @@ const client = new BotClient({
         IntentsBitField.Flags.GuildPresences,
         IntentsBitField.Flags.GuildModeration,
         IntentsBitField.Flags.GuildWebhooks,
+        IntentsBitField.Flags.MessageContent,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.DirectMessages,
+
     ],
+    partials: [Partials.Message, Partials.Channel],
 });
 
 client.login(process.env.DISCORD_TOKEN);
