@@ -1,250 +1,165 @@
-const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
-const BotClient = require("..");
-const User = require("../structures/database/User");
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const Config = require("../structures/database/configs");
 const Bet = require("../structures/database/bet");
 const { addWins } = require("./utils");
-const Config = require("../structures/database/configs");
 const myColours = require("../structures/colours");
 
 module.exports = {
-    name: "manage", // Command name
-    usage: "`!manage bet||config`",
-    description: "Este comando altera configurações da aposta! No momento ele está desativado!",
+    data: new SlashCommandBuilder()
+        .setName("manage")
+        .setDescription("Gerencia configurações das apostas.")
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addSubcommand(subcommand =>
+            subcommand.setName("bet")
+                .setDescription("Gerencia apostas.")
+                .addStringOption(option =>
+                    option.setName("action")
+                        .setDescription("Ação a ser executada (addwin, removewin, status).")
+                        .setRequired(true)
+                        .addChoices(
+                            { name: "Adicionar Vitória", value: "addwin" },
+                            { name: "Remover Vitória", value: "removewin" },
+                            { name: "Alterar Status", value: "status" }
+                        )
+                )
+                .addUserOption(option =>
+                    option.setName("user")
+                        .setDescription("Usuário (caso necessário para a ação).")
+                        .setRequired(false)
+                )
+                .addIntegerOption(option =>
+                    option.setName("amount")
+                        .setDescription("Quantidade (caso necessário para a ação).")
+                        .setRequired(false)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand.setName("config")
+                .setDescription("Altera configurações.")
+                .addStringOption(option =>
+                    option.setName("option")
+                        .setDescription("Opção a ser alterada.")
+                        .setRequired(true)
+                        .addChoices(
+                            { name: "Apostas", value: "bets" },
+                            { name: "Ranking", value: "rank" }
+                        )
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand.setName("blacklist")
+                .setDescription("Gerencia blacklist.")
+                .addStringOption(option =>
+                    option.setName("action")
+                        .setDescription("Ação a ser executada (add, remove).")
+                        .setRequired(true)
+                        .addChoices(
+                            { name: "Adicionar", value: "add" },
+                            { name: "Remover", value: "remove" }
+                        )
+                )
+                .addUserOption(option =>
+                    option.setName("user")
+                        .setDescription("Usuário a ser adicionado/removido da blacklist.")
+                        .setRequired(true)
+                )
+        ),
 
-    /**
-     * Executes the command.
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
-     */
-    execute(message, args, client) {
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
-
-        const situation = args[0]?.toLowerCase();
-
-        if (!situation) {
-            return this.sendTemporaryMessage(message, "❌ Por favor, especifique uma situação válida!");
-        }
-
-        switch (situation) {
+    async execute(interaction) {
+        const subcommand = interaction.options.getSubcommand();
+        switch (subcommand) {
             case "bet":
-                this.betHandler(message, args.slice(1), client);
-                break;
+                return this.betHandler(interaction);
             case "config":
-                this.configHandler(message, args.slice(1), client);
-                break;
+                return this.configHandler(interaction);
             case "blacklist":
-                this.blacklistHandler(message, args.slice(1), client);
+                return this.blacklistHandler(interaction);
+        }
+    },
+
+    async betHandler(interaction) {
+        const action = interaction.options.getString("action");
+        const user = interaction.options.getUser("user") || interaction.user;
+        const amount = interaction.options.getInteger("amount") || 1;
+
+        switch (action) {
+            case "addwin":
+                addWins(user.id, amount, interaction);
+                interaction.reply({ content: `✅ ${amount} vitória(s) adicionada(s) para ${user}!`, ephemeral: false });
                 break;
-            default:
-                this.sendTemporaryMessage(message, "❌ Situação não reconhecida!");
+            case "removewin":
+                interaction.reply({ content: "❌ Ainda não implementado!", ephemeral: true });
+                break;
+            case "status":
+                interaction.reply({ content: "❌ Ainda não implementado!", ephemeral: true });
                 break;
         }
     },
-    logChannel(message) {
-        return message.guild.channels.cache.get("1340360434414522389");
-    },
-    async blacklistHandler(message, args, client) {
-        const { guildId, guild } = message;
-        let serverConfig = await Config.findOne({ "guild.id": guildId });
-        const logChannel = this.logChannel(message);
+
+    async configHandler(interaction) {
+        const option = interaction.options.getString("option");
+        let serverConfig = await Config.findOne({ "guild.id": interaction.guildId });
 
         if (!serverConfig) {
             serverConfig = new Config({
-                guild: { id: guildId, name: guild.name },
-                state: { bets: { status: "on" }, rank: { status: "on" } },
-                blacklist: []
+                guild: { id: interaction.guildId, name: interaction.guild.name },
+                state: { bets: { status: "on" }, rank: { status: "on" } }
             });
-
             await serverConfig.save();
         }
 
-        const action = {
-            add: (message, args) => {
-                const formatUser = args.match(/^<@!?(\d+)>$/)[1];
+        const status = serverConfig.state[option].status;
+        const newStatus = serverConfig.state[option].status = status === "on" ? "off" : "on";
+        await serverConfig.save();
 
-                if (serverConfig.blacklist.includes(formatUser)) {
-                    const embed = new EmbedBuilder()
-                        .setTitle("Gerenciador da blacklist")
-                        .setColor(myColours.rich_black)
-                        .setDescription(`Jogador ${args} ja se encontra na blacklist!`)
-                        .setTimestamp();
+        const embed = new EmbedBuilder()
+            .setColor(myColours.rich_black)
+            .setTitle(`Mudança de estado: ${option.toUpperCase()}`)
+            .setDescription(`**${option}** foi alterado de **${status}** para **${newStatus}**.`)
+            .setTimestamp();
 
-                    return message.reply({ embeds: [embed] });
-                }
-
-                serverConfig.blacklist.push(formatUser);
-                serverConfig.save();
-
-                const embed = new EmbedBuilder()
-                    .setTitle("Gerenciador da blacklist")
-                    .setColor(myColours.rich_black)
-                    .setDescription(`Jogador ${args} foi adicionado a blacklist!`)
-                    .setFooter({ text: "Nota: Para sair da blacklist você precisa de pagar 1,50€" })
-                    .setTimestamp();
-
-                logChannel.send({ embeds: [embed] });
-                return message.reply({ embeds: [embed] });
-            },
-            remove: (message, args) => {
-                const formatUser = args.match(/^<@!?(\d+)>$/)[1];
-                const newBlacklist = serverConfig.blacklist.filter(id => id !== formatUser);  // Correct filtering
-
-                if (!serverConfig.blacklist.includes(formatUser)) {
-                    const embed = new EmbedBuilder()
-                        .setTitle("Gerenciador da blacklist")
-                        .setColor(myColours.rich_black)
-                        .setDescription(`Jogador ${args} não está na blacklist!`)
-                        .setTimestamp();
-                    return message.reply({ embeds: [embed] });
-                }
-
-                serverConfig.blacklist = newBlacklist;
-                serverConfig.save();
-
-                const embed = new EmbedBuilder()
-                    .setTitle("Gerenciador da blacklist")
-                    .setColor(myColours.rich_black)
-                    .setDescription(`Jogador ${args} foi removido da blacklist!`)
-                    .setTimestamp();
-                logChannel.send({ embeds: [embed] });
-                message.reply({ embeds: [embed] });
-            }
-        }
-
-        if (Object.keys(action).includes(args[0])) return action[args[0]](message, args.slice(1)[0])
-        else return message.reply("Use o comando na seguinte forma: `!manage blacklist add||remove <@877598927149490186>`");
+        interaction.reply({ embeds: [embed] });
     },
-    async configHandler(message, args, client) {
-        const action = args[0]?.toLowerCase();
 
-        const possibleActions = {
-            /**
-             * 
-             * @param {Message} message 
-             * @returns 
-             */
-            changestatus: async (message) => {
-                let { guildId, guild } = message;
-                let serverConfig = await Config.findOne({ "guild.id": message.guildId });
-                if (!serverConfig) {
-                    serverConfig = new Config({
-                        guild: { id: guildId, name: guild.name },
-                        state: { bets: { status: "on" }, rank: { status: "on" } }
-                    });
+    async blacklistHandler(interaction) {
+        const action = interaction.options.getString("action");
+        const user = interaction.options.getUser("user");
+        const serverConfig = await Config.findOne({ "guild.id": interaction.guildId }) || new Config({ guild: { id: interaction.guildId, name: interaction.guild.name }, blacklist: [] });
+        const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
 
-                    await serverConfig.save();
-                }
-
-                const subjects = ["bets", "rank"];
-
-                if (!subjects.includes(args[1])) return this.sendTemporaryMessage(message, "# Argumentos errados! Use o comando na seguinte forma: `!manage config changeStatus bet||rank`");
-
-
-                const status = serverConfig.state[args[1]].status;
-
-                const newStatus = serverConfig.state[args[1]].status = status == "on" ? "off" : "on";
-
-                serverConfig.state[args[1]].status = newStatus;
-                serverConfig.save();
-
-                const embed = new EmbedBuilder()
-                    .setColor(0xff4d50)
-                    .setTitle("Mudança de estado das: " + args[1].toUpperCase())
-                    .setDescription(`**${args[1]}** foi(ram) de **${status}** para **${newStatus}**.`)
-                    .setTimestamp();
-
-                message.reply({ embeds: [embed] })
+        if (action === "add") {
+            if (serverConfig.blacklist.includes(user.id)) {
+                return interaction.reply({ content: `❌ ${user} já está na blacklist!`, ephemeral: true });
             }
 
+            serverConfig.blacklist.push(user.id);
+            await serverConfig.save();
+
+            const embed = new EmbedBuilder()
+                .setTitle("Gerenciador da blacklist")
+                .setColor(myColours.rich_black)
+                .setDescription(`✅ ${user} foi adicionado à blacklist!`)
+                .setTimestamp();
+
+            logChannel.send({ embeds: [embed] });
+            interaction.reply({ embeds: [embed] });
+
+        } else if (action === "remove") {
+            if (!serverConfig.blacklist.includes(user.id)) {
+                return interaction.reply({ content: `❌ ${user} não está na blacklist!`, ephemeral: true });
+            }
+
+            serverConfig.blacklist = serverConfig.blacklist.filter(id => id !== user.id);
+            await serverConfig.save();
+
+            const embed = new EmbedBuilder()
+                .setTitle("Gerenciador da blacklist")
+                .setColor(myColours.rich_black)
+                .setDescription(`✅ ${user} foi removido da blacklist!`)
+                .setTimestamp();
+
+            logChannel.send({ embeds: [embed] });
+            interaction.reply({ embeds: [embed] });
         }
-
-        if (possibleActions[action]) return possibleActions[action](message);
-    },
-    async statusChanger(message, args, client) {
-        const betId = args[0];
-        const statusToChange = args[1];
-
-        if (!betId || !statusToChange) return this.sendTemporaryMessage(message, "# Use o comando da seguinte forma: `!manage bet status BET_ID STATUS`");
-
-        const bet = await Bet.findOne({ "_id": betId });
-
-
-        if (!bet) return this.sendTemporaryMessage(message, "# Esta aposta não existe!");
-
-        bet.status = statusToChange;
-        bet.save();
-
-        message.reply("# Estado da aposta mudada!");
-    },
-    /**
-     * Sends a temporary message that deletes itself after a delay.
-     * @param {Message} msg 
-     * @param {string} content 
-     */
-    sendTemporaryMessage(msg, content) {
-        msg.reply(content).then(mg => {
-            setTimeout(() => {
-                mg.delete().catch(() => { });
-            }, 2000);
-        });
-    },
-
-    /**
-     * Handles "bet" related actions.
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
-     */
-    betHandler(message, args, client) {
-        const action = args[0]?.toLowerCase();
-
-        const possibleActions = {
-            addwin: this.addWin.bind(this),
-            removewin: this.removeWin.bind(this),
-            status: this.statusChanger.bind(this)
-        };
-
-        if (!possibleActions[action]) {
-            return this.sendTemporaryMessage(message, `❌ Ação de aposta inválida! Ações disponíveis: ${Object.keys(possibleActions).join(", ")}`);
-        }
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return this.sendTemporaryMessage(message, "# Você não tem as permissões necessárias!");
-
-        // Execute the corresponding action
-        possibleActions[action](message, args.slice(1), client);
-    },
-
-    /**
-     * Handles the addition of a win for a bet.
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
-     */
-    addWin(message, args, client) {
-        const userId = args[0] ?? message.author.id;
-        const amount = args[1] ?? 1;
-
-        if (!userId) {
-            return this.sendTemporaryMessage(message, "❌ Por favor, forneça o ID da aposta para adicionar uma vitória!");
-        }
-
-        addWins(userId, amount, message);
-    },
-
-    /**
-     * Handles the removal of a win for a bet.
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
-     */
-    removeWin(message, args, client) {
-        const betId = args[0];
-
-        if (!betId) {
-            return this.sendTemporaryMessage(message, "❌ Por favor, forneça o ID da aposta para remover uma vitória!");
-        }
-
-        // Placeholder logic for removing a win
-        this.sendTemporaryMessage(message, `✅ Vitória removida da aposta com ID: ${betId}`);
-    },
+    }
 };

@@ -1,39 +1,38 @@
-const { EmbedBuilder, Message, PermissionFlagsBits, Colors } = require("discord.js");
-const BotClient = require("..");
+const { 
+    EmbedBuilder, 
+    PermissionFlagsBits, 
+    Colors, 
+    SlashCommandBuilder 
+} = require("discord.js");
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
 
 module.exports = {
-    name: "db",
-    usage: "`!db bet idDaAposta`\n\n!db bet 67a9366b0995a45347da7fac",
-    description: "Este comando retorna as informações de uma aposta!",
-    users: ["877598927149490186"],
+    data: new SlashCommandBuilder()
+        .setName("db")
+        .setDescription("Este comando retorna as informações de uma aposta!"),
 
-    /**
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
-     */
-    async execute(message, args, client) {
-        if (!message.member?.permissions.has(PermissionFlagsBits.Administrator)) return;
+    async execute(interaction, client) {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
 
+        const args = interaction.options.getString('args')?.split(' '); // Get args from slash command
         const [bet, id, reset] = args;
 
         try {
             if (reset === "reset" && !bet) {
                 await Promise.all([Bet.deleteMany({}), User.deleteMany({})]);
-                return message.reply("`Dados do banco de dados resetados com sucesso!`");
+                return interaction.reply("`Dados do banco de dados resetados com sucesso!`");
             }
 
             if (bet === "bet") {
                 if (id === "reset") {
                     await Bet.updateMany({}, { $set: { players: [] } });
-                    return message.reply("`Todos os jogadores foram removidos de suas apostas.`");
+                    return interaction.reply("`Todos os jogadores foram removidos de suas apostas.`");
                 }
 
                 if (id) {
                     const foundBet = await Bet.findOne({ _id: id });
-                    if (!foundBet) return this.sendTemporaryMessage(message, "# Esta aposta não existe!");
+                    if (!foundBet) return this.sendTemporaryMessage(interaction, "# Esta aposta não existe!");
 
                     const winner = foundBet.winner ? `<@${foundBet.winner}>` : "Não há vencedor definido...";
                     const embed = new EmbedBuilder()
@@ -48,13 +47,13 @@ module.exports = {
                                 `**Canal:** <#${foundBet.betChannel?.id || "Desconhecido"}>`
                         });
 
-                    return message.reply({ embeds: [embed] });
+                    return interaction.reply({ embeds: [embed] });
                 }
             }
 
             if (bet === "rank") {
                 const allUsers = await User.find({});
-                if (allUsers.length === 0) return message.reply("Não há apostas no banco de dados!");
+                if (allUsers.length === 0) return interaction.reply("Não há apostas no banco de dados!");
 
                 const embed = new EmbedBuilder()
                     .setColor(Colors.DarkButNotBlack)
@@ -68,11 +67,11 @@ module.exports = {
                     });
                 });
 
-                return message.channel.send({ embeds: [embed] });
+                return interaction.reply({ embeds: [embed] });
             }
 
             const allBets = await Bet.find({});
-            if (allBets.length === 0) return message.reply("Não há apostas no banco de dados!");
+            if (allBets.length === 0) return interaction.reply("Não há apostas no banco de dados!");
 
             const embed = new EmbedBuilder()
                 .setColor(Colors.DarkButNotBlack)
@@ -86,9 +85,9 @@ module.exports = {
                 });
             });
 
-            return message.channel.send({ embeds: [embed] });
+            return interaction.reply({ embeds: [embed] });
         } catch (error) {
-            message.reply("Tem muitas apostas para mandar nesse momento!");
+            interaction.reply("Tem muitas apostas para mandar nesse momento!");
             console.error("Erro:", error);
         }
     },
@@ -98,9 +97,10 @@ module.exports = {
      * @param {Message} msg 
      * @param {string} content 
      */
-    sendTemporaryMessage(msg, content) {
-        msg.reply(content).then(mg => {
+    sendTemporaryMessage(interaction, content) {
+        interaction.reply({ content, flags: 64 }).then(mg => {
             setTimeout(() => mg.delete().catch(() => { }), 3000);
         });
     }
+    
 };

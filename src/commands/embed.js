@@ -1,19 +1,26 @@
-const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
-const BotClient = require("..");
+const { SlashCommandBuilder, EmbedBuilder, Colors } = require("discord.js");
 const myColours = require("../structures/colours");
 
 module.exports = {
-    name: "embed", // Command name
-    usage: "`!embed`",
-    description: "Este comando retorna uma embed com as regras do server!",
+    data: new SlashCommandBuilder()
+        .setName("embed")
+        .setDescription("Este comando retorna uma embed com as regras do server!")
+        .addStringOption(option =>
+            option.setName("tipo")
+                .setDescription("Escolha o tipo de embed")
+                .setRequired(false)
+                .addChoices(
+                    { name: "regras", value: "rules" },
+                    { name: "tatico", value: "tatico" },
+                    { name: "vencedor", value: "winner" },
+                    { name: "como jogar", value: "play" }
+                )
+        ),
+
     /**
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
+     * @param {import('discord.js').CommandInteraction} interaction
      */
-    execute(message, args, client) {
-        console.log("Sigma");
-        
+    async execute(interaction) {
         const rules = `
 # BEM-VINDOS A BLOOD APOSTAS!
 \`LEIAM AS REGRAS PARA EVITAR QUALQUER TIPO DE W.O!\`
@@ -33,7 +40,7 @@ module.exports = {
 > VALE M1014 - 1 POR TIME
 > ﻿﻿﻿VALE USP
 > VALE XM8
-> VALE UMP﻿
+> VALE UMP﻿ 
 > VALE MP4
 > GRANADA SOMENTE DE **GELO**
 ## REGRAS GERAIS
@@ -58,6 +65,7 @@ module.exports = {
 ﻿﻿﻿\`ARMAS QUE NÃO ESTÃO ACIMA NÃO VALEM\`
 \`﻿PET ERRADO REFAZER ATÉ O 3a0 OU 3A3\`
 `;
+
         const taticosRule = `# REGRAS TÁTICO
 ## ARMAS QUE NÃO VALEM
 > AC80
@@ -78,6 +86,7 @@ module.exports = {
 \`PLATAFORMA DE OBS E TODOS OS CONTAINERS VALE\`
 \`VÁLIDO SUBIR NOS CAMINHÕES\`
 \`SE AMBOS TIMES CONCORDAREM SOBRE USO DE AC80/GRANADA, ESSAS ARMAS SERAM PERMITIDAS!\``;
+
         const occassions = {
             winner: new EmbedBuilder()
                 .setColor(myColours.rich_black)
@@ -92,20 +101,21 @@ module.exports = {
             play: new EmbedBuilder()
                 .setDescription(`# Como jogar?\n-# Você não tem que se inscrever em nada!\n-# Você simplesmente precisa entrar e jogar, por exemplo em: <#1338286584126247013>\n\nNota: Leia as <#1338244626984992788> antes de jogar!`)
                 .setColor(Colors.DarkButNotBlack)
+        };
+
+        const tipo = interaction.options.getString("tipo");
+
+        if (!tipo) {
+            return interaction.reply({
+                content: `Tem exatamente ${Object.keys(occassions).length} embeds disponíveis, elas sendo: **${Object.keys(occassions).join(", ")}**!\nQual você quer?`,
+                ephemeral: true
+            });
         }
 
-        if (!args[0]) return message.reply(`Tem exatamente ${Object.keys(occassions).length} embeds disponíveis, elas sendo: **${Object.keys(occassions).join(", ")}**!\nQual você quer?`)
-
-        args[0] = args[0].toLowerCase().trim();
-        if (occassions[args[0]]) {
-            return message.channel.send({ embeds: [occassions[args[0]]] });
+        if (occassions[tipo]) {
+            return interaction.reply({ embeds: [occassions[tipo]] });
         }
-    },
-    sendTemporaryMessage(msg, content) {
-        msg.reply(content).then(mg => {
-            setTimeout(() => {
-                mg.delete();
-            }, 2000);
-        });
+
+        return interaction.reply({ content: "Comando inválido. Tente novamente.", ephemeral: true });
     }
 };

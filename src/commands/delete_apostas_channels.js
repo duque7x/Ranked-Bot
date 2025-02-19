@@ -1,33 +1,34 @@
-const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const BotClient = require("..");
 
 module.exports = {
-    name: "delete_apostas_channels", // Command name
-    usage: "`!delete_apostas_channels`",
-    description: "Este comando apaga os canais de apostas!",
-    users: ["877598927149490186"],
+    data: new SlashCommandBuilder()
+        .setName("delete_apostas_channels")
+        .setDescription("Este comando apaga os canais de apostas!"),
 
     /**
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
+     * @param {import('discord.js').CommandInteraction} interaction
+     * @param {BotClient} client
      */
-    async execute(message, args, client) {
-        if (!message.author.id !== this.users[0]) return;
-        const channels = message.guild.channels.cache.filter(c => c.name.includes("emulador") || c.name.includes("mobile") || c.name.includes("mistas"));
+    async execute(interaction, client) {
+        if (interaction.user.id !== "877598927149490186") return;
+
+        const channels = interaction.guild.channels.cache.filter(c =>
+            c.name.includes("emulador") || c.name.includes("mobile") || c.name.includes("mistas")
+        );
 
         channels.forEach(async c => {
-            c.delete()
-        })
+            await c.delete();
+        });
 
+        this.sendTemporaryMessage(interaction, "Canais de apostas apagados com sucesso!");
     },
-    sendTemporaryMessage(msg, content) {
-        msg.reply(content).then(mg => {
+
+    sendTemporaryMessage(interaction, content) {
+        interaction.reply({ content, flags: 64 }).then(mg => {
             setTimeout(() => {
-                mg.delete();
+                mg.delete().catch(() => { });
             }, 2000);
         });
-    },
-    
+    }
 };
-

@@ -1,49 +1,32 @@
-const { EmbedBuilder, Message, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const BotClient = require("..");
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const myColours = require("../structures/colours");
 
 module.exports = {
-    name: "addRole",
-    description: "Adiciona um cargo a um usuário.",
-    usage: "`!addRole @cargo @usuário`",
+    data: new SlashCommandBuilder()
+        .setName("addrole")
+        .setDescription("Adiciona um cargo a um usuário.")
+        .addRoleOption(option =>
+            option.setName("cargo")
+                .setDescription("O cargo a ser adicionado.")
+                .setRequired(true)
+        )
+        .addUserOption(option =>
+            option.setName("usuario")
+                .setDescription("O usuário que receberá o cargo.")
+                .setRequired(true)
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // Apenas quem pode gerenciar cargos pode usar
 
-    /**
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
-     */
-    execute(message, args, client) {
-        if (args.length < 2) {
-            return message.reply("Uso incorreto! O formato correto é: `!addRole @cargo @usuário`");
-        }
+    async execute(interaction) {
+        const role = interaction.options.getRole("cargo");
+        const member = interaction.guild.members.cache.get(interaction.options.getUser("usuario").id);
 
-        const { guild } = message;
-
-        const roleMatch = args[0];
-        const memberMatch = args[1];
-
-        if (!roleMatch || !memberMatch) {
-            return message.reply("Formato inválido! Certifique-se de usar o comando assim: !addRole ID_DO_CARGO ID_DO_USER");
-        }
-
-        const role = guild.roles.cache.get(roleMatch);
-        const member = guild.members.cache.get(memberMatch);
-
-        if (!role) {
-            const roleNames = guild.roles.cache
-                .map(r => r.name)
-                .filter(r => !r.includes("DONO") && !r.includes("everyone") && !r.includes("CEO"))
-                .join(', ');
-
-            return message.reply(`Cargo não encontrado! Cargos disponíveis:\n ${roleNames}`);
-        }
-
-        if (!member) {
-            return message.reply("Usuário não encontrado! Certifique-se de mencioná-lo corretamente.");
+        if (!role || !member) {
+            return interaction.reply({ content: "Cargo ou usuário não encontrado.", ephemeral: true });
         }
 
         if (role.name.toLowerCase().includes("dono")) {
-            return message.reply("Você não pode atribuir esse cargo.");
+            return interaction.reply({ content: "Você não pode atribuir esse cargo.", ephemeral: true });
         }
 
         // Definição de rótulos para os cargos
@@ -55,7 +38,6 @@ module.exports = {
             analista: "ANALISE │",
         };
 
-        // Verifica se o cargo tem um rótulo correspondente
         let roleTag = "";
         for (const key in prematives) {
             if (role.name.toLowerCase().includes(key)) {
@@ -63,47 +45,45 @@ module.exports = {
                 break;
             }
         }
+
         const displayName = `${roleTag} ${member.user.username.toUpperCase()}`;
-        const logChannel = this.logChannel(message);
+        const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
 
         if (member.roles.cache.has(role.id) && member.nickname !== displayName) {
             const embed = new EmbedBuilder()
                 .setTitle("Gerenciador de cargos!")
-                .setDescription(`O ${member} ja tinha esse cargo, mas não o nome!\n\n-# Por: <@${message.author.id}>`)
+                .setDescription(`O ${member} já tinha esse cargo, mas não o nome!\n\n-# Por: <@${interaction.user.id}>`)
                 .setColor(myColours.bright_blue_ocean)
                 .setTimestamp()
                 .setFooter({ text: "Por APOSTAS" });
 
-            member.setNickname(displayName, `Nome alterado!`).catch(_ => this.sendTemporaryMessage(message, "Ocorreu um erro ao tentar mudar o nome."));
-            message.channel.send({ embeds: [embed] });
-            logChannel.send({ embeds: [embed] });
+            member.setNickname(displayName, `Nome alterado!`).catch(() => this.sendTemporaryMessage(interaction, "Ocorreu um erro ao tentar mudar o nome."));
+            interaction.reply({ embeds: [embed] });
+            if (logChannel) logChannel.send({ embeds: [embed] });
             return;
         }
 
         member.roles.add(role).then(() => {
             const embed = new EmbedBuilder()
                 .setTitle("Gerenciador de cargos!")
-                .setDescription(`O cargo <@&${role.id}> foi adicionado a ${member}!\n\n-# Por: <@${message.author.id}>`)
+                .setDescription(`O cargo <@&${role.id}> foi adicionado a ${member}!\n\n-# Por: <@${interaction.user.id}>`)
                 .setColor(myColours.bright_blue_ocean)
                 .setTimestamp()
                 .setFooter({ text: "Por APOSTAS" });
 
-            member.setNickname(displayName, `Cargo ${role.name} adicionado!`).catch(_ => this.sendTemporaryMessage(message, "Ocorreu um erro ao tentar mudar o nome."));
-            message.channel.send({ embeds: [embed] });
-            logChannel.send({ embeds: [embed] });
+            member.setNickname(displayName, `Cargo ${role.name} adicionado!`).catch(() => this.sendTemporaryMessage(interaction, "Ocorreu um erro ao tentar mudar o nome."));
+            interaction.reply({ embeds: [embed] });
+            if (logChannel) logChannel.send({ embeds: [embed] });
         }).catch(err => {
             console.error(err);
-            message.reply("Ocorreu um erro ao tentar adicionar o cargo.");
+            interaction.reply({ content: "Ocorreu um erro ao tentar adicionar o cargo.", ephemeral: true });
         });
     },
-    logChannel(message) {
-        return message.guild.channels.cache.get("1340360434414522389");
-    },
-    sendTemporaryMessage(msg, content) {
-        msg.reply(content).then(mg => {
-            setTimeout(() => {
-                mg.delete();
-            }, 2000);
+
+    sendTemporaryMessage(interaction, content) {
+        interaction.reply({ content, flags: 64 }).then(mg => {
+            setTimeout(() => mg.delete().catch(() => { }), 2000);
         });
     }
+    
 };

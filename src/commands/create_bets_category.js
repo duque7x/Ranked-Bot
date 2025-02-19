@@ -5,21 +5,20 @@ const {
     ActionRowBuilder, 
     ButtonBuilder, 
     ButtonStyle, 
-    StringSelectMenuBuilder 
+    StringSelectMenuBuilder, 
+    SlashCommandBuilder 
 } = require("discord.js");
 const Bet = require("../structures/database/bet");
 
-
 module.exports = {
-    name: "create_bets_category", // Command name
-    usage: "`!create_bets_category`",
-    description: "Este comando cria as categorias como apostas: emu, mistas, mob!",
-    users: ["877598927149490186"],
+    data: new SlashCommandBuilder()
+        .setName("create_bets_category")
+        .setDescription("Este comando cria as categorias como apostas: emu, mistas, mob!"),
 
-    async execute(message, args, client) {
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
-        if (!message.author.id !== this.users[0]) return;
-        
+    async execute(interaction, client) {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+        if (interaction.user.id !== "877598927149490186") return;
+
         const amounts = [1, 2, 3, 5, 7, 10, 25, 50, 100];
         const categories = [
             { name: "🚩│ APOSTAS EMU", id: "emu" },
@@ -29,20 +28,20 @@ module.exports = {
 
         // Create categories and channels
         for (const category of categories) {
-            const categoryChannel = await message.guild.channels.create({
+            const categoryChannel = await interaction.guild.channels.create({
                 name: category.name,
                 type: 4
             });
 
             for (let i = 0; i < 4; i++) {
                 const channelName = `🩸・${i + 1}v${i + 1}・${category.id}`;
-                const channel = await message.guild.channels.create({
+                const channel = await interaction.guild.channels.create({
                     name: channelName,
                     type: 0, // Text channel
                     parent: categoryChannel.id,
                     permissionOverwrites: [
                         {
-                            id: message.guildId,
+                            id: interaction.guild.id,
                             deny: [PermissionFlagsBits.SendMessages]
                         }
                     ]
@@ -50,17 +49,18 @@ module.exports = {
 
                 // Create bets in the channel
                 for (const amount of amounts) {
-                    await this.createBet(message, channel, amount, client);
+                    await this.createBet(interaction, channel, amount, client);
                 }
             }
         }
+
+        return interaction.reply("As categorias de apostas foram criadas com sucesso!");
     },
 
-    async createBet(message, channel, amount, client) {
+    async createBet(interaction, channel, amount, client) {
         try {
             const betType = `${channel.name.split("・")[1]}`; // Extract the bet type from the channel name
-           
-            
+
             const newBet = new Bet({
                 betType: betType,
                 amount: amount,
@@ -72,15 +72,15 @@ module.exports = {
 
             await newBet.save(); // Save the bet to MongoDB
 
-            await this.sendBetEmbed(message, betType, newBet, amount, channel, client);
+            await this.sendBetEmbed(interaction, betType, newBet, amount, channel, client);
 
-            console.log("Criando aposta: " + {  betType, amount })
+            console.log("Criando aposta: " + { betType, amount })
         } catch (err) {
             console.error(`Error creating bet in channel ${channel.name}:`, err);
         }
     },
 
-    async sendBetEmbed(message, betType, betData, amount, channelToSend, client) {
+    async sendBetEmbed(interaction, betType, betData, amount, channelToSend, client) {
         const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
         const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
 

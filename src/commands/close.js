@@ -1,38 +1,43 @@
-const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder } = require("discord.js");
+const { EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, SlashCommandBuilder } = require("discord.js");
 const BotClient = require("..");
 const Bet = require("../structures/database/bet");
 
 module.exports = {
-    name: "close", // Command name
-    usage: "`!close idDaAposta`\n\n!bet 67a9366b0995a45347da7fac",
-    description: "Este comando fecha uma aposta, você pode encontrar o id da aposta na descrição!",
-    /**
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
-     */
-    async execute(message, args, client) {
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
-        const { member, guild } = message;
-        const fila = args[0];
-        const id = args[1];
+    data: new SlashCommandBuilder()
+        .setName("close")
+        .setDescription("Este comando fecha uma aposta, você pode encontrar o id da aposta na descrição!")
+        .addStringOption(option => 
+            option.setName("opcao")
+                .setDescription("Option meu mano.")
+                .setRequired(true)
+        )
+        .addStringOption(option => 
+            option.setName("id")
+                .setDescription("ID da aposta")
+                .setRequired(true)
+        ),
 
-        if (fila === "fila") {
+    async execute(interaction, client) {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+
+        const opcao = interaction.options.getString("opcao");
+        const id = interaction.options.getString("id");
+
+        if (opcao === "opcao") {
             const bet = await Bet.findOne({ "_id": id }); // Correct MongoDB query
             const channel = await client.channels.fetch(bet.betChannel.id);
-            if (!bet) return this.sendTemporaryMessage(message, "❌ Nenhuma aposta encontrada com esse ID.");
-            if (bet.status == "off") return this.sendTemporaryMessage(message, "# Esta aposta ja esta fechada!");
-
+            if (!bet) return this.sendTemporaryMessage(interaction, "Nenhuma aposta encontrada com esse ID.");
+            if (bet.status == "off") return this.sendTemporaryMessage(interaction, "Esta aposta já está fechada!");
 
             bet.status = "off";
-            bet.save();
+            await bet.save();
             if (!channel) return console.error("Erro: O canal não foi encontrado.");
 
             await channel.edit({
-                name: "closed-" + channel.name.replace(/^fila-/, ""), // Replace "fila-" instead of slicing
+                name: "🔒・" + channel.name, 
                 permissionOverwrites: [
                     {
-                        id: guild.id, // @everyone
+                        id: interaction.guild.id, // @everyone
                         deny: [PermissionFlagsBits.ViewChannel] // Hide from everyone
                     },
                     ...bet.players.filter(Boolean).map(playerId => ({
@@ -40,15 +45,15 @@ module.exports = {
                         deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
                     }))
                 ],
-                parent: "1337588697280942131"
+                parent: "1337588697280942131" // Example parent ID
             });
 
-            return message.reply("`Fila fechada com sucesso!`");
+            return interaction.reply("opcao fechada com sucesso!");
         }
-
     },
-    sendTemporaryMessage(msg, content) {
-        msg.reply(content).then(mg => {
+
+    sendTemporaryMessage(interaction, content) {
+        interaction.reply(content).then(mg => {
             setTimeout(() => {
                 mg.delete();
             }, 3000);

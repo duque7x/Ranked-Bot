@@ -1,4 +1,4 @@
-const { Client, IntentsBitField, Collection } = require("discord.js");
+const { Client, IntentsBitField, Collection, REST, Routes } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
@@ -7,11 +7,12 @@ class BotClient extends Client {
     constructor(options) {
         super(options);
 
-        // Custom properties
         this.commands = new Collection();
+        this.commandArray = []; // Store commands for registration
         this.loadEvents();
         this.loadCommands();
-        this.handleProcessErrors()
+        this.registerSlashCommands();
+        this.handleProcessErrors();
     }
 
     loadEvents() {
@@ -34,12 +35,36 @@ class BotClient extends Client {
 
     loadCommands() {
         const commandFiles = fs.readdirSync(path.join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
+
         for (const file of commandFiles) {
             const command = require(path.join(__dirname, 'commands', file));
-            this.commands.set(command.name, command);
+            if (command.data && command.execute) {
+                this.commands.set(command.data.name, command);
+                this.commandArray.push(command.data.toJSON()); // Convert to JSON for registration
+            } else {
+                console.warn(`Command ${file} is missing "data" or "execute" property.`);
+            }
         }
     }
 
+    async registerSlashCommands() {
+        if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID) {
+            console.error("Missing DISCORD_TOKEN or CLIENT_ID in environment variables.");
+            return;
+        }
+
+        const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
+
+        try {
+            console.log("Registering slash commands...");
+            await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
+                body: this.commandArray,
+            });
+            console.log("Slash commands registered successfully.");
+        } catch (error) {
+            console.error("Error registering slash commands:", error);
+        }
+    }
 
     handleProcessErrors() {
         process.on("unhandledRejection", (error) => {
@@ -56,19 +81,14 @@ class BotClient extends Client {
 const client = new BotClient({
     intents: [
         IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.GuildMembers,
         IntentsBitField.Flags.GuildMessageReactions,
         IntentsBitField.Flags.GuildPresences,
         IntentsBitField.Flags.GuildModeration,
         IntentsBitField.Flags.GuildWebhooks,
-        IntentsBitField.Flags.MessageContent,
     ],
 });
 
-// Handle slash command interactions
-
-// Log in to Discord
-//client.login("MTMyMzA2ODIzNDMyMDE4MzQwNw.GMajhH.JC8ijxr2a_PpHCYIMuEvywjGOpFViKJ04XcmsM");
 client.login(process.env.DISCORD_TOKEN);
+
 module.exports = BotClient;

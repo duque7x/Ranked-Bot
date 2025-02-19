@@ -1,134 +1,123 @@
-const { EmbedBuilder, Message, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
-const BotClient = require("..");
-const Bet = require("../structures/database/bet"); // Import your Mongoose model
+const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
+const Bet = require("../structures/database/bet");
 const Config = require("../structures/database/configs");
 
 module.exports = {
-    name: "bet",
-    usage: "`!bet tipoDaAposta idCanalDaAposta quantidade`\n\n!bet 4v4 1337961426962088027 10",
-    description: "Este comando cria uma aposta com as seguintes direções.",
-    /**
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
-     */
-    async execute(message, args, client) {
-        const { guildId, channel, author, guild } = message;
-        let betType = args[0];
-        let channelToSend = await guild.channels.fetch(args[1]);
-        let amount = args[2] ?? "1";
-        const userId = author.id;
-        const serverConfig = Config.findOne({ "guild.id": guildId }) ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
+    data: new SlashCommandBuilder()
+        .setName("bet")
+        .setDescription("Cria uma aposta com um tipo e canal específico.")
+        .addStringOption(option =>
+            option.setName("tipo")
+                .setDescription("O tipo de aposta (ex: 4v4, 4x4).")
+                .setRequired(true)
+        )
+        .addChannelOption(option =>
+            option.setName("canal")
+                .setDescription("O canal onde a aposta será enviada.")
+                .setRequired(true)
+        )
+        .addIntegerOption(option =>
+            option.setName("quantidade")
+                .setDescription("Valor da aposta (€).")
+                .setRequired(false)
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
-        if (serverConfig.state.bet.status == "off") return this.sendTemporaryMessage("# As apostas estão fechadas no momento!");
+    async execute(interaction) {
+        const { guildId, user, options, guild } = interaction;
 
-        if (!this.validBet(betType)) {
-            return this.sendTemporaryMessage(message, "Bet não é válida!");
+        const betType = options.getString("tipo");
+        const channelToSend = options.getChannel("canal");
+        const amount = options.getInteger("quantidade") ?? 1;
+        const userId = user.id;
+
+        const serverConfig = await Config.findOne({ "guild.id": guildId }) 
+            ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
+
+        if (serverConfig.state.bets.status === "off") {
+            return interaction.reply({ content: "-# As apostas estão fechadas no momento!", flags: 64 });
         }
-        if (!this.validAmmount(amount)) {
-            return this.sendTemporaryMessage(message, "Esse valor não é válido!");
+
+        if (!["1x1", "2x2", "3x3", "4x4", "5x5", "6x6", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6"].includes(betType)) {
+            return interaction.reply({ content: "-# Tipo de aposta inválido!", flags: 64 });
         }
-        const activeBet = await Bet.find({ players: author.id });
+
+        if (amount <= 0) {
+            return interaction.reply({ content: "-# O valor da aposta precisa ser um número positivo!", flags: 64 });
+        }
+
+        const activeBet = await Bet.findOne({ players: userId });
 
         const restrictedUsers = ["877598927149490186", "1323068234320183407", "1031313654475395072"];
 
         if (activeBet && activeBet.status !== "off" && !restrictedUsers.includes(userId)) {
-            const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel?.id : "";
-
-            return this.sendTemporaryMessage(message, `# ❌ Você já está em outra aposta! <#${channelIdActive}>`);
+            const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel.id : "";
+            return interaction.reply({ content: `-# Você já está em outra aposta! <#${channelIdActive}>`, flags: 64 });
         }
 
         try {
-            // 🟢 Create a new bet in MongoDB
+            // Criar e salvar a aposta no MongoDB
             const newBet = new Bet({
-                betType: betType,
-                amount: amount,
+                betType,
+                amount,
                 betChannel: {
                     id: channelToSend.id,
                     name: channelToSend.name
                 }
             });
 
-            await newBet.save(); // Save to MongoDB
+            await newBet.save();
 
-            console.log("Bet created: betID", newBet._id);
+            console.log("Bet criada: betID", newBet._id);
 
-            // Send embed message
-            this.sendBetEmbed(message, betType, newBet, amount, channelToSend, client);
+            await sendBetEmbed(channelToSend, betType, newBet, amount);
+            interaction.reply({ content: "-# Aposta criada com sucesso!", flags: 64 });
+
         } catch (err) {
-            console.error("Error creating bet:", err);
-            this.sendTemporaryMessage(message, "❌ Ocorreu um erro ao criar a aposta!");
+            console.error("Erro ao criar aposta:", err);
+            interaction.reply({ content: "-# Ocorreu um erro ao criar a aposta!", flags: 64 });
         }
-    },
-
-    validBet(type) {
-        return ["1x1", "2x2", "3x3", "4x4", "5x5", "6x6", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6"].includes(type);
-    },
-    validAmmount(amt) {
-        return /[0-9]/.test(parseInt(amt))
-    },
-    sendTemporaryMessage(msg, content) {
-        msg.channel.send(content).then(m => {
-            setTimeout(() => m.delete(), 2000);
-        });
-    },
-    /**
-     * 
-     * @param {Message} message 
-     * @param {String} betType 
-     * @param {Bet} betData 
-     * @param {BotClient} client 
-     * @param {import("discord.js").Channel} channelToSend
-     */
-    async sendBetEmbed(message, betType, betData, amount, channelToSend, client) {
-        const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`
-        const outBetId = `out_bet-${betType}-${betData._id}-${amount}`
-
-        const embed = new EmbedBuilder()
-            .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
-            .addFields([
-                {
-                    name: "Equipa 1",
-                    value: `Slot vazio`,
-                    inline: true
-                },
-                {
-                    name: "Equipa 2",
-                    value: `Slot vazio`,
-                    inline: true
-                }
-            ])
-            .setColor(Colors.White);
-
-        const enterBet = new ButtonBuilder()
-            .setCustomId(enterBetId)
-            .setLabel("Entrar na aposta")
-            .setStyle(ButtonStyle.Success)
-
-        const outBet = new ButtonBuilder()
-            .setCustomId(outBetId)
-            .setLabel("Sair da aposta")
-            .setStyle(ButtonStyle.Danger)
-
-        /* const startBet = new ButtonBuilder()
-             .setCustomId(startBetId)
-             .setLabel("Iniciar")
-             .setStyle(ButtonStyle.Secondary) **/
-        const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId(`select_menu-${betType}-${betData._id}`)
-            .addOptions({
-                label: "Iniciar aposta",
-                value: "start_bet_value"
-            })
-            .addOptions({
-                label: "Voltar",
-                value: "go_back"
-            });
-
-        const row1 = new ActionRowBuilder().addComponents(enterBet, outBet);
-        const row2 = new ActionRowBuilder().addComponents(selectMenu);
-        const msg = await channelToSend.send({ embeds: [embed], components: [row2, row1] });
-
-        return { msg, enterBetId };
-    },
+    }
 };
+
+/**
+ * Envia o embed da aposta.
+ * @param {import("discord.js").TextChannel} channelToSend 
+ * @param {string} betType 
+ * @param {Bet} betData 
+ * @param {number} amount 
+ */
+async function sendBetEmbed(channelToSend, betType, betData, amount) {
+    const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
+    const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
+
+    const embed = new EmbedBuilder()
+        .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
+        .addFields([
+            { name: "Equipa 1", value: `Slot vazio`, inline: true },
+            { name: "Equipa 2", value: `Slot vazio`, inline: true }
+        ])
+        .setColor(Colors.White);
+
+    const enterBet = new ButtonBuilder()
+        .setCustomId(enterBetId)
+        .setLabel("Entrar na aposta")
+        .setStyle(ButtonStyle.Success);
+
+    const outBet = new ButtonBuilder()
+        .setCustomId(outBetId)
+        .setLabel("Sair da aposta")
+        .setStyle(ButtonStyle.Danger);
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`select_menu-${betType}-${betData._id}`)
+        .addOptions(
+            { label: "Iniciar aposta", value: "start_bet_value" },
+            { label: "Voltar", value: "go_back" }
+        );
+
+    const row1 = new ActionRowBuilder().addComponents(enterBet, outBet);
+    const row2 = new ActionRowBuilder().addComponents(selectMenu);
+
+    await channelToSend.send({ embeds: [embed], components: [row2, row1] });
+}

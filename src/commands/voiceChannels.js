@@ -1,24 +1,34 @@
-const { EmbedBuilder, Message, PermissionFlagsBits, Colors, ActionRowBuilder, ChannelType } = require("discord.js");
-const BotClient = require("..");
+const {
+    SlashCommandBuilder,
+    PermissionFlagsBits,
+    ChannelType
+} = require("discord.js");
 
 module.exports = {
-    name: "voiceChannels", // Command name
-    usage: "`!voiceChannels`",
-    description: "Cria canais de vos",
+    data: new SlashCommandBuilder()
+        .setName("crate_voicechannels")
+        .setDescription("Cria canais de voz para apostas.")
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    
     /**
-     * @param {Message} message 
-     * @param {string[]} args 
-     * @param {BotClient} client 
+     * @param {import("discord.js").ChatInputCommandInteraction} interaction 
      */
-    async execute(message, args, client) {
-        const { guild, member } = message;
-        if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
-        guild.channels.cache.filter(c => c.name.startsWith("🩸・JOGANDO・")).forEach(c => c.delete())
+    async execute(interaction) {
+        const { guild } = interaction;
+
+        // Apaga canais de voz antigos que começam com "🩸・JOGANDO・"
+        guild.channels.cache
+            .filter(c => c.name.startsWith("🩸・JOGANDO・"))
+            .forEach(c => c.delete());
 
         const parentChannel = guild.channels.cache.get("1338988719914618892");
 
+        if (!parentChannel) {
+            return interaction.reply({ content: "Categoria não encontrada.", ephemeral: true });
+        }
+
         for (let index = 1; index < 16; index++) {
-            guild.channels.create({
+            await guild.channels.create({
                 name: `apostas・on・${index}`,
                 type: ChannelType.GuildVoice,
                 permissionOverwrites: [
@@ -30,14 +40,8 @@ module.exports = {
                 ],
                 parent: parentChannel.id
             });
-
         }
-    },
-    sendTemporaryMessage(msg, content) {
-        msg.reply(content).then(mg => {
-            setTimeout(() => {
-                mg.delete();
-            }, 2000);
-        });
+
+        interaction.reply({ content: "Canais de voz criados com sucesso!", ephemeral: true });
     }
 };

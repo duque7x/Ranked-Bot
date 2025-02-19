@@ -1,30 +1,31 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { log } = require('console');
-const { PermissionsBitField, CategoryChannel } = require('discord.js');
+const { PermissionsBitField } = require('discord.js');
 const { inspect } = require('util');
 
 module.exports = {
-  name: "eval",
-  usage: "`!eval CODE`",
-  description: "Este comando executa o código inserido pelo user!",
-  users: ["877598927149490186"],
+  data: new SlashCommandBuilder()
+    .setName('eval')
+    .setDescription('Este comando executa o código inserido pelo user!')
+    .addStringOption(option =>
+      option.setName('code')
+        .setDescription('Código a ser executado')
+        .setRequired(true)
+    ),
+
   /**
-   * 
-   * @param {import("discord.js").Message} message 
-   * @param {import("discord.js").Client} client 
-   * @returns 
+   * @param {import("discord.js").CommandInteraction} interaction
    */
-  async execute(message, args, client) {
+  async execute(interaction) {
     const authorizedUserId = '877598927149490186';
 
     // Check if the user is authorized
-    if (message.author.id !== authorizedUserId) {
-      return message.reply("You are not authorized to use this command.");
+    if (interaction.user.id !== authorizedUserId) {
+      return interaction.reply("You are not authorized to use this command.");
     }
 
     // Get the code to evaluate
-    const code = args[0];
-    if (!code) return message.reply("Please provide code to evaluate.");
+    const code = interaction.options.getString('code');
+    if (!code) return interaction.reply("Please provide code to evaluate.");
 
     try {
       // Evaluate the code
@@ -37,13 +38,11 @@ module.exports = {
 
       // Send the output back (only once)
       const output = `\`\`\`js\n${evaled}\n\`\`\``;
-      await message.reply(output);  // Send only once
-
-
+      await interaction.reply(output);
 
     } catch (error) {
       // Send any errors back (only once)
-      await message.reply(`Error: ${error}`);
+      await interaction.reply(`Error: ${error}`);
     }
   },
 };

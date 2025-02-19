@@ -26,6 +26,19 @@ module.exports = class InteractionEvent {
             const [action, betType, betId, ammount] = interaction.customId.split("-");
             const userId = interaction.user.id;
             const { guildId, guild, member, channel, customId } = interaction;
+            if (interaction.isChatInputCommand()) {
+                const command = client.commands.get(interaction.commandName);
+                if (!command) return;
+            
+                try {
+                    await command.execute(interaction, client);
+                } catch (error) {
+                    console.error(error);
+                    interaction.reply({ content: "Erro ao executar o comando.", flags: 64 });
+                }
+                return;
+            }
+            
             if (action === "enter_bet") {
                 let serverConfig = await Config.findOne({ "guild.id": guildId });
                 if (!serverConfig) {
