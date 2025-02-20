@@ -3,7 +3,8 @@ const {
     ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder,
     Interaction, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle,
     ChannelType, PermissionFlagsBits,
-    Client
+    Client,
+    ButtonInteraction
 } = require('discord.js');
 const BotClient = require("../index");
 const Bet = require("../structures/database/bet");
@@ -17,7 +18,7 @@ module.exports = class InteractionEvent {
         this.name = 'interactionCreate';
     }
     /**
-     * @param {Interaction} interaction 
+     * @param {ButtonInteraction} interaction 
      * @param {BotClient} client 
      * @returns 
      */
@@ -83,7 +84,7 @@ module.exports = class InteractionEvent {
                         { name: "Equipe 1", value: bet.players[0] ? `<@${bet.players[0]}>` : "Slot vazio", inline: true },
                         { name: "Equipe 2", value: bet.players[1] ? `<@${bet.players[1]}>` : "Slot vazio", inline: true }
                     ]);
-
+                await interaction.update({ embeds: [updatedEmbed] });
                 await logChannel.send({
                     embeds: [
                         new EmbedBuilder()
@@ -93,7 +94,8 @@ module.exports = class InteractionEvent {
                     ]
                 });
 
-                return await interaction.update({ embeds: [updatedEmbed] });
+
+                return;
             }
 
 
