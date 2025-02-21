@@ -10,7 +10,7 @@ const BotClient = require("../index");
 const Bet = require("../structures/database/bet");
 const User = require('../structures/database/User');
 const Config = require('../structures/database/configs');
-const { addWins, getBetById } = require("../commands/utils");
+const { addWins, getBetById, addLoss, createBet, returnServerRank, returnUserRank } = require("../commands/utils");
 const myColours = require("../structures/colours");
 
 module.exports = class InteractionEvent {
@@ -41,38 +41,33 @@ module.exports = class InteractionEvent {
             const userId = interaction.user.id;
             const { guildId, guild, member, channel, customId } = interaction;
             const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
+            const serverConfig = await Config.findOneAndUpdate(
+                { "guild.id": guildId },
+                {
+                    $setOnInsert: {
+                        guild: { id: guildId, name: guild.name },
+                        state: { bets: { status: "on" }, rank: { status: "on" } }
+                    }
+                },
+                { upsert: true, new: true }
+            );
 
+            const errorMessages = this.errorMessages;
             if (action === "enter_bet") {
-                await interaction.deferReply({ flags: 64 });
-                const serverConfig = await Config.findOneAndUpdate(
-                    { "guild.id": guildId },
-                    {
-                        $setOnInsert: {
-                            guild: { id: guildId, name: guild.name },
-                            state: { bets: { status: "on" }, rank: { status: "on" } }
-                        }
-                    },
-                    { upsert: true, new: true }
-                );
-
-                if (serverConfig.state.bets.status === "off")
-                    return this.sendReply(interaction, "# As apostas estão fechadas no momento!");
-
-                if (serverConfig.blacklist.includes(userId))
-                    return this.sendReply(interaction, "Você está na *blacklist*!\nDeseja sair? Abra um ticket <#1339284682902339594>");
-
-                const [activeBet, bet] = await Promise.all([
+                await interaction.deferUpdate();
+                let [activeBet, bet] = await Promise.all([
                     Bet.findOne({ players: userId }),
-                    Bet.findById(betId)
+                    Bet.findOne({ "_id": betId })
                 ]);
 
-                if (activeBet && activeBet.status[0] !== "off")
-                    return this.sendReply(interaction, `# Você já está em outra aposta! <#${activeBet.betChannel?.id || ""}>`);
-
-                if (!bet) return this.sendReply(interaction, "# Essa aposta foi fechada!");
-                if (bet.players.includes(userId)) return this.sendReply(interaction, "# Você já está na aposta!");
-
-                if (bet.players.length >= 2) return this.sendReply(interaction, "# A aposta já está cheia!");
+                if (!bet) return this.sendReply(interaction, errorMessages.bet_off);
+                if (serverConfig.state.bets.status === "off") return this.sendReply(interaction, "# As apostas estão fechadas no momento!");
+                if (serverConfig.blacklist.some(id => id.startsWith(userId))) return this.sendReply(interaction, errorMessages.blacklist);
+                if (bet.players.includes(userId)) return this.sendReply(interaction, "# Você já está na fila...")
+                if (activeBet && activeBet.status[0] !== "off") return this.sendReply(interaction, `# Você já está em outra aposta! <#${activeBet.betChannel?.id || ""}>`);
+                
+                
+                if (bet.players.length >= 2) return this.sendReply(interaction, errorMessages.bet_full);
 
                 bet.players.push(userId);
                 await bet.save();
@@ -84,7 +79,8 @@ module.exports = class InteractionEvent {
                         { name: "Equipe 1", value: bet.players[0] ? `<@${bet.players[0]}>` : "Slot vazio", inline: true },
                         { name: "Equipe 2", value: bet.players[1] ? `<@${bet.players[1]}>` : "Slot vazio", inline: true }
                     ]);
-                await interaction.update({ embeds: [updatedEmbed] });
+
+                await interaction.message.edit({ embeds: [updatedEmbed] }); // ✅ Best choice for updating only the embed
                 await logChannel.send({
                     embeds: [
                         new EmbedBuilder()
@@ -94,15 +90,11 @@ module.exports = class InteractionEvent {
                     ]
                 });
 
-
                 return;
             }
-
-
             if (action === "out_bet") {
-                let bet = await Bet.findById(betId);
                 let errorTypes = [];
-
+                let bet = await Bet.findById(betId);
                 // Check all potential errors and add corresponding types to the array
                 if (!bet || bet.status[0] == "off") errorTypes.push('bet_off');
                 if (!bet.players?.includes(userId)) errorTypes.push('bet_not_in');
@@ -131,34 +123,35 @@ module.exports = class InteractionEvent {
                             .setTimestamp()
                     ]
                 });
+                await interaction.deferUpdate();
                 return;
             }
             if (customId.startsWith("select_menu")) {
-                const [action, betType, betId] = interaction.customId.split("-");
                 const value = interaction.values[0];
                 const handler = {
                     start_bet_value: this.startBet.bind(this),
                     go_back: this.goBack.bind(this)
                 };
                 let bet = await Bet.findById(betId);
-
-                if (!bet || bet.status[0] === "off") return this.sendReply(interaction, "# Essa aposta foi fechada!");
-                if (bet.status[0] === "started") return this.sendReply(interaction, "# Essa aposta já foi iniciada! " + bet._id);
+                if (!bet || bet.status[0] === "off") return this.sendReply(interaction, errorMessages.bet_off);
+                if (bet.status[0] === "started") return this.sendReply(interaction, errorMessages.bet_started);
                 if (handler[value]) return await handler[value](bet, client, interaction);
             }
             if (customId.startsWith("end_bet-")) {
                 if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return this.sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para fechar a aposta!");
                 const [action, betId] = customId.split("-");
-                const bet = await this.getBetById(betId);
-                if (!bet.winner) return this.sendReply(interaction, "# Você precisa definir o vencedor!");
+                let bet = await Bet.findById(betId);
+                if (!bet.winner) return this.sendReply(interaction, errorMessages.bet_no_winner);
+                if (!bet) return this.sendReply(interaction, "# Nenhuma aposta encontrada com esse ID.");
+                if (bet.status[0] == "off") return this.sendReply(interaction, errorMessages.bet_off);
 
                 return this.endBet(bet, client, interaction);
             }
             if (customId.startsWith("set_winner")) {
                 const [action, betId] = customId.split("-");
-                const bet = await this.getBetById(betId);
-
-                if (bet.winner) return this.sendReply(interaction, "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar.");
+                let bet = await Bet.findById(betId);
+                if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return this.sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para definir um vencedor!");
+                if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
 
                 const setWinnerEmbed = new EmbedBuilder()
                     .setColor(myColours.rich_black)
@@ -174,18 +167,20 @@ module.exports = class InteractionEvent {
             }
             if (customId.startsWith("btn_set_winner")) {
                 const [action, betId, team] = customId.split("-");
-                const bet = await this.getBetById(betId);
-
+                let bet = await Bet.findById(betId);
                 if (!bet) return this.sendReply(interaction, "# Esta aposta não exite!");
-                if (bet.winner) return this.sendReply(interaction, "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar. **MANDE PROVAS!**");
-
+                if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
+                betsPlayed
                 const winnerTeam = parseInt(team.replace("team", "")) === 1 ? 0 : 1;
+                const losingTeam = parseInt(team.replace("team", "")) === 1 ? 1 : 0;
                 const winingPlayer = bet.players[winnerTeam];
-                const winningUser = interaction.guild.members.cache.get(winingPlayer);
+                const winningMember = interaction.guild.members.cache.get(winingPlayer);
+                const losingPlayer = bet.players[losingTeam];
+                const losingMember = interaction.guild.members.cache.get(losingPlayer);
+                console.log(`Player ${winningMember.user.username}|${winningMember.user.id} won the bet: ${betId}.`);
 
-                console.log(`Player ${winningUser.user.username}|${winningUser.user.id} won the bet: ${betId}.`);
-
-                const addedWinObj = await addWins(winningUser.id, interaction);
+                addLoss(losingMember, interaction);
+                const addedWinObj = await addWins(winningMember.id, interaction);
 
                 if (!addedWinObj) return this.sendReply(interaction, "# Ocorreu um erro ao processar a aposta.");
 
@@ -198,7 +193,12 @@ module.exports = class InteractionEvent {
                 }
 
             }
-
+            if (customId == "see_rank") {
+                await returnServerRank(interaction);
+            }
+            if (customId == "see_profile") {
+                await returnUserRank(interaction);
+            }
         } catch (error) {
             console.error("Erro inesperado no evento interactionCreate:", error);
             if (interaction.replied || interaction.deferred) {
@@ -214,31 +214,30 @@ module.exports = class InteractionEvent {
         return bet;
     }
     async returnErrorToMember(interaction, errorTypes) {
-        const errorMessages = {
-            'bet_off': "# Essa aposta foi fechada!\n-# Aguarde antes de tentar novamente.",
-            'bet_started': "# A aposta já foi iniciada.\n-# Aguarde a conclusão antes de tentar novamente.",
-            'bet_won': "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar. **MANDE PROVAS!**",
-            'blacklist': "# Você está na *blacklist*!\n-# Deseja sair? Abra um ticket <#1339284682902339594>",
-            'bet_in': "# Você já está na aposta...",
-            'bet_full': "# A aposta já está cheia!",
-            'bet_not_full': "# A aposta não está preenchida!",
-            'bet_not_in': "# Você não se encontra nesta aposta!",
-            'bet_no_winner': "# Você precisa definir o vencedor!",
-            'bets_off': "# As apostas estão fechadas no momento!\n-# Aguarde antes de tentar novamente.",
-        };
-
         // Collect all error messages for each errorType
-        const messages = errorTypes.map(type => errorMessages[type] || "Erro desconhecido. Tente novamente.");
+        const messages = errorTypes.map(type => this.errorMessages[type] || "Erro desconhecido. Tente novamente.");
 
         // Join all error messages with a line break
         const message = messages.join('\n\n');  // Adds a newline between multiple errors
-
+        this.sendReply(interaction, message);
         // Send the error messages as a reply
-        return this.sendReply(interaction, message);
-    }
 
+        return this.errorMessages;
+    }
+    errorMessages = {
+        'bet_off': "# Essa aposta foi fechada!\n-# Aguarde antes de tentar novamente.",
+        'bet_started': "# A aposta já foi iniciada.\n-# Aguarde a conclusão antes de tentar novamente.",
+        'bet_won': "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar. **MANDE PROVAS!**",
+        'blacklist': "# Você está na *blacklist*!\n-# Deseja **sair**? Abra um ticket <#1339284682902339594>",
+        'bet_in': "# Você já está na aposta...",
+        'bet_full': "# A aposta já está cheia!",
+        'bet_not_full': "# A aposta não está preenchida!",
+        'bet_not_in': "# Você não se encontra nesta aposta!",
+        'bet_no_winner': "# Vocês precisam definir o vencedor!",
+        'bets_off': "# As apostas estão fechadas no momento!\n-# Aguarde antes de tentar novamente.",
+    };
     goBack(bet, client, interaction) {
-        return this.sendReply(interaction, "# Voltando, selecione a opcao de iniciar quando a aposta estiver cheia.")
+        return this.sendReply(interaction, "# Voltando, selecione a opcão de iniciar quando a aposta estiver cheia.")
     }
     /**
      * 
@@ -248,8 +247,7 @@ module.exports = class InteractionEvent {
      * @returns 
      */
     async endBet(bet, client, interaction) {
-        if (!bet) return this.sendReply(interaction, "# Nenhuma aposta encontrada com esse ID.");
-        if (bet.status[0] == "off") return this.sendReply(interaction, "# Esta aposta já esta fechada!");
+
 
         const channel = await client.channels.fetch(bet.betChannel.id);
         if (!channel) return console.error("Erro: O canal não foi encontrado.");
@@ -283,7 +281,7 @@ module.exports = class InteractionEvent {
             .setColor(myColours.eerie_black_green)
             .setFields();
 
-        return await interaction.update({ embeds: [updatedEmbed], components: [], content: "" });
+        return await interaction.message.edit({ embeds: [updatedEmbed], components: [], content: "" });
     }
     /**
      * 
@@ -294,19 +292,15 @@ module.exports = class InteractionEvent {
      */
     async startBet(bet, client, interaction) {
         if (bet.players.length !== 2) return this.sendReply(interaction, "# A aposta não está preenchida!");
-        const replaceOldBet = require("../commands/utils");
-        replaceOldBet.createBet(interaction, interaction.channel, bet.amount, client);
 
         const channel = await this.createBetChannel(interaction, bet);
 
+        await createBet(interaction, interaction.channel, bet.amount);
 
         bet.betChannel = { id: channel.id, name: channel.name };
-
         bet.status = ["started"];
 
         await bet.save();
-
-
         return channel;
     }
     sendReply(interaction, content) {
@@ -410,5 +404,4 @@ module.exports = class InteractionEvent {
             : interaction.reply({ embeds: [embed], flags: 64 });
         return channel;
     }
-
 };

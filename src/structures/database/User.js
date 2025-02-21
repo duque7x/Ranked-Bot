@@ -17,7 +17,23 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    blacklisted: Boolean
+    blacklisted: Boolean,
+    wins: {
+        type: Number,
+        default: 0
+    },
+    losses: {
+        type: Number,
+        default: 0
+    },
+    betsPlayed: {
+        type: Array,
+        default: 0
+    },
+    moneyLost: {
+        type: Number,
+        default: 0
+    },
 });
 
 const User = mongoose.model("User", userSchema);

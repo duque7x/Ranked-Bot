@@ -57,12 +57,12 @@ module.exports = {
         if (!foundUser) return this.sendTemporaryMessage(interaction, "# Este usuario ainda não foi registrado.");
 
         const embed = new EmbedBuilder()
-            .setColor(Colors.DarkButNotBlack)
+            .setColor(Colors.DarkAqua)
             .setDescription(`# ${user.username}`)
             .addFields({
                 name: "Detalhes",
                 value: `**Id:** ${foundUser.player.id}\n\n` +
-                    `**Credito:** ${foundUser.credit !== 0 ? foundUser.credit : "Nenhum"}\n\n` +
+                    `**Credito:** ${foundUser.credit !== 0 ? foundUser.credit : "Nenhum"}€\n\n` +
                     `**Blacklist:** ${foundUser.blacklisted ? "Sim" : "Não"}`
             })
             .setTimestamp()

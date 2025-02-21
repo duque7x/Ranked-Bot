@@ -6,11 +6,23 @@ const {
     ActionRowBuilder,
     StringSelectMenuBuilder,
     ButtonBuilder,
-    ButtonStyle
+    ButtonStyle,
+    ButtonInteraction
 } = require("discord.js");
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
 const myColours = require("../structures/colours");
+const getColors = require('get-image-colors');
+
+async function getColorFromURL(imageUrl) {
+    try {
+        const colors = await getColors(imageUrl);
+        const dominantColor = colors[0].hex();
+        return dominantColor;
+    } catch (error) {
+        console.error('Error extracting color:', error);
+    }
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -88,8 +100,13 @@ module.exports = {
         const existingUser = await User.findOne({ "player.id": userId });
 
         if (existingUser) {
+            // Ensure that wins is a number, default to 0 if it's NaN
+            existingUser.wins = isNaN(existingUser.wins) ? 0 : existingUser.wins;
+
             existingUser.credit += parseInt(amount);
             existingUser.isAdmin = user.permissions.has(PermissionFlagsBits.Administrator);
+            existingUser.wins += 1; // Increment wins
+
             bet.status = "won";
 
             await existingUser.save();
@@ -99,10 +116,12 @@ module.exports = {
             return { embed, logEmbed };
         }
 
+
         const winnerUserProfile = new User({
             player: { name: user.user.username, id: userId },
             credit: 0,
-            isAdmin: user.permissions.has(PermissionFlagsBits.Administrator)
+            isAdmin: user.permissions.has(PermissionFlagsBits.Administrator),
+            wins: 1
         });
 
         winnerUserProfile.credit += parsedAmount;
@@ -116,6 +135,28 @@ module.exports = {
         option ? console.log("No save bet") : await bet.save();
 
         return { logEmbed, embed };
+    },
+    async addLoss(member, interaction) {
+        if (!member) return this.sendReply(interaction, "Membro inválido.");
+
+        // First, attempt to find and update the user with an initial value for losses (if necessary)
+        const userProfile = await User.findOneAndUpdate(
+            { "player.id": member.id },
+            {
+                $setOnInsert: {
+                    isAdmin: member.permissions.has(PermissionFlagsBits.Administrator),
+                    losses: 0 // Initialize losses to 0 if the document doesn't exist
+                }
+            },
+            { upsert: true, new: true }
+        );
+        console.log(userProfile);
+        // Then increment the losses
+        userProfile.losses += 1; // Increment losses by 1
+        await userProfile.save(); // Save the updated user profile
+
+
+        return userProfile;
     },
 
     sendReply(interaction, content) {
@@ -183,6 +224,91 @@ module.exports = {
         await bet.save();
 
         return { logEmbed, embed };
+    },
+    async returnServerRank(interaction) {
+        const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
+    
+        const users = await User.find().sort({ wins: -1 });
+        const perPage = 10;
+        let page = 0;
+    
+        const generateEmbed = () => {
+            const start = page * perPage;
+            const paginatedUsers = users.slice(start, start + perPage);
+    
+            return new EmbedBuilder()
+                .setTitle("Ranking de vitórias")
+                .setDescription(paginatedUsers.map((user, index) =>
+                    `**${start + index + 1}° -** <@${user.player.id}>: ${user.wins ?? 0} vitórias`
+                ).join("\n"))
+                .setFooter({ text: `Página ${page + 1}` });
+        };
+    
+        const row = () => new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId("prev")
+                .setLabel("Voltar")
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(page === 0),
+            new ButtonBuilder()
+                .setCustomId("next")
+                .setLabel("Próxima")
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled((page + 1) * perPage >= users.length)
+        );
+    
+        // Enviando a interação com a resposta e componentes usando withResponse
+        const message = await interaction.reply({ 
+            embeds: [generateEmbed()], 
+            components: [row()],
+            fetchReply: true, // Corrigido para withResponse
+            flags: 64 
+        });
+    
+        // Coletor de interações para os botões
+        const collector = message.createMessageComponentCollector({ time: 120000 });
+    
+        collector.on("collect", async (btnInteraction) => {
+            if (btnInteraction.customId === "prev") page--;
+            if (btnInteraction.customId === "next") page++;
+    
+            await btnInteraction.update({ embeds: [generateEmbed()], components: [row()] });
+        });
+    
+        return { embed: generateEmbed() };
+    },
+    
+    
+    /**
+     * 
+     * @param {ButtonInteraction} interaction 
+     * @returns 
+     */
+    async returnUserRank(interaction) {
+        const { user } = interaction;
+        const foundUser = await User.findOne({ "player.id": user.id });
+
+        if (!foundUser) {
+            return this.sendReply(interaction, "# Este usuário ainda não foi registrado.");
+        }
+        const color = await getColorFromURL(user.displayAvatarURL());
+
+        const embed = new EmbedBuilder()
+            .setAuthor({
+                name: `Perfil de ${user.username}`,
+                iconURL: user.displayAvatarURL()
+            })
+            .setColor(color)
+            .addFields({
+                name: "Estatísticas",
+                value:
+                    `\n**Vitórias:** ${foundUser.wins ?? 0} ︱ **Derrotas:** ${foundUser.losses ?? 0}\n` +
+                    `**Crédito disponível:** ${foundUser.credit !== 0 ? foundUser.credit : "Nenhum"}€ ︱ **Vezes jogadas:** ${foundUser.betsPlayed.length ?? 0}\n` +
+                    `**Blacklist:** ${foundUser.blacklisted ? "Sim" : "Não"} ︱ **Dinheiro perdido:** ${foundUser.moneyLost ?? 0}€`
+            })
+            .setThumbnail(user.displayAvatarURL());
+
+        return interaction.reply({ embeds: [embed], flags: 64 });
     }
 };
 

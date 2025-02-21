@@ -37,7 +37,7 @@ module.exports = class MessageEvent {
     if (message.channel.id == "1338575355665186856") {
       const serverInfo = await Config.findOne({ "guild.id": message.guildId });
       const blacklist = serverInfo.blacklist;
-      if (blacklist.includes(message.content)) {
+      if (blacklist.some(id => id.startsWith(message.content))) {
         const embed = new EmbedBuilder()
           .setDescription(`O id **${message.content}** esta na blacklist.\n-# Abra um ticket <#1339284682902339594> para sair.`)
           .setTimestamp()
@@ -47,7 +47,7 @@ module.exports = class MessageEvent {
         message.reply({ embeds: [embed] })
       } else {
         const embed = new EmbedBuilder()
-          .setDescription(`O id **${message.content}** não esta blacklist.`)
+          .setDescription(`O id **${message.content}** não está blacklist.`)
           .setTimestamp()
           .setColor(Colors.Red)
           .setFooter({ text: "Nota: para sair da blacklist você precisa pagar 1,50€" });
@@ -58,8 +58,6 @@ module.exports = class MessageEvent {
 
     if (!message.content.startsWith(prefix)) return;
 
-    // Find the command in the Collection
-    console.log({ command, commandName });
 
     if (!cl.commands) {
       console.error('Commands collection is not defined!');

@@ -3,6 +3,7 @@ const Config = require("../structures/database/configs");
 const Bet = require("../structures/database/bet");
 const { addWins, removeWin } = require("./utils");
 const myColours = require("../structures/colours");
+const { ChatInputCommandInteraction } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -154,46 +155,61 @@ module.exports = {
 
         interaction.reply({ embeds: [embed] });
     },
-
+    /**
+     * 
+     * @param {ChatInputCommandInteraction} interaction 
+     * @returns 
+     */
     async blacklistHandler(interaction) {
         const action = interaction.options.getString("action");
         const user = interaction.options.getUser("user");
-        const serverConfig = await Config.findOne({ "guild.id": interaction.guildId }) || new Config({ guild: { id: interaction.guildId, name: interaction.guild.name }, blacklist: [] });
+        const serverConfig = await Config.findOne({ "guild.id": interaction.guildId }) || new Config({ 
+            guild: { id: interaction.guildId, name: interaction.guild.name }, 
+            blacklist: [] 
+        });
+    
         const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
-
+    
         if (action === "add") {
-            if (serverConfig.blacklist.includes(user.id)) {
-                return interaction.reply({ content: `❌ ${user} já está na blacklist!`, flags: 64 });
+            if (serverConfig.blacklist.some(id => id.startsWith(user.id))) {
+                return await interaction.reply({ content: `# ${user} já está na blacklist!`, flags: 64 });
             }
-
-            serverConfig.blacklist.push(user.id);
+    
+            console.log(serverConfig, serverConfig.blacklist.some(id => id.startsWith(user.id)));
+    
+            serverConfig.blacklist.push(`${user.id}-${interaction.user.id}-${Date.now()}`);
             await serverConfig.save();
-
+    
             const embed = new EmbedBuilder()
-                .setTitle("Gerenciador da blacklist")
+                .setTitle("Blacklist")
                 .setColor(myColours.rich_black)
-                .setDescription(`✅ ${user} foi adicionado à blacklist!`)
-                .setTimestamp();
-
-            logChannel.send({ embeds: [embed] });
-            interaction.reply({ embeds: [embed] });
-
+                .setDescription(`${user} foi adicionado à blacklist!\n\n-# Por <@${interaction.user.id}>`)
+                .setTimestamp()
+                .setThumbnail(user.displayAvatarURL());
+    
+            if (logChannel) logChannel.send({ embeds: [embed] });
+            await interaction.reply({ embeds: [embed] });
+    
         } else if (action === "remove") {
-            if (!serverConfig.blacklist.includes(user.id)) {
-                return interaction.reply({ content: `❌ ${user} não está na blacklist!`, flags: 64 });
+            if (!serverConfig.blacklist.some(id => id.startsWith(user.id))) {
+                return await interaction.reply({ content: `# ${user} não está na blacklist!`, flags: 64 });
             }
-
-            serverConfig.blacklist = serverConfig.blacklist.filter(id => id !== user.id);
+    
+            console.log(serverConfig, serverConfig.blacklist.some(id => id.startsWith(user.id)));
+    
+            // Fix: Correctly filter out entries that belong to the user
+            serverConfig.blacklist = serverConfig.blacklist.filter(id => !id.startsWith(user.id));
             await serverConfig.save();
-
+    
             const embed = new EmbedBuilder()
-                .setTitle("Gerenciador da blacklist")
+                .setTitle("Blacklist")
                 .setColor(myColours.rich_black)
-                .setDescription(`✅ ${user} foi removido da blacklist!`)
-                .setTimestamp();
-
-            logChannel.send({ embeds: [embed] });
-            interaction.reply({ embeds: [embed] });
+                .setDescription(`${user} foi removido da blacklist!\n-# Por <@${interaction.user.id}>`)
+                .setTimestamp()
+                .setThumbnail(user.displayAvatarURL());
+    
+            if (logChannel) logChannel.send({ embeds: [embed] });
+            await interaction.reply({ embeds: [embed] });
         }
     },
     async creditoHandler(interaction) {
