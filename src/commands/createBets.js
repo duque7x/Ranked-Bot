@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const myColours = require("../structures/colours");
-const { createBet } = require("./utils");
+const { createBet } = require("../utils/utils");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,11 +28,9 @@ module.exports = {
 
         interaction.reply("Criado!")
     },
-
     sendTemporaryMessage(interaction, content) {
         interaction.reply({ content, flags: 64 }).then(mg => {
             setTimeout(() => mg.delete().catch(() => { }), 2000);
         });
     }
-
 };

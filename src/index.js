@@ -54,7 +54,10 @@ class BotClient extends Client {
         (async () => {
             try {
                 console.log('Started refreshing application (/) commands.');
-
+                await rest.put(
+                    Routes.applicationGuildCommands(process.env.CLIENT_ID, "1336809872884371587"),
+                    { body: [] } // Remove todos os comandos da guilda antes de registrar novos
+                );
                 await rest.put(
                     Routes.applicationGuildCommands(process.env.CLIENT_ID, "1336809872884371587"),
                     { body: this.commandArray },
@@ -65,7 +68,6 @@ class BotClient extends Client {
                 console.error(error);
             }
         })();
-        console.log("Registered.");
     }
 
     handleProcessErrors() {

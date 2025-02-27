@@ -70,6 +70,7 @@ module.exports = {
                 .setDescription(`O cargo <@&${role.id}> foi adicionado a ${member}!\n\n-# Por: <@${interaction.user.id}>`)
                 .setColor(myColours.bright_blue_ocean)
                 .setTimestamp()
+                .setThumbnail(member.user.displayAvatarUrl())
                 .setFooter({ text: "Por APOSTAS" });
 
             member.setNickname(displayName, `Cargo ${role.name} adicionado!`).catch(() => this.sendTemporaryMessage(interaction, "Ocorreu um erro ao tentar mudar o nome."));

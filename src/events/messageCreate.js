@@ -7,6 +7,7 @@ const {
   EmbedType,
   Message,
   Colors,
+  PermissionFlagsBits,
 } = require("discord.js");
 const BotClient = require("..");
 const Config = require("../structures/database/configs");
@@ -55,9 +56,8 @@ module.exports = class MessageEvent {
         message.reply({ embeds: [embed] })
       }
     }
-
+    if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
     if (!message.content.startsWith(prefix)) return;
-
 
     if (!cl.commands) {
       console.error('Commands collection is not defined!');
@@ -66,5 +66,8 @@ module.exports = class MessageEvent {
     if (command) {
       command.execute(message, args, cl);
     }
+  }
+  isLink(content) {
+    return /https?:\/\/(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+(?:\/\S*)?/.test(content);
   }
 };

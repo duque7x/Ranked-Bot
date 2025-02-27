@@ -17,7 +17,10 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    blacklisted: Boolean,
+    blacklisted: {
+        type: Boolean,
+        default: false
+    },
     wins: {
         type: Number,
         default: 0
@@ -28,7 +31,7 @@ const userSchema = new mongoose.Schema({
     },
     betsPlayed: {
         type: Array,
-        default: 0
+        default: []
     },
     moneyLost: {
         type: Number,

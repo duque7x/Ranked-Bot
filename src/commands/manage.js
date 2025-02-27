@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const Config = require("../structures/database/configs");
 const Bet = require("../structures/database/bet");
-const { addWins, removeWin } = require("./utils");
+const { addWins, removeWin, removeWinBet } = require("../utils/utils");
 const myColours = require("../structures/colours");
 const { ChatInputCommandInteraction } = require("discord.js");
 
@@ -14,17 +14,25 @@ module.exports = {
             subcommand.setName("bet")
                 .setDescription("Gerencia apostas.")
                 .addStringOption(option =>
-                    option.setName("action")
+                    option.setName("bet_id")
+                        .setDescription("Id da aposta.")
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option.setName("acão")
                         .setDescription("Ação a ser executada (addwin, removewin, status).")
                         .setRequired(true)
                         .addChoices(
                             { name: "Adicionar Vitória", value: "addwin" },
                             { name: "Remover Vitória", value: "removewin" },
-                            { name: "Alterar Status", value: "status" }
+                            { name: "Alterar status para on", value: "status_on" },
+                            { name: "Alterar status para won", value: "status_won" },
+                            { name: "Alterar status para off", value: "status_off" },
+                            { name: "Alterar status para started", value: "status_started" },
                         )
                 )
                 .addUserOption(option =>
-                    option.setName("user")
+                    option.setName("usuário")
                         .setDescription("Usuário (caso necessário para a ação).")
                         .setRequired(false)
                 )
@@ -74,7 +82,7 @@ module.exports = {
             subcommand.setName("blacklist")
                 .setDescription("Gerencia blacklist.")
                 .addStringOption(option =>
-                    option.setName("action")
+                    option.setName("acão")
                         .setDescription("Ação a ser executada (add, remove).")
                         .setRequired(true)
                         .addChoices(
@@ -95,8 +103,6 @@ module.exports = {
 
         const subcommand = interaction.options.getSubcommand();
 
-        console.log(subcommand);
-
         switch (subcommand) {
             case "bet":
                 return this.betHandler(interaction);
@@ -108,29 +114,39 @@ module.exports = {
                 return this.creditoHandler(interaction);
         }
     },
-
     async betHandler(interaction) {
-        const action = interaction.options.getString("action");
-        const user = interaction.options.getUser("user") || interaction.user;
+        const acão = interaction.options.getString("acão");
+        const betId = interaction.options.getString("bet_id");
+        const user = interaction.options.getUser("usuário") || interaction.user;
         const amount = interaction.options.getInteger("quantidade") || 1;
+        const bet = await Bet.findOne({ "_id": betId }); // Add 'await'
+        if (!bet) return interaction.reply({ content: "# Aposta nao encontrada", flags: 64 });
 
-        switch (action) {
-            case "addwin":
-                const result = await addWins(user.id, interaction);
-                if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result.embed] }).catch(console.error);
-                else interaction.reply({ embeds: [result.embed] }).catch(console.error);
-                break;
-            case "removewin":
-                const result2 = await removeWin(user.id, interaction);
-                if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result2.embed] }).catch(console.error);
-                else interaction.reply({ embeds: [result2.embed] }).catch(console.error);
-                break;
-            case "status":
-                interaction.reply({ content: "❌ Ainda não implementado!", flags: 64 });
-                break;
+        if (acão == "addwin") {
+            const result = await addWins(user.id, interaction, amount);
+
+            bet.winner = user.id;
+            await bet.save();
+
+            if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result.embed] }).catch(console.error);
+            else interaction.reply({ embeds: [result.embed] }).catch(console.error);
+        }
+
+        if (acão == "removewin") {
+            const result2 = await removeWinBet(user.id, bet, interaction);
+            if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result2.embed] }).catch(console.error);
+            else interaction.reply({ embeds: [result2.embed] }).catch(console.error);
+        }
+
+        if (acão.startsWith("status")) {
+            const wantedStatus = acão.split("_")[1];
+
+            bet.status = wantedStatus;
+            await bet.save();
+
+            interaction.reply({ content: `# Estado da aposta mudado com sucesso! Para **${wantedStatus}**`, flags: 64 });
         }
     },
-
     async configHandler(interaction) {
         const option = interaction.options.getString("option");
         let serverConfig = await Config.findOne({ "guild.id": interaction.guildId });
@@ -161,68 +177,63 @@ module.exports = {
      * @returns 
      */
     async blacklistHandler(interaction) {
-        const action = interaction.options.getString("action");
-        const user = interaction.options.getUser("user");
-        const serverConfig = await Config.findOne({ "guild.id": interaction.guildId }) || new Config({ 
-            guild: { id: interaction.guildId, name: interaction.guild.name }, 
-            blacklist: [] 
+        const acão = interaction.options.getString("acão");
+        const user = interaction.options.getUser("usuário");
+        const serverConfig = await Config.findOne({ "guild.id": interaction.guildId }) || new Config({
+            guild: { id: interaction.guildId, name: interaction.guild.name },
+            blacklist: []
         });
-    
+
         const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
-    
-        if (action === "add") {
+
+        if (acão === "add") {
             if (serverConfig.blacklist.some(id => id.startsWith(user.id))) {
                 return await interaction.reply({ content: `# ${user} já está na blacklist!`, flags: 64 });
             }
-    
-            console.log(serverConfig, serverConfig.blacklist.some(id => id.startsWith(user.id)));
-    
             serverConfig.blacklist.push(`${user.id}-${interaction.user.id}-${Date.now()}`);
             await serverConfig.save();
-    
+
             const embed = new EmbedBuilder()
                 .setTitle("Blacklist")
                 .setColor(myColours.rich_black)
                 .setDescription(`${user} foi adicionado à blacklist!\n\n-# Por <@${interaction.user.id}>`)
                 .setTimestamp()
                 .setThumbnail(user.displayAvatarURL());
-    
+
             if (logChannel) logChannel.send({ embeds: [embed] });
             await interaction.reply({ embeds: [embed] });
-    
-        } else if (action === "remove") {
+
+        } else if (acão === "remove") {
             if (!serverConfig.blacklist.some(id => id.startsWith(user.id))) {
                 return await interaction.reply({ content: `# ${user} não está na blacklist!`, flags: 64 });
             }
-    
-            console.log(serverConfig, serverConfig.blacklist.some(id => id.startsWith(user.id)));
-    
+
             // Fix: Correctly filter out entries that belong to the user
             serverConfig.blacklist = serverConfig.blacklist.filter(id => !id.startsWith(user.id));
             await serverConfig.save();
-    
+
             const embed = new EmbedBuilder()
                 .setTitle("Blacklist")
                 .setColor(myColours.rich_black)
                 .setDescription(`${user} foi removido da blacklist!\n-# Por <@${interaction.user.id}>`)
                 .setTimestamp()
                 .setThumbnail(user.displayAvatarURL());
-    
+
             if (logChannel) logChannel.send({ embeds: [embed] });
             await interaction.reply({ embeds: [embed] });
         }
     },
     async creditoHandler(interaction) {
-        const action = interaction.options.getString("acão");
-        const user = interaction.options.getUser("user");
+        const acão = interaction.options.getString("acão");
+        const user = interaction.options.getUser("usuário");
         const amount = interaction.options.getInteger("quantidade");
 
-        if (action === "add") {
+        if (acão === "add") {
             const result = await addWins(user.id, interaction, "manage", amount);
             if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result.embed] }).catch(console.error);
             else interaction.reply({ embeds: [result.embed] }).catch(console.error);
 
-        } else if (action === "remove") {
+        } else if (acão === "remove") {
             const result2 = await removeWin(user.id, amount, interaction, "manage");
             if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result2.embed] }).catch(console.error);
             else interaction.reply({ embeds: [result2.embed] }).catch(console.error);

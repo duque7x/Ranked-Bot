@@ -4,13 +4,13 @@ const {
     Interaction, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle,
     ChannelType, PermissionFlagsBits,
     Client,
-    ButtonInteraction
+    ButtonInteraction, ThreadAutoArchiveDuration,
 } = require('discord.js');
 const BotClient = require("../index");
 const Bet = require("../structures/database/bet");
 const User = require('../structures/database/User');
 const Config = require('../structures/database/configs');
-const { addWins, getBetById, addLoss, createBet, returnServerRank, returnUserRank } = require("../commands/utils");
+const { addWins, getBetById, addLoss, createBet, returnServerRank, returnUserRank, createPlayersProfile } = require("../utils/utils");
 const myColours = require("../structures/colours");
 
 module.exports = class InteractionEvent {
@@ -41,32 +41,32 @@ module.exports = class InteractionEvent {
             const userId = interaction.user.id;
             const { guildId, guild, member, channel, customId } = interaction;
             const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
-            const serverConfig = await Config.findOneAndUpdate(
-                { "guild.id": guildId },
-                {
-                    $setOnInsert: {
-                        guild: { id: guildId, name: guild.name },
-                        state: { bets: { status: "on" }, rank: { status: "on" } }
-                    }
-                },
-                { upsert: true, new: true }
-            );
-
+            const serverConfig = await Config.find({ "guild.id": guildId });
             const errorMessages = this.errorMessages;
             if (action === "enter_bet") {
                 await interaction.deferUpdate();
-                let [activeBet, bet] = await Promise.all([
-                    Bet.findOne({ players: userId }),
+
+                let [activeBets, bet] = await Promise.all([
+                    Bet.find({ players: userId }), // Returns an array
                     Bet.findOne({ "_id": betId })
                 ]);
 
+                // Find active bets (not "off")
+                let ongoingBets = activeBets.filter(b => b.status[0] !== "off").sort((a, b) => b.createdAt - a.createdAt);;
+
+
+                // If the user has an active bet, prevent them from joining another
+                if (ongoingBets.length > 0 && userId !== "877598927149490186") {
+                    let msg = [];
+                    const n = ongoingBets.forEach(bet => msg.push(bet._id));
+
+                    return this.sendReply(interaction, `# Você já está em outra aposta! <#${ongoingBets[0].betChannel?.id || ""}>\n-# Id da aposta(s): ${ongoingBets.length > 1 ? msg.join(", ") : ongoingBets[0]._id}\n-# Chame um ADM se esta tendo problemas.`);
+                }
                 if (!bet) return this.sendReply(interaction, errorMessages.bet_off);
                 if (serverConfig.state.bets.status === "off") return this.sendReply(interaction, "# As apostas estão fechadas no momento!");
                 if (serverConfig.blacklist.some(id => id.startsWith(userId))) return this.sendReply(interaction, errorMessages.blacklist);
                 if (bet.players.includes(userId)) return this.sendReply(interaction, "# Você já está na fila...")
-                if (activeBet && activeBet.status[0] !== "off") return this.sendReply(interaction, `# Você já está em outra aposta! <#${activeBet.betChannel?.id || ""}>`);
-                
-                
+
                 if (bet.players.length >= 2) return this.sendReply(interaction, errorMessages.bet_full);
 
                 bet.players.push(userId);
@@ -94,27 +94,34 @@ module.exports = class InteractionEvent {
             }
             if (action === "out_bet") {
                 let errorTypes = [];
-                let bet = await Bet.findById(betId);
-                // Check all potential errors and add corresponding types to the array
-                if (!bet || bet.status[0] == "off") errorTypes.push('bet_off');
+                let bet = await Bet.findOne({ "_id": betId });
+
+                // Check for errors and add to errorTypes array
+                if (!bet || bet.status[0] === "off") errorTypes.push('bet_off');
                 if (!bet.players?.includes(userId)) errorTypes.push('bet_not_in');
 
                 // If there are errors, return them all in a single response
                 if (errorTypes.length > 0) return this.returnErrorToMember(interaction, errorTypes);
-                // Remover jogador e salvar aposta
+
+                // Ensure bet.players is always an array
+                bet.players ??= [];
+
+                // Remove player from the bet
                 bet.players = this.removeItemOnce(bet.players, userId);
                 await bet.save();
 
-                // Capturar os jogadores restantes
+                // Get remaining players
                 const [team1, team2] = bet.players;
 
-                // Atualizar embed
+                // Update embed
                 const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0]).setFields([
-                    { name: "Equipe 1", value: team1 ? `<@${team1}>` : team2 ? `<@${team2}>` : "Slot vazio", inline: true },
+                    { name: "Equipe 1", value: team1 ? `<@${team1}>` : "Slot vazio", inline: true },
                     { name: "Equipe 2", value: team2 ? `<@${team2}>` : "Slot vazio", inline: true }
                 ]);
 
                 await interaction.message.edit({ embeds: [updatedEmbed] });
+
+                // Send log message
                 await logChannel.send({
                     embeds: [
                         new EmbedBuilder()
@@ -123,9 +130,11 @@ module.exports = class InteractionEvent {
                             .setTimestamp()
                     ]
                 });
+
                 await interaction.deferUpdate();
                 return;
             }
+
             if (customId.startsWith("select_menu")) {
                 const value = interaction.values[0];
                 const handler = {
@@ -166,38 +175,57 @@ module.exports = class InteractionEvent {
                 interaction.reply({ embeds: [setWinnerEmbed], components: [row] })
             }
             if (customId.startsWith("btn_set_winner")) {
-                const [action, betId, team] = customId.split("-");
-                let bet = await Bet.findById(betId);
+                const [action, betId, winningTeam] = customId.split("-");
+                let bet = await Bet.findOne({ _id: betId });
+
                 if (!bet) return this.sendReply(interaction, "# Esta aposta não exite!");
                 if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
-                betsPlayed
-                const winnerTeam = parseInt(team.replace("team", "")) === 1 ? 0 : 1;
-                const losingTeam = parseInt(team.replace("team", "")) === 1 ? 1 : 0;
-                const winingPlayer = bet.players[winnerTeam];
-                const winningMember = interaction.guild.members.cache.get(winingPlayer);
-                const losingPlayer = bet.players[losingTeam];
-                const losingMember = interaction.guild.members.cache.get(losingPlayer);
+
+                const winingPlayerId = bet.players[parseInt(winningTeam.replace("team", "")) === 1 ? 0 : 1];
+                const losingPlayerId = bet.players[parseInt(winningTeam.replace("team", "")) === 1 ? 1 : 0];
+
+                const winningMember = interaction.guild.members.cache.get(winingPlayerId);
+                const losingMember = interaction.guild.members.cache.get(losingPlayerId);
+
                 console.log(`Player ${winningMember.user.username}|${winningMember.user.id} won the bet: ${betId}.`);
+                console.log(`Player ${losingMember.user.username}|${losingMember.user.id} lost the bet: ${betId}.`);
 
-                addLoss(losingMember, interaction);
-                const addedWinObj = await addWins(winningMember.id, interaction);
+                await addLoss(losingPlayerId, interaction, bet.amount);
+                await addWins(winingPlayerId, interaction, bet.amount);
+                await createPlayersProfile(bet, winingPlayerId, losingPlayerId, interaction);
 
-                if (!addedWinObj) return this.sendReply(interaction, "# Ocorreu um erro ao processar a aposta.");
+                const logEmbed = new EmbedBuilder()
+                    .setDescription(`# Gerenciador de crédito\nCrédito de **${bet.amount}€** foi adicionado a <@${userId}>!`)
+                    .setColor(myColours.bright_blue_ocean || "#0099ff")
+                    .setTimestamp()
+                    .addFields(
+                        { name: "ID da aposta:", value: bet?._id?.toString() ?? "ID inválido" },
+                        { name: "Valor ganho", value: `${bet.amount}€` },
+                        { name: "Canal da aposta", value: bet?.betChannel?.id ? `<#${bet.betChannel.id}>` : "Canal inválido" }
+                    );
 
-                bet.winner = bet.players[winnerTeam];
+                const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
+
+
+                const winnerEmbed = new EmbedBuilder()
+                    .setDescription(`# Gerenciador de crédito\nCrédito de **${bet.amount ?? 1}€** foi adicionado a <@${winingPlayerId}>!`)
+                    .setColor(myColours.bright_blue_ocean)
+                    .setTimestamp();
+
+                bet.winner = winingPlayerId;
+                bet.status = "won";
                 bet.save();
-                if (interaction.replied || interaction.deferred) {
-                    return interaction.followUp({ embeds: [addedWinObj.embed] }).catch(console.error);
-                } else {
-                    return interaction.reply({ embeds: [addedWinObj.embed] }).catch(console.error);
-                }
 
+                await winLogChannel.send({ embeds: [logEmbed] });
+                interaction.replied || interaction.deferred
+                    ? interaction.followUp({ embeds: [winnerEmbed] }).catch(console.error)
+                    : interaction.reply({ embeds: [winnerEmbed] }).catch(console.error);
             }
             if (customId == "see_rank") {
                 await returnServerRank(interaction);
             }
             if (customId == "see_profile") {
-                await returnUserRank(interaction);
+                await returnUserRank(interaction.user, interaction, "send");
             }
         } catch (error) {
             console.error("Erro inesperado no evento interactionCreate:", error);
@@ -247,35 +275,16 @@ module.exports = class InteractionEvent {
      * @returns 
      */
     async endBet(bet, client, interaction) {
-
-
         const channel = await client.channels.fetch(bet.betChannel.id);
         if (!channel) return console.error("Erro: O canal não foi encontrado.");
+
         bet.status = ["off"];
         await bet.save();
 
-        await channel.edit({
-            name: "🔒・" + channel.name,
-            permissionOverwrites: [
-                {
-                    id: interaction.guild.id, // @everyone
-                    deny: [PermissionFlagsBits.ViewChannel] // Hide from everyone
-                },
-                ...bet.players.filter(Boolean).map(playerId => ({
-                    id: playerId,
-                    deny: [PermissionFlagsBits.SendMessages]
-                })),
-                {
-                    id: "1336838133030977666", // @everyone (default permissions)
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // Hide from everyone
-                },
-                {
-                    id: "1339009613105856603", // @everyone (default permissions)
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // Hide from everyone
-                }
-            ],
-            parent: "1337588697280942131"
-        });
+        await channel.edit({ name: "🔒・" + channel.name });
+        bet.players[0] !== "877598927149490186" ? channel.members.remove(bet.players[0]) : console.log("Nao da pra tirar esse cara meu mano. " + bet.players[0]);
+        bet.players[1] !== "1031313654475395072" ? channel.members.remove(bet.players[1]) : console.log("Nao da pra tirar esse cara meu mano. " + bet.players[1]);
+
         const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
             .setDescription(`## Aposta fechada\nObrigado por jogar na **BLOOD APOSTAS 🩸**\n\n-# Volte sempre.`)
             .setColor(myColours.eerie_black_green)
@@ -299,6 +308,7 @@ module.exports = class InteractionEvent {
 
         bet.betChannel = { id: channel.id, name: channel.name };
         bet.status = ["started"];
+        bet.createdAt = Date.now();
 
         await bet.save();
         return channel;
@@ -309,99 +319,83 @@ module.exports = class InteractionEvent {
             : interaction.reply({ content, flags: 64 });
     }
     removeItemOnce(arr, value) {
-        var index = arr.indexOf(value);
-        if (index > -1) {
-            arr.splice(index, 1);
-        }
-        return arr;
+        return arr.filter(item => item !== value);
     }
+
     /**
      * Creates a private bet channel
-     * @param {Interaction} interaction 
+     * @param {ButtonInteraction} interaction 
      * @param {Bet} bet 
      */
     async createBetChannel(interaction, bet) {
-        const { guild } = interaction;
+        const { guild, channel } = interaction;
         const totalBets = await Bet.countDocuments();
         const formattedTotalBets = String(totalBets).padStart(3, '0');
 
-        const channel = await guild.channels.create({
-            name: `aposta-${formattedTotalBets}`,
-            parent: "1339324693110329458",
-            type: ChannelType.GuildText,
-            topic: `Id da aposta: ${bet._id}`,
-            permissionOverwrites: [
-                {
-                    id: guild.id, // @everyone (default permissions)
-                    deny: [PermissionFlagsBits.ViewChannel] // Hide from everyone
-                },
-                {
-                    id: bet.players[0], // First player
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-                },
-                {
-                    id: bet.players[1], // Second player
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-                },
-                {
-                    id: "1336838133030977666", // @everyone (default permissions)
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // Hide from everyone
-                },
-                {
-                    id: "1339009613105856603", // @everyone (default permissions)
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // Hide from everyone
-                }
-            ]
+        const betChannel = await channel.threads.create({
+            name: `aposta・${formattedTotalBets}`,
+            type: ChannelType.PrivateThread, // Private threads do not support role permissions
+            autoArchiveDuration: ThreadAutoArchiveDuration.ThreeDays,
+            invitable: false,
+            topic: bet._id.toString()
         });
+        // Add players to the thread
+        await Promise.all([
+            betChannel.members.add(bet.players[0]),
+            betChannel.members.add(bet.players[1])
+        ]);
 
+        // Add role members manually
+        const roleIds = ["1336838133030977666", "1339269537509675143"];
+        const roleMembers = roleIds.flatMap(roleId => guild.roles.cache.get(roleId)?.members.values() ?? []);
+
+        await Promise.all(
+            roleMembers.map(member =>
+                betChannel.members.add(member.id).catch(() => { }) // Ignore errors
+            )
+        );
+
+        // Notify users
         const embed = new EmbedBuilder()
             .setColor(myColours.gun_metal)
-            .setDescription(`# Aposta ${bet.betType}\n> Aposta criada com sucesso, vá para o [canal](https://discord.com/channels/1336809872884371587/${channel.id}) e consulte as informações.`)
+            .setDescription(`# Aposta ${bet.betType}\n> Aposta criada com sucesso, vá para o [canal](https://discord.com/channels/${guild.id}/${betChannel.id}) e consulte as informações.`)
             .setTimestamp();
 
-
-        bet.betChannel = { id: channel.id, name: channel.name };
+        bet.betChannel = { id: betChannel.id, name: betChannel.name };
         await bet.save();
-
         interaction.message.delete();
 
+        // Embed for the bet channel
         const embedForChannel = new EmbedBuilder()
             .setColor(myColours.rich_black)
             .setDescription(`# Aposta ${bet.betType}: valor ${bet.amount}€\n> Converse com um dos nossos mediadores para avançar com a aposta.`)
             .addFields([
-                {
-                    name: "Equipa 1",
-                    value: `<@${bet.players[0]}>`,
-                    inline: true
-                },
-                {
-                    name: "Equipa 2",
-                    value: `<@${bet.players[1]}>`,
-                    inline: true
-                }
+                { name: "Equipa 1", value: `<@${bet.players[0]}>`, inline: true },
+                { name: "Equipa 2", value: `<@${bet.players[1]}>`, inline: true }
             ])
             .setTimestamp();
 
-        const endBet = new ButtonBuilder()
-            .setCustomId(`end_bet-${bet._id}`)
-            .setLabel("Encerrar aposta")
-            .setStyle(ButtonStyle.Danger);
-        const setWinner = new ButtonBuilder()
-            .setCustomId(`set_winner-${bet._id}`)
-            .setLabel("Definir ganhador")
-            .setStyle(ButtonStyle.Success);
-
-
-        const row = new ActionRowBuilder().addComponents(setWinner, endBet);
-
-        channel.send({
+        // Buttons
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`set_winner-${bet._id}`).setLabel("Definir ganhador").setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`end_bet-${bet._id}`).setLabel("Encerrar aposta").setStyle(ButtonStyle.Danger)
+        );
+        await betChannel.send({
+            content: bet._id.toString(),
+        });
+        await betChannel.send({
             content: `<@&1336838133030977666>, <@${bet.players[0]}>, <@${bet.players[1]}>`,
             embeds: [embedForChannel],
             components: [row]
         });
-        await interaction.replied || interaction.deferred
+
+
+        // Ensure interaction is replied/deferred before responding
+        interaction.replied || interaction.deferred
             ? interaction.followUp({ embeds: [embed], flags: 64 })
             : interaction.reply({ embeds: [embed], flags: 64 });
-        return channel;
+
+        return betChannel;
     }
+
 };

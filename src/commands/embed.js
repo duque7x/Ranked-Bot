@@ -8,12 +8,13 @@ module.exports = {
         .addStringOption(option =>
             option.setName("tipo")
                 .setDescription("Escolha o tipo de embed")
-                .setRequired(false)
+                .setRequired(true)
                 .addChoices(
                     { name: "regras", value: "rules" },
                     { name: "tatico", value: "tatico" },
                     { name: "vencedor", value: "winner" },
-                    { name: "como jogar", value: "play" }
+                    { name: "como jogar", value: "play" },
+                    { name: "regras 1x1", value: "rules_1v1" },
                 )
         ),
 
@@ -100,7 +101,8 @@ module.exports = {
                 .setDescription(taticosRule),
             play: new EmbedBuilder()
                 .setDescription(`# Como jogar?\n-# Você não tem que se inscrever em nada!\n-# Você simplesmente precisa entrar e jogar, por exemplo em: <#1338286584126247013>\n\nNota: Leia as <#1338244626984992788> antes de jogar!`)
-                .setColor(Colors.DarkButNotBlack)
+                .setColor(Colors.DarkButNotBlack),
+            rules_1v1: new EmbedBuilder()
         };
 
         const tipo = interaction.options.getString("tipo");

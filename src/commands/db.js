@@ -6,6 +6,8 @@ const {
 } = require("discord.js");
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
+const { returnUserRank } = require("../utils/utils");
+const mongoose = require('mongoose');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,45 +30,49 @@ module.exports = {
                         .setDescription("Quem você querer ver?")
                         .setRequired(true)
                 )
+        )
+        .addSubcommand(subcommand =>
+            subcommand.setName("resetar")
+                .setDescription("Base de dados aposta")
+                .addStringOption(option =>
+                    option.setName("escolha")
+                        .setDescription("Qual voce ira resetar?")
+                        .addChoices({ name: "apostas", value: "bet" }, { name: "ranking", value: "users" },)
+                        .setRequired(true)
+                )
         ),
     async betHandler(interaction) {
         const bet_id = interaction.options.getString("bet_id");
 
+        if (!mongoose.Types.ObjectId.isValid(bet_id)) return interaction.reply({ content: "# Id não valido.", flags: 64 });
+
         const foundBet = await Bet.findOne({ _id: bet_id });
         if (!foundBet) return this.sendTemporaryMessage(interaction, "# Esta aposta não existe!");
+        if (!foundBet.gameRoom) {
+            foundBet.gameRoom = `10000-10-877598927149490186`
+            foundBet.save();
 
+        }
         const winner = foundBet.winner ? `<@${foundBet.winner}>` : "Não há vencedor definido...";
+        const [roomId, pass, creatorId] = foundBet?.gameRoom?.split("-");
         const embed = new EmbedBuilder()
-            .setColor(Colors.DarkButNotBlack)
             .setDescription(`# Aposta ${foundBet._id}`)
-            .addFields({
-                name: "Detalhes",
-                value: `**Estado:** ${foundBet.status}\n\n` +
-                    `**Jogadores:** ${foundBet.players?.length ? foundBet.players.join(", ") : "Nenhum"}\n\n` +
-                    `**Ganhador:** ${winner}\n\n` +
-                    `**Dinheiro ganho:** ${foundBet.amount}€\n\n` +
-                    `**Canal:** <#${foundBet.betChannel?.id || "Desconhecido"}>`
-            });
-
+            .addFields(
+                { name: "Estado", value: foundBet.status[0] || "Desconhecido", inline: true },
+                { name: "Tipo", value: foundBet.betType[0] || "Desconhecido", inline: true },
+                { name: "Dinheiro ganho", value: `${foundBet.amount}€`, inline: true },
+                { name: "Jogadores", value: foundBet.players?.length ? foundBet.players.map(player => `<@${player}>`).join(", ") : "Nenhum", inline: true },
+                { name: "Ganhador", value: winner || "Nenhum", inline: true },
+                { name: "Canal", value: foundBet.betChannel?.id ? `<#${foundBet.betChannel.id}>` : "Desconhecido", inline: true },
+                { name: "Sala", value: `Id: ${roomId ?? 100000}\nSenha: ${pass ?? 10}\nCriador: <@${creatorId}>`, inline: true },
+                { name: "Criada em", value: foundBet.createdAt ? new Date(foundBet.createdAt).toLocaleString() : "Desconhecido", inline: true }
+            );
         return interaction.reply({ embeds: [embed] });
     },
     async userHandler(interaction) {
         const user = interaction.options.getUser("usuario");
 
-        const foundUser = await User.findOne({ "player.id": user.id });
-        if (!foundUser) return this.sendTemporaryMessage(interaction, "# Este usuario ainda não foi registrado.");
-
-        const embed = new EmbedBuilder()
-            .setColor(Colors.DarkAqua)
-            .setDescription(`# ${user.username}`)
-            .addFields({
-                name: "Detalhes",
-                value: `**Id:** ${foundUser.player.id}\n\n` +
-                    `**Credito:** ${foundUser.credit !== 0 ? foundUser.credit : "Nenhum"}€\n\n` +
-                    `**Blacklist:** ${foundUser.blacklisted ? "Sim" : "Não"}`
-            })
-            .setTimestamp()
-            .setFooter({ text: "Por APOSTAS" });
+        const { foundUser, embed } = await returnUserRank(user, interaction);
 
         return interaction.reply({ embeds: [embed] });
     },
@@ -81,6 +87,10 @@ module.exports = {
                     break;
                 case "user":
                     this.userHandler(interaction);
+                    break;
+                case "resetar":
+                    this.resetHandlet(interaction);
+                    break;
                 default:
                     break;
             }
@@ -98,51 +108,39 @@ module.exports = {
         interaction.reply({ content, flags: 64 }).then(mg => {
             setTimeout(() => mg.delete().catch(() => { }), 3000);
         });
-    }
+    },
+    async resetHandlet(interaction) {
+        if (interaction.user.id !== "877598927149490186") return;
 
-};
+        const choice = interaction.options.getString("escolha");
 
-/**
- * if (args === "reset" && !args) {
-                await Promise.all([Bet.deleteMany({}), User.deleteMany({})]);
-                return interaction.reply("`Dados do banco de dados resetados com sucesso!`");
-            }
+        if (choice == "bet") {
+            const bets = await Bet.find({});
 
+            bets.forEach(async bet => {
+                // bet.deleteOne();
 
-
-            if (args === "rank") {
-                const allUsers = await User.find({});
-                if (allUsers.length === 0) return interaction.reply("Não há apostas no banco de dados!");
-
-                const embed = new EmbedBuilder()
-                    .setColor(Colors.DarkButNotBlack)
-                    .setTitle("Apostas no Banco de Dados")
-                    .setDescription("Aqui estão todas as apostas registradas:");
-
-                allUsers.forEach(user => {
-                    embed.addFields({
-                        name: `Jogador ${user.player.name}`,
-                        value: `**Créditos**: ${user.credit}\n${user.isAdmin ? "**Adm**: Sim\n**Pontos de ADM**: " + user.adminPoints : "**Adm**: Não"}`
-                    });
-                });
-
-                return interaction.reply({ embeds: [embed] });
-            }
-
-            const allBets = await Bet.find({});
-            if (allBets.length === 0) return interaction.reply("Não há apostas no banco de dados!");
-
-            const embed = new EmbedBuilder()
-                .setColor(Colors.DarkButNotBlack)
-                .setTitle("Apostas no Banco de Dados")
-                .setDescription("Aqui estão todas as apostas registradas:");
-
-            allBets.forEach((bet, index) => {
-                embed.addFields({
-                    name: `Aposta ${index + 1}`,
-                    value: `**ID:** ${bet._id}\n**Jogadores:** ${bet.players?.length ? bet.players.join(", ") : "Nenhum"}\n**Canal:** <#${bet.betChannel?.id || "Desconhecido"}>\n**Estado:** ${bet.status}`
-                });
+                bet.players = [];
+                bet.winner = "";
+                await bet.save();
             });
 
-            return interaction.reply({ embeds: [embed] });
- */
+            interaction.reply({ content: "# Tirei todos jogadores das apostas, e os vencedores!" });
+        } else if (choice == "users") {
+            const users = await User.find({});
+
+            users.forEach(async user => {
+                user.wins = 0;
+                user.losses = 0;
+                user.betsPlayed = [];
+                user.moneyLost = 0;
+                user.credit = 0;
+
+                await user.save();
+            });
+
+            interaction.reply({ content: "# Resetei a base de dados para os usuarios." })
+
+        }
+    }
+};
