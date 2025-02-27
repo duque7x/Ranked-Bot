@@ -326,7 +326,6 @@ module.exports = {
 
         // Fetch color from avatar URL or default to white
         const color = await getColorFromURL(user.displayAvatarURL()) || Colors.White;
-        console.log(foundUser);
 
         // Build the embed for user profile
         const embed = new EmbedBuilder()
