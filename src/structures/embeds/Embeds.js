@@ -5,7 +5,7 @@ class Embeds {
         .setTitle("Apostas não disponíveis")
         .setDescription("-# Aguarde um momento...")
         .setTimestamp()
-        .setColor(Colors.DarkRed);
+        .setColor(Colors.White);
 
 }
 

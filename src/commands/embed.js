@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, Colors } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, Colors, PermissionFlagsBits } = require("discord.js");
 const myColours = require("../structures/colours");
 
 module.exports = {
@@ -16,7 +16,8 @@ module.exports = {
                     { name: "como jogar", value: "play" },
                     { name: "regras 1x1", value: "rules_1v1" },
                 )
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     /**
      * @param {import('discord.js').CommandInteraction} interaction
@@ -94,25 +95,18 @@ module.exports = {
                 .setDescription(`# Adicionar o vencedor da aposta!\n-# Caso o vencedor foi mal selecionado, por favor chame um dos nossos ADMs!`)
                 .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" }),
             rules: new EmbedBuilder()
-                .setColor(Colors.DarkButNotBlack)
+                .setColor(Colors.White)
                 .setDescription(rules),
             tatico: new EmbedBuilder()
-                .setColor(Colors.DarkButNotBlack)
+                .setColor(Colors.White)
                 .setDescription(taticosRule),
             play: new EmbedBuilder()
                 .setDescription(`# Como jogar?\n-# Você não tem que se inscrever em nada!\n-# Você simplesmente precisa entrar e jogar, por exemplo em: <#1338286584126247013>\n\nNota: Leia as <#1338244626984992788> antes de jogar!`)
-                .setColor(Colors.DarkButNotBlack),
+                .setColor(Colors.White),
             rules_1v1: new EmbedBuilder()
         };
 
         const tipo = interaction.options.getString("tipo");
-
-        if (!tipo) {
-            return interaction.reply({
-                content: `Tem exatamente ${Object.keys(occassions).length} embeds disponíveis, elas sendo: **${Object.keys(occassions).join(", ")}**!\nQual você quer?`,
-                flags: 64
-            });
-        }
 
         if (occassions[tipo]) {
             return interaction.reply({ embeds: [occassions[tipo]] });
