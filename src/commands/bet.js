@@ -92,7 +92,7 @@ async function sendBetEmbed(channelToSend, betType, betData, amount) {
 
     const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
     const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
-
+    
     const embed = new EmbedBuilder()
         .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
         .addFields([

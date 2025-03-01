@@ -287,7 +287,7 @@ class Utils {
         );
 
         // Send the interaction with response and components
-        const message = await interaction.reply({
+        const message = await interaction.followUp({
             embeds: [await generateEmbed()], // Await to resolve the async function
             components: [row()],
             fetchReply: true,
@@ -351,7 +351,7 @@ class Utils {
 
         // Conditional reply or log the embed based on the option
         if (option === "send") {
-            return interaction.reply({ embeds: [embed], flags: 64 });
+            return interaction.followUp({ embeds: [embed], flags: 64 });
         }
 
         return { foundUser, embed };

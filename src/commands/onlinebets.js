@@ -15,20 +15,19 @@ module.exports = {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
         const bets = await Bet.find({});
         let embeds = [];
-        console.log(bets);
         
-        await bets.filter(bet => bet.status == "started" || bet.status == "won").forEach((bet, index) => {
+        bets.filter(bet => bet.status == "started" || bet.status == "won").forEach((bet, index) => {
             embeds.push(new EmbedBuilder()
                 .setTitle(`Aposta ${index + 1}`)
                 .addFields([
                     {
                         name: "Tipo de aposta:",
-                        value: `${bet.betType}`,
+                        value: `${bet?.betType[0] === "" ? "1v1" : bet.betType[0]}`,
                         inline: true
                     },
                     {
                         name: "Quantidade:",
-                        value: `${bet.amount}`,
+                        value: `${bet.amount ?? 0}`,
                         inline: true
                     },
                     {

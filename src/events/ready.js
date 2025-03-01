@@ -19,19 +19,6 @@ module.exports = class ReadyEvent {
       type: ActivityType.Custom,
     });
 
-
-    const commandsPath = path.join(__dirname, "..", "commands");
-    const commandFiles = fs
-      .readdirSync(commandsPath)
-      .filter((file) => file.endsWith(".js"));
-
-    for (const file of commandFiles) {
-      const commandPath = path.join(commandsPath, file);
-
-      const command = require(commandPath);
-      this.client.commands.set(command.name, command);
-    }
-
     console.log(`Logged in as ${this.client.user.tag}`);
   }
 };

@@ -182,7 +182,8 @@ module.exports = class InteractionEvent {
             }
             if (customId.startsWith("btn_set_winner")) {
                 const [action, betId, winingPlayerId, losingPlayerId] = customId.split("-");
-
+                console.log({customId});
+                
                 const bet = await Bet.findOne({ _id: betId });
                 //if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
                 const winningMember = interaction.guild.members.cache.get(winingPlayerId);
@@ -223,9 +224,11 @@ module.exports = class InteractionEvent {
                     : interaction.reply({ embeds: [winnerEmbed] }).catch(console.error);
             }
             if (customId == "see_rank") {
+                await interaction.deferUpdate({ flags: 64 });
                 await returnServerRank(interaction);
             }
             if (customId == "see_profile") {
+                await interaction.deferUpdate({ flags: 64 });
                 await returnUserRank(interaction.user, interaction, "send");
             }
         } catch (error) {
