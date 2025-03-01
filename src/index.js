@@ -59,7 +59,7 @@ class BotClient extends Client {
                     { body: [] } // Remove todos os comandos da guilda antes de registrar novos
                 );
                 await rest.put(
-                    Routes.applicationGuildCommands(process.env.CLIENT_ID, "1336809872884371587"),
+                    Routes.applicationCommands(process.env.CLIENT_ID, "1336809872884371587"),
                     { body: this.commandArray },
                 );
 

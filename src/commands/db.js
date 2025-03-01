@@ -45,16 +45,12 @@ module.exports = {
         const bet_id = interaction.options.getString("bet_id");
 
         if (!mongoose.Types.ObjectId.isValid(bet_id)) return interaction.reply({ content: "# Id não valido.", flags: 64 });
-
         const foundBet = await Bet.findOne({ _id: bet_id });
         if (!foundBet) return this.sendTemporaryMessage(interaction, "# Esta aposta não existe!");
-        if (!foundBet.gameRoom) {
-            foundBet.gameRoom = `10000-10-877598927149490186`
-            foundBet.save();
-
-        }
+        console.log({foundBet});
+        
         const winner = foundBet.winner ? `<@${foundBet.winner}>` : "Não há vencedor definido...";
-        const [roomId, pass, creatorId] = foundBet?.gameRoom?.split("-");
+
         const embed = new EmbedBuilder()
             .setDescription(`# Aposta ${foundBet._id}`)
             .addFields(

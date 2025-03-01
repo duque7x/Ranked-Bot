@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const Config = require("../structures/database/configs");
 const Bet = require("../structures/database/bet");
-const { addWins, removeWin, removeWinBet } = require("../utils/utils");
+const { setBetWinner, removeWin, removeWinBet } = require("../utils/utils");
 const myColours = require("../structures/colours");
 const { ChatInputCommandInteraction } = require("discord.js");
 
@@ -68,7 +68,7 @@ module.exports = {
                         )
                 )
                 .addUserOption(option =>
-                    option.setName("user")
+                    option.setName("usuário")
                         .setDescription("Usuário a ser adicionado/removido manipulado.")
                         .setRequired(true)
                 )
@@ -91,7 +91,7 @@ module.exports = {
                         )
                 )
                 .addUserOption(option =>
-                    option.setName("user")
+                    option.setName("usuário")
                         .setDescription("Usuário a ser adicionado/removido da blacklist.")
                         .setRequired(true)
                 )
@@ -118,13 +118,11 @@ module.exports = {
         const acão = interaction.options.getString("acão");
         const betId = interaction.options.getString("bet_id");
         const user = interaction.options.getUser("usuário") || interaction.user;
-        const amount = interaction.options.getInteger("quantidade") || 1;
         const bet = await Bet.findOne({ "_id": betId }); // Add 'await'
         if (!bet) return interaction.reply({ content: "# Aposta nao encontrada", flags: 64 });
 
         if (acão == "addwin") {
-            const result = await addWins(user.id, interaction, amount);
-
+            const result = await setBetWinner(bet, user);
             bet.winner = user.id;
             await bet.save();
 

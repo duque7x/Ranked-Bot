@@ -10,7 +10,7 @@ const BotClient = require("../index");
 const Bet = require("../structures/database/bet");
 const User = require('../structures/database/User');
 const Config = require('../structures/database/configs');
-const { addWins, getBetById, addLoss, createBet, returnServerRank, returnUserRank, createPlayersProfile } = require("../utils/utils");
+const { setBetWinner, getBetById, addLossWithAmount, createBet, returnServerRank, returnUserRank, createPlayersProfile } = require("../utils/utils");
 const myColours = require("../structures/colours");
 const Embeds = require("../structures/embeds/Embeds");
 
@@ -28,24 +28,27 @@ module.exports = class InteractionEvent {
             if (interaction.isChatInputCommand()) {
                 const command = client.commands.get(interaction.commandName);
                 if (!command) return;
-
                 try {
                     return await command.execute(interaction, client);
                 } catch (error) {
                     console.error(error);
                     return this.sendReply(interaction, "Erro ao executar o comando.");
                 }
-
             }
-            const [action, betType, betId, amount] = interaction.customId.split("-");
-            const userId = interaction.user.id;
-            const { guildId, guild, member, channel, customId } = interaction;
-            const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
-            const serverConfig = await Config.findOne({ "guild.id": guildId });
-            const errorMessages = this.errorMessages;
+            let [action, betType, betId, amount] = interaction.customId.split("-");
+            let userId = interaction.user.id;
+            let { guildId, guild, member, channel, customId } = interaction;
+            let logChannel = interaction.guild.channels.cache.get("1340360434414522389") || interaction.channel;
+            let errorMessages = this.errorMessages;
+            let serverConfig = await Config.findOneAndUpdate(
+                { "guild.id": interaction.guild.id },  // Find the document by guild ID
+                { $setOnInsert: { guild: { name: interaction.guild.name, id: interaction.guild.id } } },  // Only set this if the document doesn't exist
+                { new: true, upsert: true }  // Return the updated document, and create one if it doesn't exist
+            );
 
             if (action === "enter_bet") {
                 await interaction.deferUpdate({ flags: 64 });
+                let [action, betType, betId, amount] = interaction.customId.split("-");
 
                 let [activeBets, bet] = await Promise.all([
                     Bet.find({ players: userId }), // Returns an array
@@ -163,39 +166,36 @@ module.exports = class InteractionEvent {
                 let bet = await Bet.findById(betId);
                 if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return this.sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para definir um vencedor!");
                 if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
+                if (!bet) return this.sendReply(interaction, "# Esta aposta não exite!");
 
                 const setWinnerEmbed = new EmbedBuilder()
                     .setColor(myColours.rich_black)
                     .setDescription(`# Adicionar o vencedor da aposta!\n-# Caso o vencedor foi mal selecionado, por favor chame um dos nossos ADMs!`)
                     .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" });
 
-                const team1Btn = new ButtonBuilder().setCustomId(`btn_set_winner-${bet._id}-team1`).setLabel("Time 1 vencedor").setStyle(ButtonStyle.Secondary);
-                const team2Btn = new ButtonBuilder().setCustomId(`btn_set_winner-${bet._id}-team2`).setLabel("Time 2 vencedor").setStyle(ButtonStyle.Secondary);
-
-                const row = new ActionRowBuilder().addComponents(team1Btn, team2Btn);
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId(`btn_set_winner-${bet._id}-${bet.players[0]}-${bet.players[1]}`).setLabel("Time 1 vencedor").setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId(`btn_set_winner-${bet._id}-${bet.players[1]}-${bet.players[0]}`).setLabel("Time 2 vencedor").setStyle(ButtonStyle.Secondary)
+                );
 
                 interaction.reply({ embeds: [setWinnerEmbed], components: [row] })
             }
             if (customId.startsWith("btn_set_winner")) {
-                const [action, betId, winningTeam] = customId.split("-");
-                let bet = await Bet.findOne({ _id: betId });
+                const [action, betId, winingPlayerId, losingPlayerId] = customId.split("-");
 
-                if (!bet) return this.sendReply(interaction, "# Esta aposta não exite!");
-                if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
-
-                const winingPlayerId = bet.players[parseInt(winningTeam.replace("team", "")) === 1 ? 0 : 1];
-                const losingPlayerId = bet.players[parseInt(winningTeam.replace("team", "")) === 1 ? 1 : 0];
-
+                const bet = await Bet.findOne({ _id: betId });
+                //if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
                 const winningMember = interaction.guild.members.cache.get(winingPlayerId);
                 const losingMember = interaction.guild.members.cache.get(losingPlayerId);
 
-                console.log(`Player ${winningMember.user.username}|${winningMember.user.id} won the bet: ${betId}.`);
-                console.log(`Player ${losingMember.user.username}|${losingMember.user.id} lost the bet: ${betId}.`);
+                const loserProfile = (await addLossWithAmount(losingPlayerId, interaction, bet));
+                const winnerProfile = (await setBetWinner(bet, winningMember)).userProfile;
 
-                await addLoss(losingPlayerId, interaction, bet.amount);
-                await addWins(winingPlayerId, interaction, bet.amount);
-                await createPlayersProfile(bet, winingPlayerId, losingPlayerId, interaction);
+                !loserProfile.betsPlayed.includes(bet._id) ? loserProfile.betsPlayed.push(bet._id) : console.log("Added bet.");
+                !winnerProfile.betsPlayed.includes(bet._id) ? winnerProfile.betsPlayed.push(bet._id) : console.log("Added bet.");
 
+                loserProfile.save();
+                winnerProfile.save();
                 const logEmbed = new EmbedBuilder()
                     .setDescription(`# Gerenciador de crédito\nCrédito de **${bet.amount}€** foi adicionado a <@${userId}>!`)
                     .setColor(myColours.bright_blue_ocean || "#0099ff")
@@ -206,19 +206,18 @@ module.exports = class InteractionEvent {
                         { name: "Canal da aposta", value: bet?.betChannel?.id ? `<#${bet.betChannel.id}>` : "Canal inválido" }
                     );
 
-                const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
-
+                const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346") || interaction.channel;
 
                 const winnerEmbed = new EmbedBuilder()
-                    .setDescription(`# Gerenciador de crédito\nCrédito de **${bet.amount ?? 1}€** foi adicionado a <@${winingPlayerId}>!`)
+                    .setDescription(`# Gerenciador de vitórias\n-# 1 foi adicionada a <@${userId}>!`)
                     .setColor(myColours.bright_blue_ocean)
+                    .setThumbnail(winningMember.user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }))
                     .setTimestamp();
 
-                bet.winner = winingPlayerId;
-                bet.status = ["won"];
-                bet.save();
 
                 await winLogChannel.send({ embeds: [logEmbed] });
+
+                console.log(`Player ${winningMember.user.username}|${winningMember.user.id} won the bet: ${betId}.`, `Player ${losingMember.user.username}|${losingMember.user.id} lost the bet: ${betId}.`);
                 interaction.replied || interaction.deferred
                     ? interaction.followUp({ embeds: [winnerEmbed] }).catch(console.error)
                     : interaction.reply({ embeds: [winnerEmbed] }).catch(console.error);

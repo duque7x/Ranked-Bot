@@ -31,7 +31,7 @@ module.exports = {
         const amount = options.getInteger("quantidade") ?? 1;
         const userId = user.id;
 
-        const serverConfig = await Config.findOne({ "guild.id": guildId }) 
+        const serverConfig = await Config.findOne({ "guild.id": guildId })
             ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
 
         if (serverConfig.state.bets.status === "off") {
@@ -88,6 +88,8 @@ module.exports = {
  * @param {number} amount 
  */
 async function sendBetEmbed(channelToSend, betType, betData, amount) {
+    console.log({ betType, betData });
+
     const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
     const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
 

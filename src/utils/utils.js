@@ -7,31 +7,21 @@ const {
     StringSelectMenuBuilder,
     ButtonBuilder,
     ButtonStyle,
-    ButtonInteraction
+    ButtonInteraction,
 } = require("discord.js");
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
 const myColours = require("../structures/colours");
 
 
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName("utils")
-        .setDescription("Este arquivo tem várias funções úteis.")
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .addChannelOption(option =>
-            option.setName("canal")
-                .setDescription("Canal onde a aposta será criada.")
-                .setRequired(true))
-        .addIntegerOption(option =>
-            option.setName("valor")
-                .setDescription("Valor da aposta.")
-                .setRequired(true)),
-
+class Utils {
+    constructor() {
+        this.name = 'utilsCreate';
+    }
     /**
      * @param {import("discord.js").ChatInputCommandInteraction} interaction 
      */
-    async execute(interaction) {
+    execute(interaction) {
         if (interaction.user.id !== "877598927149490186") {
             return interaction.reply({ content: "Você não tem permissão para usar este comando.", flags: 64 });
         }
@@ -40,9 +30,9 @@ module.exports = {
         const amount = interaction.options.getInteger("valor");
 
         return this.createBet(interaction, channel, amount);
-    },
+    }
 
-    async createBet(interaction, channel, amount) {
+    createBet = async (interaction, channel, amount) => {
         try {
             const betType = channel.name.split("・")[1];
 
@@ -58,129 +48,160 @@ module.exports = {
         } catch (err) {
             console.error(`Erro ao criar aposta no canal ${channel.name}:`, err);
         }
-    },
-    async addWins(userId, interaction, amount) {
-        const user = interaction.guild.members.cache.get(userId);
-        if (!user) return this.sendReply(interaction, "Usuário inválido.");
+    }
+    setBetWinner = async (bet, member) => {
+        const userId = member.id;
+        const { amount } = bet;
+        const isAdmin = member?.permissions?.has(PermissionFlagsBits.Administrator) || false;
 
         const embed = new EmbedBuilder()
             .setDescription(`# Gerenciador de crédito\nCrédito de **${amount}€** foi adicionado a <@${userId}>!`)
             .setColor(myColours.bright_blue_ocean)
+            .setFooter({ text: "Você pode guardar este crédito ou receber do mediador..." })
             .setTimestamp();
 
-        // Try to find the user
-        let existingUser = await User.findOne({ "player.id": userId });
+        // Atualiza ou cria usuário no banco
+        const userProfile = await this.addCredit(userId, parseInt(amount), isAdmin, 1);
 
-        if (existingUser) {
-            // Ensure existing values are valid
-            existingUser.wins = isNaN(existingUser.wins) ? 0 : existingUser.wins;
-            existingUser.credit = isNaN(existingUser.credit) ? 0 : existingUser.credit;
+        // Atualiza aposta
+        bet.winner = userId;
+        bet.status = ["won"];
+        await bet.save();
+        await this.addWin(member);
 
-            // Update stats
-            existingUser.credit += parseInt(amount);
-            existingUser.wins += 1;
-            existingUser.isAdmin = user.permissions.has(PermissionFlagsBits.Administrator);
+        return { embed, userProfile };
+    }
+    addCredit = async (userId, amount, isAdmin) => {
+        return await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
+                $inc: { credit: amount },
+                $set: { isAdmin }
+            },
+            { new: true, upsert: true }
+        );
+    }
+    removeCredit = async (userId, amount) => {
+        return await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
+                $inc: { credit: -amount }
+            },
+            { new: true, upsert: true }
+        );
+    }
+    addWin = async (user, interaction) => {
+        const userId = user.id;
 
-            await existingUser.save();
-        } else {
-            // Create new profile only if user does not exist
-            existingUser = new User({
-                player: { name: user.user.username, id: userId },
-                credit: parseInt(amount),
-                isAdmin: user.permissions.has(PermissionFlagsBits.Administrator),
-                wins: 1
-            });
-
-            await existingUser.save();
-        }
-
-        return { embed, existingUser };
-    },
-
-    async addLoss(userId, interaction, amount) {
-        if (!userId) return this.sendReply(interaction, "Membro inválido.");
-        const member = interaction.guild.members.cache.get(userId);
-
-        // First, attempt to find and update the user with an initial value for losses (if necessary)
+        // Atualiza ou cria o usuário no banco de dados
         const userProfile = await User.findOneAndUpdate(
             { "player.id": userId },
             {
+                $inc: { wins: 1 },
+                $set: { "player.id": userId }
+            },
+            { new: true, upsert: true }
+        );
+        return userProfile;
+    }
+    addLossWithAmount = async (userId, interaction, bet) => {
+        if (!userId) return this.sendReply(interaction, "Membro inválido.");
+        const { amount } = bet;
+        // You can skip fetching the member if you don't need it elsewhere
+        const isAdmin = interaction.guild.members.cache.has(userId) && interaction.guild.members.cache.get(userId).permissions.has(PermissionFlagsBits.Administrator);
+
+        // Attempt to find and update the user profile
+
+
+        return await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
                 $setOnInsert: {
-                    isAdmin: member.permissions.has(PermissionFlagsBits.Administrator),
-                    losses: 0 // Initialize losses to 0 if the document doesn't exist
-                }
+                    isAdmin: isAdmin,
+                },
+                $inc: { losses: 1, moneyLost: amount[0] }
             },
             { upsert: true, new: true }
         );
-        // Then increment the losses
-        userProfile.losses += 1; // Increment losses by 1
-        userProfile.moneyLost += amount;
-        await userProfile.save(); // Save the updated user profile
+    }
+    addLoss = async (user, interaction) => {
+        if (!user) return this.sendReply(interaction, "Membro inválido.");
+        const userId = user.id;
+        const member = interaction.guild.members.cache.get(userId);
+        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-
-        return userProfile;
-    },
-
-    sendReply(interaction, content) {
+        return await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
+                $setOnInsert: {
+                    isAdmin: isAdmin,
+                },
+                $inc: { losses: 1 }
+            },
+            { upsert: true, new: true }
+        );
+    }
+    sendReply = async (interaction, content) => {
         return interaction.replied || interaction.deferred
             ? interaction.followUp({ content, flags: 64 })
             : interaction.reply({ content, flags: 64 });
-    },
+    }
     /**
      * 
      * @param {""} userId 
      * @param {import("discord.js").Interaction} interaction 
      * @returns 
      */
-    async removeWinBet(userId, bet, interaction) {
+    removeWinBet = async (userId, bet, interaction) => {
         const user = interaction.guild.members.cache.get(userId);
-        const { amount } = bet;
+        const { amount, _id, betChannel } = bet;
 
+        // Create the main embed message
         const embed = new EmbedBuilder()
             .setDescription(`# Gerenciador de crédito\nCrédito de **${amount}€** foi removido de <@${userId}>!`)
             .setColor(Colors.DarkRed)
             .setTimestamp();
 
+        // Create the log embed
         const logEmbed = EmbedBuilder.from(embed)
             .addFields(
-                { name: "ID da aposta:", value: bet._id?.toString() || "ID inválido" },
+                { name: "ID da aposta:", value: _id?.toString() || "ID inválido" },
                 { name: "Valor removido", value: isNaN(amount) ? "Valor inválido" : `${amount}€` },
-                { name: "Canal da aposta", value: `<#${bet.betChannel.id}>` }
+                { name: "Canal da aposta", value: `<#${betChannel.id}>` }
             )
             .setFooter({ text: `Por ${interaction.user.username}` });
 
-        const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
+        // Log channel ID (use a constant to avoid magic numbers)
+        const WIN_LOG_CHANNEL_ID = "1339329876662030346";
+        const winLogChannel = interaction.guild.channels.cache.get(WIN_LOG_CHANNEL_ID);
 
-        // Buscar usuário no banco
-        let existingUser = await User.findOne({ "player.id": userId });
+        // Use findOneAndUpdate to find and update the user in a single operation
+        const updatedUser = await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
+                $set: {
+                    "player.name": user.user.username,
+                    "isAdmin": user.permissions.has(PermissionFlagsBits.Administrator),
+                },
+                $inc: {
+                    credit: -Math.max(0, amount),
+                    wins: -1,
+                },
+            },
+            { new: true, upsert: true } // Ensure that the user is created if not found, and return the updated user
+        );
 
-        if (!existingUser) {
-            // Se o usuário não existir, criar um novo
-            existingUser = new User({
-                player: { name: user.user.username, id: userId },
-                credit: 0,
-                wins: 0,
-                isAdmin: user.permissions.has(PermissionFlagsBits.Administrator),
-            });
-        } else {
-            // Atualizar os dados existentes
-            existingUser.isAdmin = user.permissions.has(PermissionFlagsBits.Administrator);
-            existingUser.credit = Math.max(0, existingUser.credit - amount);
-            existingUser.wins = Math.max(0, existingUser.wins - 1);
-        }
-
-        await existingUser.save();
-
-        // Resetar os dados da aposta
+        // Reset bet data
         bet.status = "started";
         bet.winner = "";
         await bet.save();
 
-        // Enviar o log da atualização
+        // Send log embed to the win log channel
         winLogChannel.send({ embeds: [logEmbed] });
 
         return { embed, logEmbed };
-    },
+    }
+
     async removeWin(userId, amount) {
         const user = interaction.guild.members.cache.get(userId);
         amount = amount ?? 1;
@@ -200,30 +221,24 @@ module.exports = {
             .setFooter({ text: `Por ${interaction.user.username}` });
 
         const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
-        const existingUser = await User.findOne({ "player.id": userId });
 
-        if (existingUser) {
-            existingUser.credit = parseInt(existingUser.credit) - parseInt(amount);
-            existingUser.wins = existingUser.wins <= 0 ? 0 : parseInt(existingUser.credit) - 1;
-            existingUser.isAdmin = user.permissions.has(PermissionFlagsBits.Administrator);
-
-            await existingUser.save();
-
-            winLogChannel.send({ embeds: [logEmbed] });
-        }
-
-        const winnerUserProfile = new User({
-            player: { name: user.user.username, id: userId },
-            credit: 0,
-            isAdmin: user.permissions.has(PermissionFlagsBits.Administrator),
-            wins: 0
-        });
-
-        await winnerUserProfile.save();
+        const existingUser = await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
+                $set: {
+                    "player.name": user.user.username,
+                    "isAdmin": user.permissions.has(PermissionFlagsBits.Administrator),
+                },
+                $inc: {
+                    wins: -1,
+                },
+            },
+            { new: true, upsert: true } // Ensure that the user is created if not found, and return the updated user
+        );
         winLogChannel.send({ embeds: [logEmbed] });
 
         return { logEmbed, embed };
-    },
+    }
     async returnServerRank(interaction) {
         const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
 
@@ -290,7 +305,7 @@ module.exports = {
         });
 
         return { embed: await generateEmbed() };
-    },
+    }
     /**
      * 
      * @param {ButtonInteraction} interaction 
@@ -321,7 +336,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setAuthor({
                 name: `Perfil de ${user.username}`,
-                iconURL: user.displayAvatarURL(),
+                iconURL: user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }),
             })
             .setColor(color)
             .addFields({
@@ -332,7 +347,7 @@ module.exports = {
                     **Blacklist:** ${foundUser.blacklisted ? "Sim" : "Não"} ︱ **Dinheiro perdido:** ${foundUser.moneyLost ?? 0}€
                 `,
             })
-            .setThumbnail(user.displayAvatarURL());
+            .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }));
 
         // Conditional reply or log the embed based on the option
         if (option === "send") {
@@ -340,43 +355,6 @@ module.exports = {
         }
 
         return { foundUser, embed };
-    },
-
-    /**
-     * 
-     * @param {Bet} bet 
-     * @param {*} playerId1 
-     * @param {*} playerId2 
-     * @param {ButtonInteraction} interaction 
-     */
-    async createPlayersProfile(bet, playerId1, playerId2, interaction) {
-        const member1 = interaction.guild.members.cache.get(playerId1);
-        const member2 = interaction.guild.members.cache.get(playerId2);
-
-        const player1Profile = await User.findOneAndUpdate(
-            { "player.id": playerId1 }, // Search condition
-            {
-                $setOnInsert: { // Only applies if creating a new user
-                    player: { name: member1.displayName, id: playerId1 },
-                }
-            },
-            { new: true, upsert: true } // Return updated document & create if not found
-        );
-        const player2Profile = await User.findOneAndUpdate(
-            { "player.id": playerId2 }, // Search condition
-            {
-                $setOnInsert: { // Only applies if creating a new user
-                    player: { name: member2.displayName, id: playerId1 },
-                }
-            },
-            { new: true, upsert: true } // Return updated document & create if not found
-        );
-        player1Profile.betsPlayed.push(bet._id);
-        player2Profile.betsPlayed.push(bet._id);
-        player1Profile.save();
-        player2Profile.save();
-
-        return { player1Profile, player2Profile };
     }
 };
 
@@ -419,3 +397,5 @@ async function sendBetEmbed(interaction, betType, betData, amount, channelToSend
     await channelToSend.send({ embeds: [embed], components: [row2, row1] });
     return;
 }
+
+module.exports = new Utils();

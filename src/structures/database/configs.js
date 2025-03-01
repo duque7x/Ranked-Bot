@@ -3,7 +3,7 @@ const mongoose = require("./connection");
 const configSchema = new mongoose.Schema({
     guild: {
         id: { type: String, required: true },
-        name: { type: String, required: true }
+        name: { type: String}
     },
     state: {
         bets: {
