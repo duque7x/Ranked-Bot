@@ -12,6 +12,7 @@ const User = require('../structures/database/User');
 const Config = require('../structures/database/configs');
 const { addWins, getBetById, addLoss, createBet, returnServerRank, returnUserRank, createPlayersProfile } = require("../utils/utils");
 const myColours = require("../structures/colours");
+const Embeds = require("../structures/embeds/Embeds");
 
 module.exports = class InteractionEvent {
     constructor(client) {
@@ -36,15 +37,15 @@ module.exports = class InteractionEvent {
                 }
 
             }
-
             const [action, betType, betId, amount] = interaction.customId.split("-");
             const userId = interaction.user.id;
             const { guildId, guild, member, channel, customId } = interaction;
             const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
-            const serverConfig = await Config.find({ "guild.id": guildId });
+            const serverConfig = await Config.findOne({ "guild.id": guildId });
             const errorMessages = this.errorMessages;
+
             if (action === "enter_bet") {
-                await interaction.deferUpdate();
+                await interaction.deferUpdate({ flags: 64 });
 
                 let [activeBets, bet] = await Promise.all([
                     Bet.find({ players: userId }), // Returns an array
@@ -62,8 +63,9 @@ module.exports = class InteractionEvent {
 
                     return this.sendReply(interaction, `# Você já está em outra aposta! <#${ongoingBets[0].betChannel?.id || ""}>\n-# Id da aposta(s): ${ongoingBets.length > 1 ? msg.join(", ") : ongoingBets[0]._id}\n-# Chame um ADM se esta tendo problemas.`);
                 }
+
                 if (!bet) return this.sendReply(interaction, errorMessages.bet_off);
-                if (serverConfig.state.bets.status === "off") return this.sendReply(interaction, "# As apostas estão fechadas no momento!");
+                if (serverConfig.state.bets.status === "off") return interaction.followUp({ embeds: [Embeds.betsOff], flags: 64 });
                 if (serverConfig.blacklist.some(id => id.startsWith(userId))) return this.sendReply(interaction, errorMessages.blacklist);
                 if (bet.players.includes(userId)) return this.sendReply(interaction, "# Você já está na fila...")
 
@@ -213,7 +215,7 @@ module.exports = class InteractionEvent {
                     .setTimestamp();
 
                 bet.winner = winingPlayerId;
-                bet.status = "won";
+                bet.status = ["won"];
                 bet.save();
 
                 await winLogChannel.send({ embeds: [logEmbed] });

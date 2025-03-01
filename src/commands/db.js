@@ -64,7 +64,6 @@ module.exports = {
                 { name: "Jogadores", value: foundBet.players?.length ? foundBet.players.map(player => `<@${player}>`).join(", ") : "Nenhum", inline: true },
                 { name: "Ganhador", value: winner || "Nenhum", inline: true },
                 { name: "Canal", value: foundBet.betChannel?.id ? `<#${foundBet.betChannel.id}>` : "Desconhecido", inline: true },
-                { name: "Sala", value: `Id: ${roomId ?? 100000}\nSenha: ${pass ?? 10}\nCriador: <@${creatorId}>`, inline: true },
                 { name: "Criada em", value: foundBet.createdAt ? new Date(foundBet.createdAt).toLocaleString() : "Desconhecido", inline: true }
             );
         return interaction.reply({ embeds: [embed] });

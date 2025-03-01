@@ -15,9 +15,8 @@ module.exports = class ReadyEvent {
 
   execute(event, client) {
     client.user.setActivity({
-      name: "APOSTA DE 150€ EM LIVE BROTA",
-      type: ActivityType.Streaming,
-      url: "https://www.twitch.tv/sigmaboy"
+      name: "apostando mais de 100€ em live",
+      type: ActivityType.Custom,
     });
 
 

@@ -12,17 +12,7 @@ const {
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
 const myColours = require("../structures/colours");
-const getColors = require('get-image-colors');
 
-async function getColorFromURL(imageUrl) {
-    try {
-        const colors = await getColors(imageUrl);
-        const dominantColor = colors[0].hex();
-        return dominantColor;
-    } catch (error) {
-        console.error('Error extracting color:', error);
-    }
-}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -325,7 +315,7 @@ module.exports = {
         );
 
         // Fetch color from avatar URL or default to white
-        const color = await getColorFromURL(user.displayAvatarURL()) || Colors.White;
+        const color = Colors.White;
 
         // Build the embed for user profile
         const embed = new EmbedBuilder()
@@ -338,8 +328,8 @@ module.exports = {
                 name: "Estatísticas",
                 value: `
                     **Vitórias:** ${foundUser.wins ?? 0} ︱ **Derrotas:** ${foundUser.losses ?? 0}
-                    **Crédito disponível:** ${foundUser.credit !== 0 ? foundUser.credit : "Nenhum"}€ ︱ **Vezes jogadas:** ${foundUser.betsPlayed.length ?? 0}
-                    **Blacklist:** ${foundUser.blacklisted ? "Sim" : "Não"} ︱ **Dinheiro perdido:** -${foundUser.moneyLost ?? 0}€
+                    **Crédito disponível:** ${foundUser.credit !== 0 ? foundUser.credit : 0}€ ︱ **Vezes jogadas:** ${foundUser.betsPlayed.length ?? 0}
+                    **Blacklist:** ${foundUser.blacklisted ? "Sim" : "Não"} ︱ **Dinheiro perdido:** ${foundUser.moneyLost ?? 0}€
                 `,
             })
             .setThumbnail(user.displayAvatarURL());

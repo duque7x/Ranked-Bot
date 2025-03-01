@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChatInputCommandInteraction } = require("discord.js");
 const myColours = require("../structures/colours");
 
 module.exports = {
@@ -16,7 +16,11 @@ module.exports = {
                 .setRequired(true)
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // Apenas quem pode gerenciar cargos pode usar
-
+/**
+ * 
+ * @param {ChatInputCommandInteraction} interaction 
+ * @returns 
+ */
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
         const role = interaction.options.getRole("cargo");
@@ -70,7 +74,7 @@ module.exports = {
                 .setDescription(`O cargo <@&${role.id}> foi adicionado a ${member}!\n\n-# Por: <@${interaction.user.id}>`)
                 .setColor(myColours.bright_blue_ocean)
                 .setTimestamp()
-                .setThumbnail(member.user.displayAvatarUrl())
+                .setThumbnail(member.user.defaultAvatarURL)
                 .setFooter({ text: "Por APOSTAS" });
 
             member.setNickname(displayName, `Cargo ${role.name} adicionado!`).catch(() => this.sendTemporaryMessage(interaction, "Ocorreu um erro ao tentar mudar o nome."));

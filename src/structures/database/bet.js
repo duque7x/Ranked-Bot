@@ -8,6 +8,7 @@ const betSchema = new mongoose.Schema({
     status: { type: [mongoose.Schema.Types.String], default: "on" },
     amount: { type: [mongoose.Schema.Types.String], default: "1" },
     winner: { type: mongoose.Schema.Types.String },
+    payed: String,
 });
 
 const Bet = mongoose.model("Bet", betSchema);
