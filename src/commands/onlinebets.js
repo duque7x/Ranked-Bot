@@ -15,7 +15,8 @@ module.exports = {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
         const bets = await Bet.find({});
         let embeds = [];
-
+        console.log(bets);
+        
         await bets.filter(bet => bet.status == "started" || bet.status == "won").forEach((bet, index) => {
             embeds.push(new EmbedBuilder()
                 .setTitle(`Aposta ${index + 1}`)
