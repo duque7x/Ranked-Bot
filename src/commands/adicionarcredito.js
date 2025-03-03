@@ -5,7 +5,7 @@ const BotClient = require("../index");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("adicionarcredito")
-        .setDescription("Este comando fecha uma aposta, você pode encontrar o id da aposta na descrição!")
+        .setDescription("Este comando adiciona credito a um usuario!")
         .addUserOption(option =>
             option.setName("usuário")
                 .setDescription("A quem eu adiciono a vitória?")

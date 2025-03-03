@@ -5,7 +5,7 @@ const BotClient = require("../index");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("removerderrota")
-        .setDescription("Este comando remove uma derrota!")
+        .setDescription("Este comando remove uma derrota de um certo usuario")
         .addUserOption(option =>
             option.setName("usuário")
                 .setDescription("A quem eu adiciono a vitória?")
