@@ -1,11 +1,11 @@
 const { ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, SlashCommandBuilder, Colors } = require("discord.js");
-const { removeWin } = require("../utils/utils");
+const { addLoss } = require("../utils/utils");
 const BotClient = require("../index");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("removervitoria")
-        .setDescription("Este comando remove uma vitoria")
+        .setName("adicionarderrota")
+        .setDescription("Este comando adiciona uma derrota!")
         .addUserOption(option =>
             option.setName("usuário")
                 .setDescription("A quem eu adiciono a vitória?")
@@ -21,10 +21,10 @@ module.exports = {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
         const user = interaction.options.getUser("usuário");
 
-        await removeWin(user, interaction);
+        await addLoss(user.id);
         
         const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de vitórias\n-# Vitórias removida a <@${user.id}>!`)
+            .setDescription(`# Gerenciador de derrotas\n-# Derrotas adicionadas a <@${user.id}>!`)
             .setColor(Colors.White)
             .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }))
             .setTimestamp();

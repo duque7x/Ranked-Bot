@@ -4,7 +4,7 @@ const Config = require("../structures/database/configs");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("bet")
+        .setName("aposta")
         .setDescription("Cria uma aposta com um tipo e canal específico.")
         .addStringOption(option =>
             option.setName("tipo")
@@ -24,6 +24,8 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+
         const { guildId, user, options, guild } = interaction;
 
         const betType = options.getString("tipo");

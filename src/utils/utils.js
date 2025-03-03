@@ -31,7 +31,18 @@ class Utils {
 
         return this.createBet(interaction, channel, amount);
     }
+    removeLoss = async (user) => {
+        const userId = user.id;
 
+        return await User.findOneAndUpdate(
+            { "player.id": userId, losses: { $gt: 0 } },
+            {
+                $inc: { losses: Math.max(0, -1) }
+            },
+            { upsert: true, new: true }
+        );
+
+    }
     createBet = async (interaction, channel, amount) => {
         try {
             const betType = channel.name.split("・")[1];
@@ -48,6 +59,34 @@ class Utils {
         } catch (err) {
             console.error(`Erro ao criar aposta no canal ${channel.name}:`, err);
         }
+    }
+    addLoss = async (userId) => {
+        return await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
+                $inc: { losses: 1 }
+            },
+            { upsert: true, new: true }
+        );
+    }
+    removeCredit = async (userId, amount) => {
+        return await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
+                $inc: { credit: -amount }
+            },
+            { new: true, upsert: true }
+        );
+    }
+    addCredit = async (userId, amount, isAdmin) => {
+        return await User.findOneAndUpdate(
+            { "player.id": userId },
+            {
+                $inc: { credit: amount },
+                $set: { isAdmin }
+            },
+            { new: true, upsert: true }
+        );
     }
     setBetWinner = async (bet, member) => {
         const userId = member.id;
@@ -201,33 +240,12 @@ class Utils {
 
         return { embed, logEmbed };
     }
-
-    async removeWin(userId, amount) {
-        const user = interaction.guild.members.cache.get(userId);
-        amount = amount ?? 1;
-
-        const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de vitorias e credito\nCrédito de **${amount}€** foi removido de <@${userId}>!`)
-            .setColor(Colors.DarkRed)
-            .setTimestamp();
-
-        const logEmbed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de vitorias e crédito\nCrédito de **${amount}€** foi removido de <@${userId}>!`)
-            .setColor(Colors.DarkRed)
-            .setTimestamp()
-            .addFields(
-                { name: "Valor removido", value: amount && !isNaN(amount) ? `${amount}€` : "Valor inválido" },
-            )
-            .setFooter({ text: `Por ${interaction.user.username}` });
-
-        const winLogChannel = interaction.guild.channels.cache.get("1339329876662030346");
-
-        const existingUser = await User.findOneAndUpdate(
-            { "player.id": userId },
+    removeWin = async (user, interaction) => {
+        return await User.findOneAndUpdate(
+            { "player.id": user.id },
             {
                 $set: {
-                    "player.name": user.user.username,
-                    "isAdmin": user.permissions.has(PermissionFlagsBits.Administrator),
+                    "player.name": user.username,
                 },
                 $inc: {
                     wins: -1,
@@ -235,9 +253,6 @@ class Utils {
             },
             { new: true, upsert: true } // Ensure that the user is created if not found, and return the updated user
         );
-        winLogChannel.send({ embeds: [logEmbed] });
-
-        return { logEmbed, embed };
     }
     async returnServerRank(interaction) {
         const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");

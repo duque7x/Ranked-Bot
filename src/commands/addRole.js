@@ -22,7 +22,7 @@ module.exports = {
  * @returns 
  */
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
         const role = interaction.options.getRole("cargo");
         const member = interaction.guild.members.cache.get(interaction.options.getUser("usuario").id);
 

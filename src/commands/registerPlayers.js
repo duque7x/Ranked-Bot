@@ -13,7 +13,8 @@ module.exports = {
      * @returns 
      */
     async execute(interaction, client) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+
 
         const members = interaction.guild.members.cache;
         const roleId = "1338983241759064228";

@@ -7,7 +7,7 @@ const { ChatInputCommandInteraction } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("manage")
+        .setName("gerenciar")
         .setDescription("Gerencia configurações das apostas.")
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>

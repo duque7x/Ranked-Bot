@@ -10,7 +10,8 @@ module.exports = {
      * @param {import("discord.js").ChatInputCommandInteraction} interaction
      */
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+
         const link = "https://discord.gg/HApztNnbvw";
 
         const embed = new EmbedBuilder()

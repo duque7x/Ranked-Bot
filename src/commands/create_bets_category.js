@@ -16,7 +16,8 @@ module.exports = {
         .setDescription("Este comando cria as categorias como apostas: emu, mistas, mob!"),
 
     async execute(interaction, client) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+    
         if (interaction.user.id !== "877598927149490186") return;
 
         const amounts = [1, 2, 3, 5, 7, 10, 25, 50, 100];

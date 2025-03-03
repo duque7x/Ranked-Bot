@@ -21,6 +21,8 @@ module.exports = {
      * @returns 
      */
     async execute(interaction, client) {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+
         const channel = interaction.options.getChannel('canal');
         const messageContent = interaction.options.getString('mensagem');
 
