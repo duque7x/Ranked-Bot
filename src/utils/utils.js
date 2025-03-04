@@ -239,14 +239,15 @@ class Utils {
             await User.findOneAndUpdate(
                 { "player.id": member.id },
                 {
-                    player: {
-                        id: member.id,
-                        name: member.user.username // Use user.username for the Discord username
-                    },
-                    isAdmin: member.permissions.has(PermissionFlagsBits.Administrator)
+                    $set: {
+                        "player.name": member.user.username,
+                        "player.id": member.user.id,
+                        isAdmin: member.permissions.has(PermissionFlagsBits.Administrator)
+                    }
                 },
-                { new: true, upsert: true } // upsert: true will create a new document if it doesn't exist
+                { new: true, upsert: true }
             );
+            
         }
         const users = await User.find().sort({ wins: -1 });
         const perPage = 10;
@@ -269,7 +270,7 @@ class Utils {
             };
 
             return new EmbedBuilder()
-                .setThumbnail(firstRanked?.displayAvatarURL())
+                .setThumbnail(firstRanked?.user.displayAvatarURL())
                 .setTitle("Ranking de Vitórias")
                 .setDescription(
                     paginatedUsers.map((user, index) =>
