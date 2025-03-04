@@ -31,18 +31,18 @@ class Utils {
 
         return this.createBet(interaction, channel, amount);
     }
-    removeLoss = async (user) => {
-        const userId = user.id;
-
-        return await User.findOneAndUpdate(
-            { "player.id": userId, losses: { $gt: 0 } },
-            {
-                $inc: { losses: Math.max(0, -1) }
-            },
-            { upsert: true, new: true }
-        );
-
-    }
+    errorMessages = {
+        'bet_off': "# Essa aposta foi fechada!\n-# Aguarde antes de tentar novamente.",
+        'bet_started': "# A aposta já foi iniciada.\n-# Aguarde a conclusão antes de tentar novamente.",
+        'bet_won': "# Esta aposta já tem um ganhador!\n-# Foi um engano?\n-# Chame um ADM para o ajudar. **MANDE PROVAS!**",
+        'blacklist': "# Você está na *blacklist*!\n-# Deseja **sair**? Abra um ticket <#1339284682902339594>",
+        'bet_in': "# Você já está na aposta...",
+        'bet_full': "# A aposta já está cheia!",
+        'bet_not_full': "# A aposta não está preenchida!",
+        'bet_not_in': "# Você não se encontra nesta aposta!",
+        'bet_no_winner': "# Vocês precisam definir o vencedor!",
+        'bets_off': "# As apostas estão fechadas no momento!\n-# Aguarde antes de tentar novamente.",
+    };
     createBet = async (interaction, channel, amount) => {
         try {
             const betType = channel.name.split("・")[1];
@@ -55,38 +55,10 @@ class Utils {
             });
 
             await newBet.save();
-            await sendBetEmbed(interaction, betType, newBet, amount, channel);
+            await this.sendBetEmbed(interaction, betType, newBet, amount, channel);
         } catch (err) {
             console.error(`Erro ao criar aposta no canal ${channel.name}:`, err);
         }
-    }
-    addLoss = async (userId) => {
-        return await User.findOneAndUpdate(
-            { "player.id": userId },
-            {
-                $inc: { losses: 1 }
-            },
-            { upsert: true, new: true }
-        );
-    }
-    removeCredit = async (userId, amount) => {
-        return await User.findOneAndUpdate(
-            { "player.id": userId },
-            {
-                $inc: { credit: -amount }
-            },
-            { new: true, upsert: true }
-        );
-    }
-    addCredit = async (userId, amount, isAdmin) => {
-        return await User.findOneAndUpdate(
-            { "player.id": userId },
-            {
-                $inc: { credit: amount },
-                $set: { isAdmin }
-            },
-            { new: true, upsert: true }
-        );
     }
     setBetWinner = async (bet, member) => {
         const userId = member.id;
@@ -163,22 +135,26 @@ class Utils {
             { upsert: true, new: true }
         );
     }
-    addLoss = async (user, interaction) => {
-        if (!user) return this.sendReply(interaction, "Membro inválido.");
-        const userId = user.id;
-        const member = interaction.guild.members.cache.get(userId);
-        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
-
+    addLoss = async (userId) => {
         return await User.findOneAndUpdate(
             { "player.id": userId },
             {
-                $setOnInsert: {
-                    isAdmin: isAdmin,
-                },
                 $inc: { losses: 1 }
             },
             { upsert: true, new: true }
         );
+    }
+    removeLoss = async (user) => {
+        const userId = user.id;
+
+        return await User.findOneAndUpdate(
+            { "player.id": userId, losses: { $gt: 0 } },
+            {
+                $inc: { losses: Math.max(0, -1) }
+            },
+            { upsert: true, new: true }
+        );
+
     }
     sendReply = async (interaction, content) => {
         return interaction.replied || interaction.deferred
@@ -240,12 +216,14 @@ class Utils {
 
         return { embed, logEmbed };
     }
-    removeWin = async (user, interaction) => {
+    removeWin = async (userId, interaction) => {
+        const member = interaction.guild.members.cache.get(userId);
+
         return await User.findOneAndUpdate(
-            { "player.id": user.id },
+            { "player.id": userId },
             {
                 $set: {
-                    "player.name": user.username,
+                    "player.name": member.user.username,
                 },
                 $inc: {
                     wins: -1,
@@ -254,9 +232,24 @@ class Utils {
             { new: true, upsert: true } // Ensure that the user is created if not found, and return the updated user
         );
     }
-    async returnServerRank(interaction) {
+    returnServerRank = async (interaction) => {
         const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
+        await interaction.guild.members.fetch();
+        const members = interaction.guild.members.cache;
 
+        for (const member of members.values()) {
+            await User.findOneAndUpdate(
+                { "player.id": member.id },
+                {
+                    player: {
+                        id: member.id,
+                        name: member.user.username // Use user.username for the Discord username
+                    },
+                    isAdmin: member.permissions.has(PermissionFlagsBits.Administrator)
+                },
+                { new: true, upsert: true } // upsert: true will create a new document if it doesn't exist
+            );
+        }
         const users = await User.find().sort({ wins: -1 });
         const perPage = 10;
         let page = 0;
@@ -268,7 +261,7 @@ class Utils {
         const generateEmbed = async () => {
             const start = page * perPage;
             const paginatedUsers = users.slice(start, start + perPage);
-            const returnedUser = await module.exports.returnUserRank(interaction.user, interaction);
+            const returnedUser = await this.returnUserRank(interaction.user, interaction);
 
 
             const userStats = {
@@ -302,7 +295,7 @@ class Utils {
         );
 
         // Send the interaction with response and components
-        const message = await interaction.followUp({
+        const message = await interaction.reply({
             embeds: [await generateEmbed()], // Await to resolve the async function
             components: [row()],
             fetchReply: true,
@@ -326,7 +319,7 @@ class Utils {
      * @param {ButtonInteraction} interaction 
      * @returns 
      */
-    async returnUserRank(user, interaction, option) {
+    returnUserRank = async (user, interaction, option) => {
         // Default to interaction.user if no user is provided
         user = user ?? interaction.user;
 
@@ -366,51 +359,45 @@ class Utils {
 
         // Conditional reply or log the embed based on the option
         if (option === "send") {
-            return interaction.followUp({ embeds: [embed], flags: 64 });
+            return interaction.reply({ embeds: [embed], flags: 64 });
         }
 
         return { foundUser, embed };
     }
+    sendBetEmbed = async (interaction, betType, betData, amount, channelToSend) => {
+        const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
+        const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
+
+        const embed = new EmbedBuilder()
+            .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
+            .addFields([
+                { name: "Equipa 1", value: "Slot vazio", inline: true },
+                { name: "Equipa 2", value: "Slot vazio", inline: true }
+            ])
+            .setColor(Colors.White);
+
+        const enterBet = new ButtonBuilder()
+            .setCustomId(enterBetId)
+            .setLabel("Entrar na aposta")
+            .setStyle(ButtonStyle.Success);
+
+        const outBet = new ButtonBuilder()
+            .setCustomId(outBetId)
+            .setLabel("Sair da aposta")
+            .setStyle(ButtonStyle.Danger);
+
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`select_menu-${betType}-${betData._id}`)
+            .addOptions([
+                { label: "Iniciar aposta", value: "start_bet_value" },
+                { label: "Voltar", value: "go_back" }
+            ]);
+
+        const row1 = new ActionRowBuilder().addComponents(enterBet, outBet);
+        const row2 = new ActionRowBuilder().addComponents(selectMenu);
+
+        await channelToSend.send({ embeds: [embed], components: [row2, row1] });
+        return;
+    }
 };
-
-async function getBetById(betId) {
-    const bet = await Bet.findOne({ _id: betId });
-    return bet;
-}
-async function sendBetEmbed(interaction, betType, betData, amount, channelToSend) {
-    const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
-    const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
-
-    const embed = new EmbedBuilder()
-        .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
-        .addFields([
-            { name: "Equipa 1", value: "Slot vazio", inline: true },
-            { name: "Equipa 2", value: "Slot vazio", inline: true }
-        ])
-        .setColor(Colors.White);
-
-    const enterBet = new ButtonBuilder()
-        .setCustomId(enterBetId)
-        .setLabel("Entrar na aposta")
-        .setStyle(ButtonStyle.Success);
-
-    const outBet = new ButtonBuilder()
-        .setCustomId(outBetId)
-        .setLabel("Sair da aposta")
-        .setStyle(ButtonStyle.Danger);
-
-    const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`select_menu-${betType}-${betData._id}`)
-        .addOptions([
-            { label: "Iniciar aposta", value: "start_bet_value" },
-            { label: "Voltar", value: "go_back" }
-        ]);
-
-    const row1 = new ActionRowBuilder().addComponents(enterBet, outBet);
-    const row2 = new ActionRowBuilder().addComponents(selectMenu);
-
-    await channelToSend.send({ embeds: [embed], components: [row2, row1] });
-    return;
-}
-
 module.exports = new Utils();
