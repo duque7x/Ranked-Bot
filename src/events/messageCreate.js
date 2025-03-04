@@ -35,7 +35,7 @@ module.exports = class MessageEvent {
     const commandName = args.shift();
     const command = cl.commands.get(commandName);
 
-    if (message.channel.id == "1338575355665186856") {
+    if (message.channel.id == "1338575355665186856" && /^\d+$/.test(message.content)) {
       const serverInfo = await Config.findOne({ "guild.id": message.guildId });
       const blacklist = serverInfo.blacklist;
       if (blacklist.some(id => id.startsWith(message.content))) {
