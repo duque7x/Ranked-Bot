@@ -247,11 +247,12 @@ class Utils {
                 },
                 { new: true, upsert: true }
             );
-            
+
         }
         const users = await User.find().sort({ wins: -1 });
         const perPage = 10;
         let page = 0;
+        console.log(users);
 
         // Find the user's rank in the sorted array
         const userRank = users.findIndex(u => u.player.id === interaction.user.id) + 1;
