@@ -260,6 +260,7 @@ class Utils {
             const start = page * perPage;
             const paginatedUsers = users.slice(start, start + perPage);
             const returnedUser = await this.returnUserRank(interaction.user, interaction);
+            console.log({ userRank, firstRanked });
 
 
             const userStats = {
