@@ -216,14 +216,12 @@ class Utils {
 
         return { embed, logEmbed };
     }
-    removeWin = async (userId, interaction) => {
-        const member = interaction.guild.members.cache.get(userId);
-
+    removeWin = async (user, interaction) => {
         return await User.findOneAndUpdate(
-            { "player.id": userId },
+            { "player.id": user.id },
             {
                 $set: {
-                    "player.name": member.user.username,
+                    "player.name": user.username,
                 },
                 $inc: {
                     wins: -1,

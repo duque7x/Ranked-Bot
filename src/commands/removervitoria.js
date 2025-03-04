@@ -21,7 +21,7 @@ module.exports = {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
         const user = interaction.options.getUser("usuário");
 
-        await removeWin(user, interaction);
+        await removeWin(user, interaction); 
         
         const embed = new EmbedBuilder()
             .setDescription(`# Gerenciador de vitórias\n-# Vitórias removida a <@${user.id}>!`)
