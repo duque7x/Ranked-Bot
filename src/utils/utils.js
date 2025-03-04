@@ -256,7 +256,8 @@ class Utils {
 
         // Find the user's rank in the sorted array
         const userRank = users.findIndex(u => u.player.id === interaction.user.id) + 1;
-        const firstRanked = interaction.guild.members.cache.get(users[0].player.id);
+        const firstRankedId = users[0].player.id;
+        const firstRanked = interaction.guild.members.cache.has(firstRankedId) ? interaction.guild.members.cache.get(firstRankedId) : interaction.guild.members.cache.get("1323068234320183407");
 
         const generateEmbed = async () => {
             const start = page * perPage;
@@ -271,7 +272,7 @@ class Utils {
             };
 
             return new EmbedBuilder()
-                .setThumbnail(firstRanked?.user.displayAvatarURL())
+                .setThumbnail(firstRanked?.user?.displayAvatarURL())
                 .setTitle("Ranking de Vitórias")
                 .setDescription(
                     paginatedUsers.map((user, index) =>
