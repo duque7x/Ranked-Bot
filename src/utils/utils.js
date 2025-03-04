@@ -268,7 +268,7 @@ class Utils {
             };
 
             return new EmbedBuilder()
-                .setThumbnail(firstRanked.displayAvatarURL())
+                .setThumbnail(firstRanked?.displayAvatarURL())
                 .setTitle("Ranking de Vitórias")
                 .setDescription(
                     paginatedUsers.map((user, index) =>
