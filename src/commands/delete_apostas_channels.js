@@ -11,7 +11,8 @@ module.exports = {
      * @param {BotClient} client
      */
     async execute(interaction, client) {
-        if (interaction.user.id !== "877598927149490186") return;
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flgas: 64 });
+
 
         const channels = interaction.guild.channels.cache.filter(c =>
             c.name.includes("emulador") || c.name.includes("mobile") || c.name.includes("mistas")

@@ -3,16 +3,17 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('send')
-        .setDescription('Send a message to a specific channel.')
+        .setName('enviar')
+        .setDescription('Envia uma mensagem.')
         .addChannelOption(option =>
             option.setName('canal')
                 .setDescription('O canal para mandar a mensagem')
-                .setRequired(true))
+        )
         .addStringOption(option =>
             option.setName('mensagem')
                 .setDescription('A mensagem para mandar')
-                .setRequired(true)),
+                .setRequired(true)
+        ),
 
     /**
      * 
@@ -21,9 +22,9 @@ module.exports = {
      * @returns 
      */
     async execute(interaction, client) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flgas: 64 });
 
-        const channel = interaction.options.getChannel('canal');
+        const channel = interaction.options.getChannel('canal') ?? interaction.channel;
         const messageContent = interaction.options.getString('mensagem');
 
 

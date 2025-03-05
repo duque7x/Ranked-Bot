@@ -12,7 +12,8 @@ module.exports = {
      * @param {import("discord.js").ChatInputCommandInteraction} interaction
      */
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flgas: 64 });
+
 
         const bets = await Bet.find({});
         let embeds = [];

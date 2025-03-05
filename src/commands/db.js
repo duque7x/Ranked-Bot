@@ -72,7 +72,8 @@ module.exports = {
         return interaction.reply({ embeds: [embed] });
     },
     async execute(interaction, client) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flgas: 64 });
+
 
         const subcommand = interaction.options.getSubcommand();
 

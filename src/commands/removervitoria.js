@@ -18,7 +18,8 @@ module.exports = {
      * @returns 
      */
     async execute(interaction, client) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply("# Você não tem permissões.");
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flgas: 64 });
+
         const user = interaction.options.getUser("usuário");
 
         await removeWin(user, interaction); 
