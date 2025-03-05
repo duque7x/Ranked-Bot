@@ -11,7 +11,7 @@ module.exports = {
         .setDescription("Gerencia configurações das apostas.")
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>
-            subcommand.setName("bet")
+            subcommand.setName("aposta")
                 .setDescription("Gerencia apostas.")
                 .addStringOption(option =>
                     option.setName("bet_id")
@@ -104,7 +104,7 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
 
         switch (subcommand) {
-            case "bet":
+            case "aposta":
                 return this.betHandler(interaction);
             case "config":
                 return this.configHandler(interaction);

@@ -54,7 +54,6 @@ module.exports = class {
 
                 await member.roles.add(defaultRole);
                 console.log(`Default role assigned to ${member.user.tag}.`);
-
                 defaultChannel.send({ embeds: [embed] })
             } catch (error) {
                 console.error(`Failed to assign role to ${member.user.tag}:`, error);
