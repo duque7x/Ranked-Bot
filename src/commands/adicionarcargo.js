@@ -3,7 +3,7 @@ const myColours = require("../structures/colours");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("addrole")
+        .setName("adicionarcargo")
         .setDescription("Adiciona um cargo a um usuário.")
         .addRoleOption(option =>
             option.setName("cargo")
