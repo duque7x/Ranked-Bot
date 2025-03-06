@@ -166,7 +166,7 @@ module.exports = class InteractionEvent {
                 let bet = await Bet.findById(betId);
                 if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return this.sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para definir um vencedor!");
                 if (!bet) return this.sendReply(interaction, "# Esta aposta não existe!");
-                if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
+                if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won + `\nId: **${betId}**`);
 
                 const setWinnerEmbed = new EmbedBuilder()
                     .setColor(myColours.rich_black)
@@ -184,7 +184,7 @@ module.exports = class InteractionEvent {
                 const [action, betId, winingPlayerId, losingPlayerId] = customId.split("-");
 
                 const bet = await Bet.findOne({ _id: betId });
-                if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
+                if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won + `\nId: **${betId}**`);
                 const winningMember = interaction.guild.members.cache.get(winingPlayerId);
                 const losingMember = interaction.guild.members.cache.get(losingPlayerId);
 

@@ -5,16 +5,16 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('enviar')
         .setDescription('Envia uma mensagem.')
-        .addChannelOption(option =>
-            option.setName('canal')
-                .setDescription('O canal para mandar a mensagem')
-        )
         .addStringOption(option =>
             option.setName('mensagem')
                 .setDescription('A mensagem para mandar')
                 .setRequired(true)
+        )
+        .addChannelOption(option =>
+            option.setName('canal')
+                .setDescription('O canal para mandar a mensagem')
         ),
-
+        
     /**
      * 
      * @param {import("discord.js").Interaction} interaction 
