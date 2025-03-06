@@ -182,10 +182,9 @@ module.exports = class InteractionEvent {
             }
             if (customId.startsWith("btn_set_winner")) {
                 const [action, betId, winingPlayerId, losingPlayerId] = customId.split("-");
-                //if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
 
                 const bet = await Bet.findOne({ _id: betId });
-                //if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
+                if (bet.winner) return this.sendReply(interaction, errorMessages.bet_won);
                 const winningMember = interaction.guild.members.cache.get(winingPlayerId);
                 const losingMember = interaction.guild.members.cache.get(losingPlayerId);
 

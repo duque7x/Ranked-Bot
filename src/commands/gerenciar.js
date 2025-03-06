@@ -43,10 +43,10 @@ module.exports = {
                 )
         )
         .addSubcommand(subcommand =>
-            subcommand.setName("config")
+            subcommand.setName("alterarestado")
                 .setDescription("Altera configurações.")
                 .addStringOption(option =>
-                    option.setName("option")
+                    option.setName("opção")
                         .setDescription("Opção a ser alterada.")
                         .setRequired(true)
                         .addChoices(
@@ -107,7 +107,7 @@ module.exports = {
         switch (subcommand) {
             case "aposta":
                 return this.betHandler(interaction);
-            case "config":
+            case "alterarestado":
                 return this.configHandler(interaction);
             case "blacklist":
                 return this.blacklistHandler(interaction);
@@ -147,7 +147,7 @@ module.exports = {
         }
     },
     async configHandler(interaction) {
-        const option = interaction.options.getString("option");
+        const option = interaction.options.getString("opção");
         let serverConfig = await Config.findOne({ "guild.id": interaction.guildId });
 
         if (!serverConfig) {
