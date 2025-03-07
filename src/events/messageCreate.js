@@ -56,7 +56,7 @@ module.exports = class MessageEvent {
         message.reply({ embeds: [embed] })
       }
     }
-    if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
+   // if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
     if (!message.content.startsWith(prefix)) return;
 
     if (!cl.commands) {
