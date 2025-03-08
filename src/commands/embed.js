@@ -15,6 +15,7 @@ module.exports = {
                     { name: "vencedor", value: "winner" },
                     { name: "como jogar", value: "play" },
                     { name: "regras 1x1", value: "rules_1v1" },
+                    { name: "ss emu", value: "ssEmu" },
                 )
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
@@ -66,7 +67,6 @@ module.exports = {
 ﻿﻿﻿\`ARMAS QUE NÃO ESTÃO ACIMA NÃO VALEM\`
 \`﻿PET ERRADO REFAZER ATÉ O 3a0 OU 3A3\`
 `;
-
         const taticosRule = `# REGRAS TÁTICO
 ## ARMAS QUE NÃO VALEM
 > AC80
@@ -87,7 +87,31 @@ module.exports = {
 \`PLATAFORMA DE OBS E TODOS OS CONTAINERS VALE\`
 \`VÁLIDO SUBIR NOS CAMINHÕES\`
 \`SE AMBOS TIMES CONCORDAREM SOBRE USO DE AC80/GRANADA, ESSAS ARMAS SERAM PERMITIDAS!\``;
+        const emuSSrules = `# REGRAS SS EMULADOR
+> Emulador é Proibido **Relogar**
+> Suspeita de emulador a mais é **permitido pedir tela para ver se tem a quantidade de emu** corresponde a que está na fila.
+> Caso esteja com suspeita de **hack**, específicar na aposta qual é o jogador a ser telado!
+> Apenas **dois** podem estar desativados (dependendo das provas encontradas em ScreenShare, será passível de W.O
 
+Negar acesso via **AnyDesk** ou **TeamViewer W.O**
+
+Proibido remoção de **pendrive** do computador pós partida
+
+Proibido **clumsy**, **cheat engine**, ou quaisquer app de **injeção de hacks**, mesmo com **intuito de FPS** e etc
+
+**Windows stoppado** ou falta de serviços podem resultar em W.O
+
+Qualquer **rastro** ou tentativa de **bypass** (injeção ou quaisquer modificações de dll durante/após partida.) W.O
+
+O uso de **Clear String** é estritamente proibido (ou qualquer ferramenta/utilitário que limpe evidências)
+
+Os seguintes serviços/processos são obrigatórios: **PcaSvc, Dps, DiagTrack, SysMain e Sysmon**
+
+Obrigatório ter **csrss**
+
+**Sysmon modificado W.O**
+
+**Se tivermos provas concretas, o jogador sera banido do servidor por tempo indefinido**`
         const occassions = {
             winner: new EmbedBuilder()
                 .setColor(myColours.rich_black)
@@ -102,7 +126,8 @@ module.exports = {
             play: new EmbedBuilder()
                 .setDescription(`# Como jogar?\n-# Você não tem que se inscrever em nada!\n-# Você simplesmente precisa entrar e jogar, por exemplo em: <#1338286584126247013>\n\nNota: Leia as <#1338244626984992788> antes de jogar!`)
                 .setColor(Colors.White),
-            rules_1v1: new EmbedBuilder()
+            ssEmu: new EmbedBuilder(Colors.Aqua)
+            .setDescription(emuSSrules)
         };
 
         const tipo = interaction.options.getString("tipo");
