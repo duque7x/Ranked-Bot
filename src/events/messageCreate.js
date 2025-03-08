@@ -62,7 +62,7 @@ module.exports = class MessageEvent {
     if (message.content == ".rank") {
       return returnServerRank(message)
     } if (message.content == ".p") {
-      return returnUserRank(message)
+      return returnUserRank(message.author, message)
     }
     if (!cl.commands) {
       console.error('Commands collection is not defined!');
