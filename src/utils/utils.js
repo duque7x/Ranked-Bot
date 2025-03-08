@@ -264,8 +264,6 @@ class Utils {
         await interaction.guild.members.fetch();
         const members = interaction.guild.members.cache;
 
-        await this.updateMembers(members);
-
         const users = await User.find().sort({ wins: -1 });
         const perPage = 10;
         let page = 0;
