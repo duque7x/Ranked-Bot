@@ -291,7 +291,6 @@ class Utils {
                     ).join("\n") +
                     `\n\n**Suas estatísticas:**\n**Vitórias**: ${userStats.Vitórias}\n**Posição**: ${userStats.Posição}`
                 )
-                .setColor(Colors.Aqua)
                 .setFooter({ text: `Página ${page + 1}` })
         };
 
