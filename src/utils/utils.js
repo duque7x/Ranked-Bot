@@ -259,7 +259,6 @@ class Utils {
         await Promise.all(updates);
     }
     returnServerRank = async (interaction) => {
-        interaction.deferReply({ flags: 64 });
         const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
         await interaction.guild.members.fetch();
         const members = interaction.guild.members.cache;
@@ -309,7 +308,7 @@ class Utils {
         );
 
         // Send the interaction with response and components
-        const message = await interaction.followUp({
+        const message = await interaction.reply({
             embeds: [await generateEmbed()], // Await to resolve the async function
             components: [row()],
             fetchReply: true,
