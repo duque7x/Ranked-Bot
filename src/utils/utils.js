@@ -237,17 +237,19 @@ class Utils {
         const members = interaction.guild.members.cache;
 
         for (const member of members.values()) {
-            await User.findOneAndUpdate(
-                { "player.id": member.id },
-                {
-                    $set: {
-                        "player.name": member.user.username,
-                        "player.id": member.user.id,
-                        isAdmin: member.permissions.has(PermissionFlagsBits.Administrator)
-                    }
-                },
-                { new: true, upsert: true }
-            );
+            User.exists({ "player.id": member.id }) ?
+                members :
+                await User.findOneAndUpdate(
+                    { "player.id": member.id },
+                    {
+                        $set: {
+                            "player.name": member.user.username,
+                            "player.id": member.user.id,
+                            isAdmin: member.permissions.has(PermissionFlagsBits.Administrator)
+                        }
+                    },
+                    { new: true, upsert: true }
+                );
 
         }
         const users = await User.find().sort({ wins: -1 });
