@@ -40,7 +40,7 @@ module.exports = {
             administrador: "ADM │",
             staff: "STAFF │",
             mediadores: "MED │",
-            team: "SS │",
+            ss: "SS │",
             analista: "ANALISE │",
         };
 
@@ -52,7 +52,7 @@ module.exports = {
             }
         }
 
-        const displayName = `${roleTag} ${member.user.username.toUpperCase()}`;
+        const displayName = `${roleTag} ${member.user.username}`;
         const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
 
         if (member.roles.cache.has(role.id) && member.nickname !== displayName) {
