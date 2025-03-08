@@ -11,6 +11,7 @@ const {
 } = require("discord.js");
 const BotClient = require("..");
 const Config = require("../structures/database/configs");
+const { returnServerRank, returnUserRank } = require("../utils/utils");
 
 module.exports = class MessageEvent {
   /**
@@ -29,7 +30,7 @@ module.exports = class MessageEvent {
   async execute(message, cl) {
     if (message.author.bot) return;
 
-    const prefix = "!";
+    const prefix = ".";
     // Get the command and arguments
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift();
@@ -56,9 +57,13 @@ module.exports = class MessageEvent {
         message.reply({ embeds: [embed] })
       }
     }
-   // if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
+    // if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
     if (!message.content.startsWith(prefix)) return;
-
+    if (message.content == ".rank") {
+      return returnServerRank(message)
+    } if (message.content == ".p") {
+      return returnUserRank(message)
+    }
     if (!cl.commands) {
       console.error('Commands collection is not defined!');
       return;

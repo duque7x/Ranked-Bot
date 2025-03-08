@@ -268,18 +268,18 @@ class Utils {
         let page = 0;
 
         // Find the user's rank in the sorted array
-        const userRank = users.findIndex(u => u.player.id === interaction.user.id) + 1;
+        const userRankPosition = users.findIndex(u => u.player.id === interaction.member.user.id) + 1;
         const firstRankedId = users[0].player.id;
         const firstRanked = interaction.guild.members.cache.has(firstRankedId) ? interaction.guild.members.cache.get(firstRankedId) : interaction.guild.members.cache.get("1323068234320183407");
 
         const generateEmbed = async () => {
             const start = page * perPage;
             const paginatedUsers = users.slice(start, start + perPage);
-            const returnedUser = await this.returnUserRank(interaction.user, interaction);
+            const returnedUser = await this.returnUserRank(interaction.member.user, interaction);
 
             const userStats = {
                 "Vitórias": returnedUser.foundUser.wins ?? 0,
-                "Posição": userRank > 0 ? `${userRank}` : "Não classificado"
+                "Posição": userRankPosition > 0 ? `${userRankPosition}` : "Não classificado"
             };
 
             return new EmbedBuilder()
@@ -334,7 +334,7 @@ class Utils {
      */
     returnUserRank = async (user, interaction, option) => {
         // Default to interaction.user if no user is provided
-        user = user ?? interaction.user;
+        user = user ?? interaction.member.user;
 
         // Get member from the guild
         const member = interaction.guild.members.cache.get(user.id);
