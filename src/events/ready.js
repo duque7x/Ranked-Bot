@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { Client, Collection, ChannelType, PermissionsBitField, ActivityType, ActivityFlags } = require("discord.js");
 const BotClient = require("..");
+const chalk = new (require('chalk').Chalk);
 
 module.exports = class ReadyEvent {
   /**
@@ -19,6 +20,7 @@ module.exports = class ReadyEvent {
       type: ActivityType.Custom,
     });
 
-    console.log(`Logged in as ${this.client.user.tag}`);
+    console.log(chalk.bgBlue(`O bot está on! Com o nome ${this.client.user.username} e com ${this.client.guilds.cache.size} guildas`));
+    this.client.guilds.cache.forEach(g => console.log(chalk.bgBlack(`Nome da guilda: ${g.name}. Membros ${g.members.cache.size}`)));
   }
 };

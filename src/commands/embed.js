@@ -14,9 +14,12 @@ module.exports = {
                     { name: "tatico", value: "tatico" },
                     { name: "vencedor", value: "winner" },
                     { name: "como jogar", value: "play" },
-                    { name: "regras 1x1", value: "rules_1v1" },
                     { name: "ss emu", value: "ssEmu" },
                 )
+        )
+        .addChannelOption(o =>
+            o.setName("canal")
+                .setDescription("Canal para enviar a embed.")
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
@@ -127,15 +130,16 @@ Obrigatório ter **csrss**
                 .setDescription(`# Como jogar?\n-# Você não tem que se inscrever em nada!\n-# Você simplesmente precisa entrar e jogar, por exemplo em: <#1338286584126247013>\n\nNota: Leia as <#1338244626984992788> antes de jogar!`)
                 .setColor(Colors.White),
             ssEmu: new EmbedBuilder(Colors.Aqua)
-            .setDescription(emuSSrules)
+                .setDescription(emuSSrules)
         };
 
         const tipo = interaction.options.getString("tipo");
+        const channel = interaction.options.getChannel("canal") ?? interaction.channel;
 
         if (occassions[tipo]) {
-            return interaction.reply({ embeds: [occassions[tipo]] });
+            return channel.send({ embeds: [occassions[tipo]] });
         }
 
-        return interaction.reply({ content: "Comando inválido. Tente novamente.", flags: 64 });
+        return interaction.reply({ content: `# Embed \`${tipo}\` nao existe. Tente: \`${Object.keys(occassions).join(", ")}\``, flags: 64 });
     }
 };

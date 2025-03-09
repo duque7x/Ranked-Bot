@@ -2,6 +2,7 @@ const { Client, IntentsBitField, Collection, REST, Routes, Partials } = require(
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
+const chalk = new (require('chalk').Chalk);
 
 class BotClient extends Client {
     constructor(options) {
@@ -53,7 +54,7 @@ class BotClient extends Client {
 
         (async () => {
             try {
-                console.log('Started refreshing application (/) commands.');
+                console.log(chalk.red('Started refreshing application (/) commands.'));
                 await rest.put(
                     Routes.applicationGuildCommands(process.env.CLIENT_ID, "1336809872884371587"),
                     { body: [] } // Remove todos os comandos da guilda antes de registrar novos
@@ -63,7 +64,7 @@ class BotClient extends Client {
                     { body: this.commandArray },
                 );
 
-                console.log('Successfully reloaded application (/) commands.');
+                console.log(chalk.bgMagenta('Successfully reloaded application (/) commands.'));
             } catch (error) {
                 console.error(error);
             }

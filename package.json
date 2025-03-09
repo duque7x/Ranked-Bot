@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "chalk": "^5.4.1",
     "discord.js": "^14.17.2",
     "dotenv": "^16.4.7",
     "mongoose": "^8.10.0"
