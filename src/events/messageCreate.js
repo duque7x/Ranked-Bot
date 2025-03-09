@@ -61,7 +61,7 @@ module.exports = class MessageEvent {
     if (!message.content.startsWith(prefix)) return;
     if (message.content == ".rank") {
       return returnServerRank(message)
-    } if (message.content == ".p") {
+    } if (message.content.startsWith(".p")) {
       const user = message.guild.members.cache.get(args[0])?.user ?? message.author;
       return returnUserRank(user, message, "send")
     }
