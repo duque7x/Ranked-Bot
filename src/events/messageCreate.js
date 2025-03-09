@@ -62,7 +62,7 @@ module.exports = class MessageEvent {
     if (message.content == ".rank") {
       return returnServerRank(message)
     } if (message.content == ".p") {
-      const user = message.guild.members.cache.get(args[0]).user ?? message.author;
+      const user = message.guild.members.cache.get(args[0])?.user ?? message.author;
       return returnUserRank(user, message, "send")
     }
     if (!cl.commands) {
