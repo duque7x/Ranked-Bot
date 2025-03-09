@@ -2,7 +2,7 @@ const { Client, IntentsBitField, Collection, REST, Routes, Partials } = require(
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
-const chalk = new (require('chalk').Chalk);
+const chalk = require('chalk');
 
 class BotClient extends Client {
     constructor(options) {

@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { Client, Collection, ChannelType, PermissionsBitField, ActivityType, ActivityFlags } = require("discord.js");
 const BotClient = require("..");
-const chalk = new (require('chalk').Chalk);
+const chalk = require('chalk');
 
 module.exports = class ReadyEvent {
   /**
