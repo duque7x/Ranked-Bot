@@ -62,7 +62,8 @@ module.exports = class MessageEvent {
     if (message.content == ".rank") {
       return returnServerRank(message)
     } if (message.content == ".p") {
-      return returnUserRank(message.author, message, "send")
+      const user = message.guild.members.cache.get(args[0]).user ?? message.author;
+      return returnUserRank(user, message, "send")
     }
     if (!cl.commands) {
       console.error('Commands collection is not defined!');
