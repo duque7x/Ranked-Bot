@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,7 +13,8 @@ module.exports = {
         .addChannelOption(option =>
             option.setName('canal')
                 .setDescription('O canal para mandar a mensagem')
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
         
     /**
      * 
@@ -28,6 +29,6 @@ module.exports = {
         const messageContent = interaction.options.getString('mensagem');
 
 
-        channel.send(`# ${messageContent}\n||@everyone @here||`);
+        channel.send(`@everyone`);
     },
 };

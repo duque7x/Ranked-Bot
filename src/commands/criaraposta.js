@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
 const Bet = require("../structures/database/bet");
 const Config = require("../structures/database/configs");
+const { sendBetEmbed, createBet } = require("../utils/utils");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -21,7 +22,7 @@ module.exports = {
                 .setDescription("Valor da aposta (€).")
                 .setRequired(false)
         )
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
@@ -44,36 +45,11 @@ module.exports = {
         if (!["1x1", "2x2", "3x3", "4x4", "5x5", "6x6", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6"].includes(betType)) {
             return interaction.reply({ content: "-# Tipo de aposta inválido!", flags: 64 });
         }
-
-        if (amount <= 0) {
-            return interaction.reply({ content: "-# O valor da aposta precisa ser um número positivo!", flags: 64 });
-        }
-
-        const activeBet = await Bet.findOne({ players: userId });
-
-        const restrictedUsers = ["877598927149490186", "1323068234320183407", "1031313654475395072"];
-
-        if (activeBet && activeBet.status !== "off" && !restrictedUsers.includes(userId)) {
-            const channelIdActive = activeBet.betChannel?.id ? activeBet.betChannel.id : "";
-            return interaction.reply({ content: `-# Você já está em outra aposta! <#${channelIdActive}>`, flags: 64 });
-        }
-
         try {
-            // Criar e salvar a aposta no MongoDB
-            const newBet = new Bet({
-                betType,
-                amount,
-                betChannel: {
-                    id: channelToSend.id,
-                    name: channelToSend.name
-                }
-            });
+            const bet = await createBet(interaction, channelToSend, amount, betType)
 
-            await newBet.save();
-
-            console.log("Bet criada: betID", newBet._id);
-
-            await sendBetEmbed(channelToSend, betType, newBet, amount);
+            await sendBetEmbed(interaction, betType, bet, amount, channelToSend);
+            
             interaction.reply({ content: "-# Aposta criada com sucesso!", flags: 64 });
 
         } catch (err) {
@@ -82,47 +58,3 @@ module.exports = {
         }
     }
 };
-
-/**
- * Envia o embed da aposta.
- * @param {import("discord.js").TextChannel} channelToSend 
- * @param {string} betType 
- * @param {Bet} betData 
- * @param {number} amount 
- */
-async function sendBetEmbed(channelToSend, betType, betData, amount) {
-    console.log({ betType, betData });
-
-    const enterBetId = `enter_bet-${betType}-${betData._id}-${amount}`;
-    const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
-    
-    const embed = new EmbedBuilder()
-        .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
-        .addFields([
-            { name: "Equipa 1", value: `Slot vazio`, inline: true },
-            { name: "Equipa 2", value: `Slot vazio`, inline: true }
-        ])
-        .setColor(Colors.White);
-
-    const enterBet = new ButtonBuilder()
-        .setCustomId(enterBetId)
-        .setLabel("Entrar na aposta")
-        .setStyle(ButtonStyle.Success);
-
-    const outBet = new ButtonBuilder()
-        .setCustomId(outBetId)
-        .setLabel("Sair da aposta")
-        .setStyle(ButtonStyle.Danger);
-
-    const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`select_menu-${betType}-${betData._id}`)
-        .addOptions(
-            { label: "Iniciar aposta", value: "start_bet_value" },
-            { label: "Voltar", value: "go_back" }
-        );
-
-    const row1 = new ActionRowBuilder().addComponents(enterBet, outBet);
-    const row2 = new ActionRowBuilder().addComponents(selectMenu);
-
-    await channelToSend.send({ embeds: [embed], components: [row2, row1] });
-}

@@ -6,7 +6,8 @@ const embed = require("./embed");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("onbets")
-        .setDescription("Manda uma embed com as apostas online."),
+        .setDescription("Manda uma embed com as apostas online.")
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     /**
      * @param {import("discord.js").ChatInputCommandInteraction} interaction
@@ -24,7 +25,7 @@ module.exports = {
                 .addFields([
                     {
                         name: "Tipo de aposta:",
-                        value: `${bet?.betType[0] === "" ? "1v1" : bet.betType[0]}`,
+                        value: `${bet?.betType === "" ? "1v1" : bet.betType}`,
                         inline: true
                     },
                     {

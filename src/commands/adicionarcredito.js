@@ -27,7 +27,7 @@ module.exports = {
                 )
                 .setDescription("Quanto vai ser adicionado?")
                 .setRequired(true)
-        ),
+        ).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 

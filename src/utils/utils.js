@@ -8,6 +8,7 @@ const {
     ButtonBuilder,
     ButtonStyle,
     ButtonInteraction,
+    ChannelType
 } = require("discord.js");
 const Bet = require("../structures/database/bet");
 const User = require("../structures/database/User");
@@ -43,9 +44,9 @@ class Utils {
         'bet_no_winner': "# Vocês precisam definir o vencedor!",
         'bets_off': "# As apostas estão fechadas no momento!\n-# Aguarde antes de tentar novamente.",
     };
-    createBet = async (interaction, channel, amount) => {
+    createBet = async (interaction, channel, amount, _betType) => {
         try {
-            const betType = channel.name.split("・")[1];
+            const betType = _betType ?? "1v1";
 
             const newBet = new Bet({
                 betType,
@@ -56,6 +57,8 @@ class Utils {
 
             await newBet.save();
             await this.sendBetEmbed(interaction, betType, newBet, amount, channel);
+
+            return newBet;
         } catch (err) {
             console.error(`Erro ao criar aposta no canal ${channel.name}:`, err);
         }
@@ -65,18 +68,18 @@ class Utils {
         const { amount } = bet;
         const isAdmin = member?.permissions?.has(PermissionFlagsBits.Administrator) || false;
 
-        const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de crédito\nCrédito de **${amount}€** foi adicionado a <@${userId}>!`)
-            .setColor(myColours.bright_blue_ocean)
-            .setFooter({ text: "Você pode guardar este crédito ou receber do mediador..." })
-            .setTimestamp();
 
         // Atualiza ou cria usuário no banco
         const userProfile = await this.addCredit(userId, parseInt(amount), isAdmin, 1);
 
+        const embed = new EmbedBuilder()
+            .setDescription(`# Gerenciador de crédito\nCrédito de **${amount}€** foi adicionado a <@${userId}>!\n-# Agora com **${userProfile.wins}**`)
+            .setColor(myColours.bright_blue_ocean)
+            .setFooter({ text: "Você pode guardar este crédito ou receber do mediador..." })
+            .setTimestamp();
         // Atualiza aposta
         bet.winner = userId;
-        bet.status = ["won"];
+        bet.status = "won";
         await bet.save();
         await this.addWin(member);
 
@@ -130,7 +133,7 @@ class Utils {
                 $setOnInsert: {
                     isAdmin: isAdmin,
                 },
-                $inc: { losses: 1, moneyLost: amount[0] }
+                $inc: { losses: 1, moneyLost: amount }
             },
             { upsert: true, new: true }
         );
@@ -150,7 +153,7 @@ class Utils {
         return await User.findOneAndUpdate(
             { "player.id": userId, losses: { $gt: 0 } },
             {
-                $inc: { losses: Math.max(0, -1) }
+                $inc: { losses: -1 }
             },
             { upsert: true, new: true }
         );
@@ -382,7 +385,7 @@ class Utils {
         const outBetId = `out_bet-${betType}-${betData._id}-${amount}`;
 
         const embed = new EmbedBuilder()
-            .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Escolha um time para entrar e aguarde a partida começar!`)
+            .setDescription(`## Aposta de ${betData.amount}€  |  ${betData.betType}\n> Entre na aposta e aguarde a partida começar!`)
             .addFields([
                 { name: "Equipa 1", value: "Slot vazio", inline: true },
                 { name: "Equipa 2", value: "Slot vazio", inline: true }
@@ -411,6 +414,103 @@ class Utils {
 
         await channelToSend.send({ embeds: [embed], components: [row2, row1] });
         return;
+    }
+    /**
+     * Creates a private bet channel
+     * @param {ButtonInteraction} interaction 
+     * @param {Bet} bet 
+     */
+    createBetChannel = async (interaction, bet) => {
+        const { guild } = interaction;
+        const totalBets = await Bet.countDocuments();
+        const formattedTotalBets = String(totalBets).padStart(3, '0');
+        console.log(bet);
+        
+        const betChannel = await guild.channels.create({
+            name: `💎・aposta・${formattedTotalBets}`,
+            type: ChannelType.GuildText,
+            topic: bet._id.toString(),
+            parent: "1339324693110329458",
+            permissionOverwrites: [
+                {
+                    id: guild.roles.everyone.id,
+                    deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                },
+                {
+                    id: bet.players[0],
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                },
+                {
+                    id: bet.players[1],
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                },
+                {
+                    id: "1339009613105856603",
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                },
+                
+            ]
+        });
+        // Notify users
+        const embed = new EmbedBuilder()
+            .setColor(myColours.gun_metal)
+            .setDescription(`# Aposta ${bet.betType}\n> Aposta criada com sucesso, vá para o [canal](https://discord.com/channels/${guild.id}/${betChannel.id}) e consulte as informações.`)
+            .setTimestamp();
+
+        interaction.replied || interaction.deferred
+            ? interaction.followUp({ embeds: [embed], flags: 64 })
+            : interaction.reply({ embeds: [embed], flags: 64 });
+
+        bet.betChannel = { id: betChannel.id, name: betChannel.name };
+        await bet.save();
+
+        interaction.message.delete();
+
+        // Embed for the bet channel
+        const embedForChannel = new EmbedBuilder()
+            .setColor(Colors.White)
+            .setDescription(`# Aposta ${bet.betType}: valor ${bet.amount}€\n> Converse com um dos nossos mediadores para avançar com a aposta.`)
+            .addFields([
+                { name: "Equipa 1", value: `<@${bet.players[0]}>`, inline: true },
+                { name: "Equipa 2", value: `<@${bet.players[1]}>`, inline: true }
+            ])
+            .setTimestamp();
+
+        // Buttons
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`set_winner-${bet._id}`).setLabel("Definir ganhador").setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`end_bet-${bet._id}`).setLabel("Encerrar aposta").setStyle(ButtonStyle.Danger)
+        );
+
+        await betChannel.send({
+            content: `<@&1336838133030977666>, <@${bet.players[0]}>, <@${bet.players[1]}>`,
+            embeds: [embedForChannel],
+            components: [row]
+        });
+        // Ensure interaction is replied/deferred before responding
+
+        return betChannel;
+    }
+    /**
+         * 
+         * @param {Bet} bet 
+         * @param {Client} client 
+         * @param {Interaction} interaction
+         * @returns 
+         */
+    startBet = async (bet, client, interaction) => {
+        if (bet.players.length !== 2) return this.sendReply(interaction, "# A aposta não está preenchida!");
+
+        const channel = await this.createBetChannel(interaction, bet);
+
+        await this.createBet(interaction, interaction.channel, bet.amount);
+
+        bet.betChannel = { id: channel.id, name: channel.name };
+        bet.status = "started";
+        bet.createdAt = Date.now();
+
+        await bet.save();
+        return channel;
     }
 };
 module.exports = new Utils();

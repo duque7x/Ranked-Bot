@@ -13,6 +13,8 @@ class BotClient extends Client {
         this.loadEvents();
         this.loadCommands();
         this.handleProcessErrors();
+        this.embedSessions = new Map();
+
     }
 
     loadEvents() {

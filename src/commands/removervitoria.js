@@ -10,7 +10,8 @@ module.exports = {
             option.setName("usuário")
                 .setDescription("A quem eu adiciono a vitória?")
                 .setRequired(true)
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
@@ -18,8 +19,6 @@ module.exports = {
      * @returns 
      */
     async execute(interaction, client) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
-
         const user = interaction.options.getUser("usuário");
 
         await removeWin(user, interaction); 

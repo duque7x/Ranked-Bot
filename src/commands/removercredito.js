@@ -27,7 +27,8 @@ module.exports = {
                 )
                 .setDescription("Quanto vai ser adicionado?")
                 .setRequired(true)
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
@@ -35,8 +36,6 @@ module.exports = {
      * @returns 
      */
     async execute(interaction, client) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
-
         const user = interaction.options.getUser("usuário");
         const amount = interaction.options.getInteger("quantidade");
         const member = interaction.guild.members.cache.get(user.id);

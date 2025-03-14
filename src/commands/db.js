@@ -40,25 +40,25 @@ module.exports = {
                         .addChoices({ name: "apostas", value: "bet" }, { name: "ranking", value: "users" },)
                         .setRequired(true)
                 )
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     async betHandler(interaction) {
         const bet_id = interaction.options.getString("bet_id");
 
         if (!mongoose.Types.ObjectId.isValid(bet_id)) return interaction.reply({ content: "# Id não valido.", flags: 64 });
         const foundBet = await Bet.findOne({ _id: bet_id });
         if (!foundBet) return this.sendTemporaryMessage(interaction, "# Esta aposta não existe!");
-        console.log({foundBet});
-        
+
         const winner = foundBet.winner ? `<@${foundBet.winner}>` : "Não há vencedor definido...";
 
         const embed = new EmbedBuilder()
             .setDescription(`# Aposta ${foundBet._id}`)
             .addFields(
-                { name: "Estado", value: foundBet.status[0] || "Desconhecido", inline: true },
-                { name: "Tipo", value: foundBet.betType[0] || "Desconhecido", inline: true },
+                { name: "Estado", value: foundBet.status ?? "Desconhecido", inline: true },
+                { name: "Tipo", value: foundBet.betType ?? "Desconhecido", inline: true },
                 { name: "Dinheiro ganho", value: `${foundBet.amount}€`, inline: true },
                 { name: "Jogadores", value: foundBet.players?.length ? foundBet.players.map(player => `<@${player}>`).join(", ") : "Nenhum", inline: true },
-                { name: "Ganhador", value: winner || "Nenhum", inline: true },
+                { name: "Ganhador", value: winner ?? "Nenhum", inline: true },
                 { name: "Canal", value: foundBet.betChannel?.id ? `<#${foundBet.betChannel.id}>` : "Desconhecido", inline: true },
                 { name: "Criada em", value: foundBet.createdAt ? new Date(foundBet.createdAt).toLocaleString() : "Desconhecido", inline: true }
             );

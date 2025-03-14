@@ -5,16 +5,14 @@ const myColours = require("../structures/colours");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("leaderboard")
-        .setDescription("Manda embed com 2 opcoes: rank, perfil usuario."),
+        .setDescription("Manda embed com 2 opcoes: rank, perfil usuario.")
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
      * @returns 
      */
     async execute(interaction) {
-        if (interaction.member.id !== "877598927149490186") {
-            return interaction.reply({ content: "# Você não tem permissão para usar este comando!", flags: 64 });
-        }
 
         const embed = new EmbedBuilder()
             .setColor(Colors.NotQuiteBlack)

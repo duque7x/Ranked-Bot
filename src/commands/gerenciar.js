@@ -25,10 +25,10 @@ module.exports = {
                         .addChoices(
                             { name: "Adicionar Vitória", value: "addwin" },
                             { name: "Remover Vitória", value: "removewin" },
-                            { name: "Alterar status para on", value: "status_on" },
-                            { name: "Alterar status para won", value: "status_won" },
-                            { name: "Alterar status para off", value: "status_off" },
-                            { name: "Alterar status para started", value: "status_started" },
+                            { name: "Alterar para on", value: "status_on" },
+                            { name: "Alterar para won", value: "status_won" },
+                            { name: "Alterat para off", value: "status_off" },
+                            { name: "Alterar para started", value: "status_started" },
                         )
                 )
                 .addUserOption(option =>

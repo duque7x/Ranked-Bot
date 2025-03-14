@@ -1,6 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { PermissionsBitField } = require('discord.js');
+const { PermissionsBitField, ChannelType, PermissionFlagsBits } = require('discord.js');
 const { inspect } = require('util');
+const Bet = require("../structures/database/bet");
+const User = require("../structures/database/User");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,19 +12,13 @@ module.exports = {
       option.setName('code')
         .setDescription('Código a ser executado')
         .setRequired(true)
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   /**
    * @param {import("discord.js").CommandInteraction} interaction
    */
   async execute(interaction) {
-    const authorizedUserId = '877598927149490186';
-
-    // Check if the user is authorized
-    if (interaction.user.id !== authorizedUserId) {
-      return interaction.reply("You are not authorized to use this command.");
-    }
-
     // Get the code to evaluate
     const code = interaction.options.getString('code');
     if (!code) return interaction.reply("Please provide code to evaluate.");

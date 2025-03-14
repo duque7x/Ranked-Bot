@@ -14,9 +14,6 @@ module.exports = {
      * @param {import("discord.js").ChatInputCommandInteraction} interaction 
      */
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
-
-
         const { guild } = interaction;
 
         // Apaga canais de voz antigos que começam com "🩸・JOGANDO・"

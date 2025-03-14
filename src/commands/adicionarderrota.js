@@ -10,7 +10,7 @@ module.exports = {
             option.setName("usuário")
                 .setDescription("A quem eu adiciono a vitória?")
                 .setRequired(true)
-        ),
+        ).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 

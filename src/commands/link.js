@@ -4,7 +4,8 @@ const myColours = require("../structures/colours");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("link")
-        .setDescription("Manda uma embed com o link do servidor."),
+        .setDescription("Manda uma embed com o link do servidor.")
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     /**
      * @param {import("discord.js").ChatInputCommandInteraction} interaction

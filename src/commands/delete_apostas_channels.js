@@ -1,35 +1,53 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const BotClient = require("..");
+const Bet = require("../structures/database/bet");
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("delete_apostas_channels")
-        .setDescription("Este comando apaga os canais de apostas!"),
+        .setDescription("Este comando apaga os canais de apostas!")
+        .addStringOption(option => option.setName("apagarapostas")
+            .addChoices([
+                {
+                    name: "Sim",
+                    value: "delete_apostas"
+                },
+                {
+                    name: "Nao",
+                    value: "no_delete_apostas"
+                },
+            ])
+            .setDescription("Apagar apostas?"))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     /**
      * @param {import('discord.js').CommandInteraction} interaction
      * @param {BotClient} client
      */
     async execute(interaction, client) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
+        await interaction.deferReply({ flags: 64 });
+        const deleteBets = interaction.options.getString("apagarapostas");
 
 
         const channels = interaction.guild.channels.cache.filter(c =>
-            c.name.includes("emulador") || c.name.includes("mobile") || c.name.includes("mistas")
+            c.name.split("・")[2]?.includes("emu") || c.name.split("・")[2]?.includes("mob") || c.name.split("・")[2]?.includes("mistas") || c.name.split("・")[2]?.includes("tático")
         );
 
         channels.forEach(async c => {
+            c.parentId ?
+                await c.parent.delete() :
+                true;
+
             await c.delete();
         });
 
-        this.sendTemporaryMessage(interaction, "Canais de apostas apagados com sucesso!");
-    },
+        if (deleteBets == "delete_apostas") {
+            const bets = await Bet.find({});
 
-    sendTemporaryMessage(interaction, content) {
-        interaction.reply({ content, flags: 64 }).then(mg => {
-            setTimeout(() => {
-                mg.delete().catch(() => { });
-            }, 2000);
-        });
+            for (let bet of bets) {
+                await bet.deleteOne();
+            }
+        }
+        await interaction.followUp({ content: "Tudo apagado.", flags: 64 });
     }
 };
