@@ -4,6 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, A
 
 
 module.exports = async function setWinner_handler(interaction) {
+    const { member, customId } = interaction;
     const [action, betId] = customId.split("-");
     let bet = await Bet.findById(betId);
     if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para definir um vencedor!");
@@ -11,7 +12,7 @@ module.exports = async function setWinner_handler(interaction) {
     if (bet.winner) return sendReply(interaction, errorMessages.bet_won + `\nId: **${betId}**`);
 
     const setWinnerEmbed = new EmbedBuilder()
-        .setColor(myColours.rich_black)
+        .setColor(Colors.DarkGold)
         .setDescription(`# Adicionar o vencedor da aposta!\n-# Caso o vencedor foi mal selecionado, por favor chame um dos nossos ADMs!`)
         .setFooter({ text: "Nota: Clicar no ganhador errado de propósito resultara em castigo de 2 semanas!" });
 

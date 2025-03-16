@@ -2,6 +2,7 @@ const Bet = require("../../structures/database/bet");
 const sendReply = require("../_functions/sendReply");
 const Config = require('../../structures/database/configs');
 const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
+const { errorMessages } = require("../utils");
 
 module.exports = async function enterBet_handler(interaction ) {
     const serverConfig = await Config.findOneAndUpdate(
@@ -9,6 +10,7 @@ module.exports = async function enterBet_handler(interaction ) {
         { $setOnInsert: { guild: { name: interaction.guild.name, id: interaction.guild.id } } },  // Only set this if the document doesn't exist
         { new: true, upsert: true }  // Return the updated document, and create one if it doesn't exist
     );
+
     const logChannel = interaction.guild.channels.cache.get("1340360434414522389") ?? interaction.channel;
     await interaction.deferUpdate({ flags: 64 });
     let [action, betType, betId, amount] = interaction.customId.split("-");
@@ -29,7 +31,8 @@ module.exports = async function enterBet_handler(interaction ) {
 
         return sendReply(interaction, `# Você já está em outra aposta! <#${ongoingBets[0].betChannel?.id || ""}>\n-# Id da aposta(s): ${ongoingBets.length > 1 ? msg.join(", ") : ongoingBets[0]._id}\n-# Chame um ADM se esta tendo problemas.`);
     }
-
+    console.log("Id na blacklist: " + serverConfig.blacklist.some(id => id.startsWith(userId)));
+    
     if (!bet) return sendReply(interaction, errorMessages.bet_off);
     if (serverConfig.state.bets.status === "off") return interaction.followUp({ embeds: [Embeds.betsOff], flags: 64 });
     if (serverConfig.blacklist.some(id => id.startsWith(userId))) return sendReply(interaction, errorMessages.blacklist);

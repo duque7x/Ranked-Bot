@@ -1,6 +1,6 @@
 const Bet = require("../../structures/database/bet");
 
-module.exports = async (interaction, channel, amount, betType) => {
+module.exports = async (interaction, channel, amount, betType, sendOrNot) => {
     try {
         const newBet = new Bet({
             betType,
@@ -10,7 +10,12 @@ module.exports = async (interaction, channel, amount, betType) => {
         });
 
         await newBet.save();
-        await require("./sendBetEmbed")(interaction, newBet, channel);
+        
+        if (sendOrNot == true) {
+            console.log("TUEEEEEEEE");
+            
+            await require("./sendBetEmbed")(interaction, newBet, channel);
+        }
 
         return newBet;
     } catch (err) {

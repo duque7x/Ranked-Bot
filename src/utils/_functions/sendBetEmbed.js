@@ -6,7 +6,7 @@ module.exports = async (interaction, bet, channelToSend) => {
     const outBetId = `out_bet-${betType}-${_id}-${amount}`;
 
     const embed = new EmbedBuilder()
-        .setDescription(`## Aposta de ${betType}€ | ${amount}\n> Entre na aposta e aguarde a partida começar!`)
+        .setDescription(`## Aposta de ${amount}€ | ${betType}\n> Entre na aposta e aguarde a partida começar!`)
         .addFields([
             { name: "Equipa 1", value: "Slot vazio", inline: true },
             { name: "Equipa 2", value: "Slot vazio", inline: true }

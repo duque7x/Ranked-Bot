@@ -7,9 +7,10 @@ module.exports = async (bet, interaction) => {
     bet.status = "off";
     await bet.save();
 
-    const newEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-        .setDescription(`## Aposta fechada pr <@${interaction.user.id}>\nObrigado por jogar na **BLOOD APOSTAS 🩸**\n\n-# Volte sempre.`)
-        .setColor(Colors.White)
+    const newEmbed = new EmbedBuilder()
+        .setDescription(`## Aposta fechada por <@${interaction.user.id}>\nObrigado por jogar na **BLOOD APOSTAS 🩸**\n\n-# Volte sempre.`)
+        .setTimestamp()
+        .setColor(0xff0000)
         .setThumbnail(interaction.user.displayAvatarURL({ extension: "png", size: 512 }))
         .setFields();
 

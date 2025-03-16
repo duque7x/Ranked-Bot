@@ -77,31 +77,9 @@ module.exports = {
                         .setDescription("Quantidade de dinheiro a ser adicionada ou removida.")
                         .setRequired(true)
                 )
-        )
-        .addSubcommand(subcommand =>
-            subcommand.setName("blacklist")
-                .setDescription("Gerencia blacklist.")
-                .addStringOption(option =>
-                    option.setName("acão")
-                        .setDescription("Ação a ser executada (add, remove).")
-                        .setRequired(true)
-                        .addChoices(
-                            { name: "Adicionar", value: "add" },
-                            { name: "Remover", value: "remove" }
-                        )
-                )
-                .addUserOption(option =>
-                    option.setName("usuário")
-                        .setDescription("Usuário a ser adicionado/removido da blacklist.")
-                        .setRequired(true)
-                )
-
         ),
 
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
-
-
         const subcommand = interaction.options.getSubcommand();
 
         switch (subcommand) {
@@ -109,8 +87,6 @@ module.exports = {
                 return this.betHandler(interaction);
             case "alterarestado":
                 return this.configHandler(interaction);
-            case "blacklist":
-                return this.blacklistHandler(interaction);
             case "credito":
                 return this.creditoHandler(interaction);
         }
@@ -170,58 +146,7 @@ module.exports = {
 
         interaction.reply({ embeds: [embed] });
     },
-    /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
-     * @returns 
-     */
-    async blacklistHandler(interaction) {
-        const acão = interaction.options.getString("acão");
-        const user = interaction.options.getUser("usuário");
-        const serverConfig = await Config.findOne({ "guild.id": interaction.guildId }) || new Config({
-            guild: { id: interaction.guildId, name: interaction.guild.name },
-            blacklist: []
-        });
-
-        const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
-
-        if (acão === "add") {
-            if (serverConfig.blacklist.some(id => id.startsWith(user.id))) {
-                return await interaction.reply({ content: `# ${user} já está na blacklist!`, flags: 64 });
-            }
-            serverConfig.blacklist.push(`${user.id}-${interaction.user.id}-${Date.now()}`);
-            await serverConfig.save();
-
-            const embed = new EmbedBuilder()
-                .setTitle("Blacklist")
-                .setColor(myColours.rich_black)
-                .setDescription(`${user} foi adicionado à blacklist!\n\n-# Por <@${interaction.user.id}>`)
-                .setTimestamp()
-                .setThumbnail(user.displayAvatarURL());
-
-            if (logChannel) logChannel.send({ embeds: [embed] });
-            await interaction.reply({ embeds: [embed] });
-
-        } else if (acão === "remove") {
-            if (!serverConfig.blacklist.some(id => id.startsWith(user.id))) {
-                return await interaction.reply({ content: `# ${user} não está na blacklist!`, flags: 64 });
-            }
-
-            // Fix: Correctly filter out entries that belong to the user
-            serverConfig.blacklist = serverConfig.blacklist.filter(id => !id.startsWith(user.id));
-            await serverConfig.save();
-
-            const embed = new EmbedBuilder()
-                .setTitle("Blacklist")
-                .setColor(myColours.rich_black)
-                .setDescription(`${user} foi removido da blacklist!\n-# Por <@${interaction.user.id}>`)
-                .setTimestamp()
-                .setThumbnail(user.displayAvatarURL());
-
-            if (logChannel) logChannel.send({ embeds: [embed] });
-            await interaction.reply({ embeds: [embed] });
-        }
-    },
+    
     async creditoHandler(interaction) {
         const acão = interaction.options.getString("acão");
         const user = interaction.options.getUser("usuário");

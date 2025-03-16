@@ -58,7 +58,7 @@ class BotClient extends Client {
             try {
                 console.log(chalk.red('Started refreshing application (/) commands.'));
                 await rest.put(
-                    Routes.applicationGuildCommands(process.env.CLIENT_ID, "1336809872884371587"),
+                    Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
                     { body: [] } // Remove todos os comandos da guilda antes de registrar novos
                 );
                 await rest.put(

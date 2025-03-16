@@ -20,7 +20,7 @@ module.exports = {
         .addIntegerOption(option =>
             option.setName("quantidade")
                 .setDescription("Valor da aposta (€).")
-                .setRequired(false)
+                .setRequired(true)
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
@@ -32,16 +32,14 @@ module.exports = {
         const channelToSend = options.getChannel("canal");
         const amount = options.getInteger("quantidade") ?? 1;
 
-
-        const serverConfig = await Config.findOne({ "guild.id": guildId })
-            ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
+        const serverConfig = await Config.findOne({ "guild.id": guildId }) ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
 
         if (serverConfig.state.bets.status === "off") {
             return interaction.reply({ content: "-# As apostas estão fechadas no momento!", flags: 64 });
         }
 
         if (!["1x1", "2x2", "3x3", "4x4", "5x5", "6x6", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6"].includes(betType)) {
-            return interaction.reply({ content: "-# Tipo de aposta inválido!", flags: 64 });
+            return interaction.reply({ content: "# Tipo de aposta inválido!", flags: 64 });
         }
         try {
             const bet = await createBet(interaction, channelToSend, amount, betType)

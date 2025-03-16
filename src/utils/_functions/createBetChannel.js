@@ -1,12 +1,12 @@
 const Bet = require("../../structures/database/bet");
 const myColours = require("../../structures/colours");
-const { PermissionFlagsBits, EmbedBuilder, ChannelType } = require("discord.js");
+const { PermissionFlagsBits, EmbedBuilder, ChannelType, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
 module.exports = async (interaction, bet) => {
     const { guild } = interaction;
     const totalBets = await Bet.countDocuments();
     const formattedTotalBets = String(totalBets).padStart(3, '0');
-    
+
     const betChannel = await guild.channels.create({
         name: `💎・aposta・${formattedTotalBets}`,
         type: ChannelType.GuildText,
@@ -25,11 +25,7 @@ module.exports = async (interaction, bet) => {
                 id: bet.players[1],
                 allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
             },
-            {
-                id: "1339009613105856603",
-                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-            },
-            
+
         ]
     });
     // Notify users
@@ -68,7 +64,6 @@ module.exports = async (interaction, bet) => {
         embeds: [embedForChannel],
         components: [row]
     });
-    // Ensure interaction is replied/deferred before responding
 
     return betChannel;
 }
