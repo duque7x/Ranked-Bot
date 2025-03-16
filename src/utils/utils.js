@@ -46,7 +46,9 @@ class Utils {
     static get returnServerRank() {
         return require("./_functions/returnServerRank");
     }
-    
+    static get returnUserRank() {
+        return require("./_functions/returnUserRank");
+    }
     static get sendBetEmbed() {
         return require("./_functions/sendBetEmbed");
     }
