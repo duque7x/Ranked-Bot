@@ -53,6 +53,7 @@ module.exports = class {
                 );
 
                 await member.roles.add(defaultRole);
+                await member.roles.add("1350144276834680912");
                 console.log(`Default role assigned to ${member.user.tag}.`);
                 defaultChannel.send({ embeds: [embed] })
             } catch (error) {

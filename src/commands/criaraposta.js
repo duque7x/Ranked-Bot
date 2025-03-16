@@ -26,14 +26,12 @@ module.exports = {
 
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
-
-
-        const { guildId, user, options, guild } = interaction;
+        const { guildId, options, guild } = interaction;
 
         const betType = options.getString("tipo");
         const channelToSend = options.getChannel("canal");
         const amount = options.getInteger("quantidade") ?? 1;
-        const userId = user.id;
+
 
         const serverConfig = await Config.findOne({ "guild.id": guildId })
             ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });
@@ -48,7 +46,7 @@ module.exports = {
         try {
             const bet = await createBet(interaction, channelToSend, amount, betType)
 
-            await sendBetEmbed(interaction, betType, bet, amount, channelToSend);
+            await sendBetEmbed(interaction, bet, channelToSend);
             
             interaction.reply({ content: "-# Aposta criada com sucesso!", flags: 64 });
 

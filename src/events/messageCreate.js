@@ -29,7 +29,7 @@ module.exports = class MessageEvent {
    */
   async execute(message, cl) {
     if (message.author.bot) return;
-    
+
     const prefix = ".";
     // Get the command and arguments  
     const args = message.content.slice(prefix.length).trim().split(/ +/);
@@ -57,7 +57,7 @@ module.exports = class MessageEvent {
         message.reply({ embeds: [embed] })
       }
     }
-    // if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
+    if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
     if (!message.content.startsWith(prefix)) return;
     if (message.content == ".rank") {
       return returnServerRank(message)

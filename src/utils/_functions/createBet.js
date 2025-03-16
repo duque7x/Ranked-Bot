@@ -1,7 +1,7 @@
-module.exports = async (interaction, channel, amount) => {
-    try {
-        const betType = channel.name.split("・")[1];
+const Bet = require("../../structures/database/bet");
 
+module.exports = async (interaction, channel, amount, betType) => {
+    try {
         const newBet = new Bet({
             betType,
             amount,
@@ -10,7 +10,9 @@ module.exports = async (interaction, channel, amount) => {
         });
 
         await newBet.save();
-        await this.sendBetEmbed(interaction, betType, newBet, amount, channel);
+        await require("./sendBetEmbed")(interaction, newBet, channel);
+
+        return newBet;
     } catch (err) {
         console.error(`Erro ao criar aposta no canal ${channel.name}:`, err);
     }
