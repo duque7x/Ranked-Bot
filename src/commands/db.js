@@ -32,11 +32,11 @@ module.exports = {
                 )
         )
         .addSubcommand(subcommand =>
-            subcommand.setName("resetar")
+            subcommand.setName("apagar")
                 .setDescription("Base de dados aposta")
                 .addStringOption(option =>
                     option.setName("escolha")
-                        .setDescription("Qual voce ira resetar?")
+                        .setDescription("Qual você ira apagar?")
                         .addChoices({ name: "apostas", value: "bet" }, { name: "ranking", value: "users" },)
                         .setRequired(true)
                 )
@@ -85,7 +85,7 @@ module.exports = {
                 case "user":
                     this.userHandler(interaction);
                     break;
-                case "resetar":
+                case "apagar":
                     this.resetHandlet(interaction);
                     break;
                 default:
@@ -114,29 +114,24 @@ module.exports = {
         if (choice == "bet") {
             const bets = await Bet.find({});
 
-            bets.forEach(async bet => {
-                // bet.deleteOne();
+            await Promise.all(bets.map(bet => bet.deleteOne()));
 
-                bet.players = [];
-                bet.winner = "";
-                await bet.save();
-            });
-
-            interaction.reply({ content: "# Tirei todos jogadores das apostas, e os vencedores!" });
+            interaction.reply({ content: "# Apaguei todas APOSTAS!" });
         } else if (choice == "users") {
             const users = await User.find({});
 
-            users.forEach(async user => {
-                user.wins = 0;
-                user.losses = 0;
-                user.betsPlayed = [];
-                user.moneyLost = 0;
-                user.credit = 0;
+            await Promise.all(
+                users.forEach(async user => {
+                    user.wins = 0;
+                    user.losses = 0;
+                    user.betsPlayed = [];
+                    user.moneyLost = 0;
+                    user.credit = 0;
 
-                await user.save();
-            });
+                    await user.save();
+                }));
 
-            interaction.reply({ content: "# Resetei a base de dados para os usuarios." })
+            interaction.reply({ content: "# Resetei as estatisticas para os usuarios." })
 
         }
     }

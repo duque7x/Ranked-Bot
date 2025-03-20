@@ -12,15 +12,27 @@ module.exports = {
                 .setDescription("O tipo de aposta (ex: 4v4, 4x4).")
                 .setRequired(true)
         )
-        .addChannelOption(option =>
-            option.setName("canal")
-                .setDescription("O canal onde a aposta será enviada.")
-                .setRequired(true)
-        )
         .addIntegerOption(option =>
             option.setName("quantidade")
                 .setDescription("Valor da aposta (€).")
+                .addChoices(
+                    { name: "1", value: 1 },
+                    { name: "2", value: 2 },
+                    { name: "3", value: 3 },
+                    { name: "5", value: 5 },
+                    { name: "7", value: 7 },
+                    { name: "10", value: 10 },
+                    { name: "25", value: 25 },
+                    { name: "50", value: 50 },
+                    { name: "100", value: 100 },
+                    { name: "1200", value: 1200 },
+                )
                 .setRequired(true)
+        )
+        .addChannelOption(option =>
+            option.setName("canal")
+                .setDescription("O canal onde a aposta será enviada.")
+                .setRequired(false)
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
@@ -29,7 +41,7 @@ module.exports = {
         const { guildId, options, guild } = interaction;
 
         const betType = options.getString("tipo");
-        const channelToSend = options.getChannel("canal");
+        const channelToSend = options.getChannel("canal") ?? interaction.channel;
         const amount = options.getInteger("quantidade") ?? 1;
 
         const serverConfig = await Config.findOne({ "guild.id": guildId }) ?? new Config({ guild: { id: guildId, name: guild.name }, state: { bets: { status: "on" }, rank: { status: "on" } } });

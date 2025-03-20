@@ -12,7 +12,7 @@ module.exports = {
     .addChannelOption(option =>
         option.setName('canal')
           .setDescription('Canal para as mensagens serem deletadas')
-          .setRequired(true)
+          .setRequired(false)
       )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 

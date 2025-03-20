@@ -17,7 +17,7 @@ module.exports = {
         )
         .addSubcommand(sub => sub
             .setName("remover")
-            .setDescription("Remove um jogador a blacklist")
+            .setDescription("Remove um jogador da blacklist")
             .addUserOption(option => option
                 .setName("usuario")
                 .setDescription("Qual usuario a ser removido?")
@@ -38,13 +38,10 @@ module.exports = {
         switch (subcommand) {
             case "adicionar":
                 const embed = await blacklist_handler("add", interaction.guildId, user, interaction.user.id);
-
                 await logChannel.send({ embeds: [embed] });
                 return await interaction.reply({ embeds: [embed] });
             case "remover":
                 const embed2 = await blacklist_handler("remove", interaction.guildId, user, interaction.user.id);
-
-
                 await logChannel.send({ embeds: [embed2] });
                 return await interaction.reply({ embeds: [embed2] });
         }

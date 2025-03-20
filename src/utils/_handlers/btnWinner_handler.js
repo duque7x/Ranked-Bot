@@ -6,8 +6,7 @@ const { EmbedBuilder, Colors } = require("discord.js");
 const errorMessages = require("../utils").errorMessages;
 
 module.exports = async function btnWinner(interaction) {
-    const { member, customId, guild, channel, user } = interaction;
-    const userId = user.id;
+    const { customId, guild, channel } = interaction;
     const [action, betId, winningPlayerId, losingPlayerId] = customId.split("-");
 
     // Buscar aposta no banco de dados
@@ -15,7 +14,7 @@ module.exports = async function btnWinner(interaction) {
     if (!bet) return sendReply(interaction, "Aposta não encontrada.");
 
     // Verificar se a aposta já tem um vencedor
-    if (bet.winner) return sendReply(interaction, errorMessages.bet_won + `\nId: **${betId}**`);
+   if (bet.winner) return sendReply(interaction, errorMessages.bet_won + `\nId: **${betId}**`);
 
     // Buscar membros no cache
     const winningMember = guild.members.cache.get(winningPlayerId);
@@ -38,7 +37,7 @@ module.exports = async function btnWinner(interaction) {
 
     // Criar embeds de logs
     const logEmbed = new EmbedBuilder()
-        .setDescription(`# Gerenciador de crédito\nCrédito de **${bet.amount}€** foi adicionado a <@${userId}>!`)
+        .setDescription(`# Gerenciador de crédito\nCrédito de **${bet.amount}€** foi adicionado a <@${winningPlayerId}>!`)
         .setColor(Colors.DarkButNotBlack)
         .setTimestamp()
         .addFields(
@@ -48,8 +47,8 @@ module.exports = async function btnWinner(interaction) {
         );
 
     const winnerEmbed = new EmbedBuilder()
-        .setDescription(`# Gerenciador de vitórias\n-# Vitória adicionada a <@${userId}>!\nAgora com **${winnerProfile.wins + 1}** vitórias`)
-        .setColor(Colors.Grey)
+        .setDescription(`# Ganhador da aposta!\n-# Vitória adicionada a <@${winningPlayerId}>!\nAgora com **${winnerProfile.wins + 1}** vitória(s)`)
+        .setColor(0x00ff00)
         .setThumbnail(winningMember.user.displayAvatarURL({ dynamic: true, size: 512, format: "png" }))
         .setTimestamp();
 

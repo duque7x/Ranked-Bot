@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, Colors } = require("discord.js");
 
 module.exports = async (userId, bet, interaction) => {
     const user = interaction.guild.members.cache.get(userId);
@@ -6,7 +6,7 @@ module.exports = async (userId, bet, interaction) => {
 
     // Create the main embed message
     const embed = new EmbedBuilder()
-        .setDescription(`# Gerenciador de crédito\nCrédito de **${amount}€** foi removido de <@${userId}>!`)
+        .setDescription(`# Gerenciador de crédito\nCrédito de **${amount}€** foi removido de <@${userId}>!\nAposta **resetada**!`)
         .setColor(Colors.DarkRed)
         .setTimestamp();
 
@@ -21,7 +21,7 @@ module.exports = async (userId, bet, interaction) => {
 
     // Log channel ID (use a constant to avoid magic numbers)
     const WIN_LOG_CHANNEL_ID = "1339329876662030346";
-    const winLogChannel = interaction.guild.channels.cache.get(WIN_LOG_CHANNEL_ID);
+    const winLogChannel = interaction.guild.channels.cache.get(WIN_LOG_CHANNEL_ID) ?? interaction.channel;
 
     await (require("./removeCredit"))(userId, amount);
     await (require("./removeWin"))(userId, amount);

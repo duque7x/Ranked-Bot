@@ -11,7 +11,7 @@ module.exports = async (interaction, bet) => {
         name: `💎・aposta・${formattedTotalBets}`,
         type: ChannelType.GuildText,
         topic: bet._id.toString(),
-        parent: "1339324693110329458",
+        //parent: "1339324693110329458",
         permissionOverwrites: [
             {
                 id: guild.roles.everyone.id,

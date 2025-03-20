@@ -22,10 +22,10 @@ module.exports = {
 
         const user = interaction.options.getUser("usuário");
 
-        await addLoss(user.id);
+       const userProfile =  await addLoss(user.id);
         
         const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de derrotas\n-# Derrotas adicionadas a <@${user.id}>!`)
+            .setDescription(`# Gerenciador de derrotas\n-# Derrotas adicionadas a <@${user.id}>!\nAgora com **${userProfile.losses}** derrota(s)`)
             .setColor(Colors.White)
             .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }))
             .setTimestamp();

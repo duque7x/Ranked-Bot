@@ -53,7 +53,7 @@ module.exports = class ReadyEvent {
 
       try {
         // Buscar as últimas mensagens do canal
-        const messages = await channel.messages.fetch({ limit: 10 });
+        const messages = await channel.messages.fetch({ limit: 20 });
 
         // Filtrar mensagens enviadas pelo bot
         const botMessages = messages.filter(m => m.author.id === "1323068234320183407");
@@ -70,7 +70,6 @@ module.exports = class ReadyEvent {
           .setColor(0xff0000);
 
         await channel.send({ embeds: [embed] });
-        await channel.send("@everyone");
 
         // Agendar a próxima execução
         this.scheduleDailyMessage();

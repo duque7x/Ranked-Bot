@@ -11,9 +11,10 @@ module.exports = async function endBet_handler(interaction) {
     const [action, betId] = customId.split("-");
     let bet = await Bet.findById(betId);
 
+    if (!bet || bet.status == "off") return sendReply(interaction, errorMessages.bet_off);
     if (!bet.winner) return sendReply(interaction, errorMessages.bet_no_winner);
     if (!bet) return sendReply(interaction, "# Nenhuma aposta encontrada com esse ID.");
-    if (bet.status == "off") return sendReply(interaction, errorMessages.bet_off);
+    
 
     return endBetFunction(bet, interaction);
 }

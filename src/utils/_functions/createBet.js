@@ -12,8 +12,6 @@ module.exports = async (interaction, channel, amount, betType, sendOrNot) => {
         await newBet.save();
         
         if (sendOrNot == true) {
-            console.log("TUEEEEEEEE");
-            
             await require("./sendBetEmbed")(interaction, newBet, channel);
         }
 

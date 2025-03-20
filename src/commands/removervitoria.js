@@ -21,10 +21,10 @@ module.exports = {
     async execute(interaction, client) {
         const user = interaction.options.getUser("usuário");
 
-        await removeWin(user, interaction); 
+        const userProfile = await removeWin(user, interaction); 
         
         const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de vitórias\n-# Vitórias removida a <@${user.id}>!`)
+            .setDescription(`# Gerenciador de vitórias\n-# Vitórias removida a <@${user.id}>!\nAgora com **${userProfile.wins}** vitória(s)`)
             .setColor(Colors.White)
             .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }))
             .setTimestamp();

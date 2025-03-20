@@ -13,7 +13,7 @@ module.exports = async (action, guildId, user, adminId) => {
 
         const embed = new EmbedBuilder()
             .setTitle("Blacklist")
-            .setColor(Colors.Red)
+            .setColor(0xff0000)
             .setDescription(`${user} foi adicionado à blacklist!\n\n-# Por <@${adminId}>`)
             .setTimestamp()
             .setThumbnail(user.displayAvatarURL());
@@ -26,7 +26,7 @@ module.exports = async (action, guildId, user, adminId) => {
 
         const embed = new EmbedBuilder()
             .setTitle("Blacklist")
-            .setColor(Colors.Red)
+            .setColor(Colors.Grey)
             .setDescription(`${user} foi removido da blacklist!\n-# Por <@${adminId}>`)
             .setTimestamp()
             .setThumbnail(user.displayAvatarURL());

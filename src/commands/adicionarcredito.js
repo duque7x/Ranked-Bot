@@ -41,11 +41,11 @@ module.exports = {
         const amount = interaction.options.getInteger("quantidade");
         const member = interaction.guild.members.cache.get(user.id);
 
-        await addCredit(user.id, amount, member.permissions.has(PermissionFlagsBits.Administrator));
+        const userProfile = await addCredit(user.id, amount, member.permissions.has(PermissionFlagsBits.Administrator));
 
         const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de credito\n-# ${amount}€ foram adicionados a <@${user.id}>!`)
-            .setColor(Colors.White)
+            .setDescription(`# Gerenciador de credito\n-# ${amount}€ foram adicionados a <@${user.id}>!\nAgora com **${userProfile.credit}**€`)
+            .setColor(Colors.Grey)
             .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }))
             .setTimestamp();
 

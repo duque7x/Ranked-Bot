@@ -1,9 +1,10 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const Config = require("../structures/database/configs");
 const Bet = require("../structures/database/bet");
-const { setBetWinner, removeWin, removeWinBet } = require("../utils/utils");
+const { setBetWinner, removeWin, removeWinBet, sendReply, errorMessages } = require("../utils/utils");
 const myColours = require("../structures/colours");
 const { ChatInputCommandInteraction } = require("discord.js");
+const removeItemOnce = require("../utils/_functions/removeItemOnce");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -23,6 +24,8 @@ module.exports = {
                         .setDescription("Ação a ser executada (addwin, removewin, status).")
                         .setRequired(true)
                         .addChoices(
+                            { name: "Adicionar jogador", value: "add_player" },
+                            { name: "Remover jogador", value: "remove_player" },
                             { name: "Adicionar Vitória", value: "addwin" },
                             { name: "Remover Vitória", value: "removewin" },
                             { name: "Alterar para on", value: "status_on" },
@@ -78,7 +81,6 @@ module.exports = {
                         .setRequired(true)
                 )
         ),
-
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
 
@@ -112,7 +114,6 @@ module.exports = {
             if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result2.embed] }).catch(console.error);
             else interaction.reply({ embeds: [result2.embed] }).catch(console.error);
         }
-
         if (acão.startsWith("status")) {
             const wantedStatus = acão.split("_")[1];
 
@@ -120,6 +121,23 @@ module.exports = {
             await bet.save();
 
             interaction.reply({ content: `# Estado da aposta mudado com sucesso! Para **${wantedStatus}**`, flags: 64 });
+        }
+        if (acão == "add_player") {
+            if (bet.players.length == 2) return sendReply(interaction, errorMessages.bet_full);
+            if (bet.players.includes(user.id)) return sendReply(interaction, errorMessages.bet_in);
+
+            bet.players.push(user.id);
+            await bet.save();
+
+            sendReply(interaction, "# Jogador adicionado na aposta!\n-# Lembre-se somente os capitães entram na aposta.");
+        }
+        if (acão == "remove_player") {
+            if (!bet.players.includes(user.id)) return sendReply(interaction, "# Este jogador nunca teve nesta aposta!");
+
+            bet.players = removeItemOnce(bet.players, user.id);
+            await bet.save();
+
+            sendReply(interaction, "# Jogador removido na aposta!");
         }
     },
     async configHandler(interaction) {
@@ -146,7 +164,7 @@ module.exports = {
 
         interaction.reply({ embeds: [embed] });
     },
-    
+
     async creditoHandler(interaction) {
         const acão = interaction.options.getString("acão");
         const user = interaction.options.getUser("usuário");

@@ -16,12 +16,21 @@ module.exports = {
         const bets = await Bet.find();
 
         for (let bet of bets) {
-            let update = {};
-            console.log(bets)
+            let update = [];
+            
             // Convert array fields to strings (use first value or default)
-            if (Array.isArray(bet.betType)) bet.betType = bet.betType[0] || "";
-            if (Array.isArray(bet.status)) bet.status = bet.status[0] || "on";
-            if (Array.isArray(bet.amount)) bet.amount = bet.amount[0] || "1";
+            if (Array.isArray(bet.betType)) {
+                bet.betType = bet.betType[0] || "";
+                update[bet.betType+bet._id] = "yes";
+            }
+            if (Array.isArray(bet.status)) {
+                bet.status = bet.status[0] || "on";
+                update[bet.status+bet._id] = "yes";
+            }
+            if (Array.isArray(bet.amount)) {
+                bet.amount = bet.amount[0] || "1";
+                update[bet.amount+bet._id] = "yes";
+            }
 
             // Ensure 'payed' is a Boolean
             if (typeof bet.payed !== "boolean") bet.payed = Boolean(bet.payed);

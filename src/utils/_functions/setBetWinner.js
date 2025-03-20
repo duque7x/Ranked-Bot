@@ -1,5 +1,4 @@
-const { Colors } = require("discord.js");
-const { PermissionFlagsBits, EmbedBuilder } = require("discord.js");
+const { PermissionFlagsBits, EmbedBuilder, Colors } = require("discord.js");
 
 module.exports = async (bet, member) => {
     const userId = member.id;

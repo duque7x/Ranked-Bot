@@ -22,11 +22,11 @@ module.exports = {
 
         const user = interaction.options.getUser("usuário");
 
-        await addWin(user, interaction);
+        const userProfile = await addWin(user, interaction);
 
         const embed = new EmbedBuilder()
-            .setDescription(`# Gerenciador de vitórias\n-# Vitória adicionada a <@${user.id}>`)
-            .setColor(Colors.White)
+            .setDescription(`# Gerenciador de vitórias\n-# Vitória adicionada a <@${user.id}>\nAgora com **${userProfile.wins}** vitória(s)`)
+            .setColor(Colors.Yellow)
             .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }))
             .setTimestamp();
 
