@@ -1,25 +1,20 @@
 const User = require("../../structures/database/User");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits, Colors } = require("discord.js");
 module.exports = async (user, interaction, option) => {
-    // Default to interaction.user if no user is provided
-    user = user ?? interaction.member.user;
+    if (!user) return "Nao existe."
 
-    // Get member from the guild
-    const member = interaction.guild.members.cache.get(user.id);
-
-    // Fetch or create the user profile with upsert
     const foundUser = await User.findOneAndUpdate(
         { "player.id": user.id },
         {
             $setOnInsert: {
-                isAdmin: member.permissions.has(PermissionFlagsBits.Administrator),
+                player: {
+                    id: user.id,
+                    name: user.username
+                }
             }
         },
         { upsert: true, new: true }
     );
-
-    // Fetch color from avatar URL or default to white
-    const color = Colors.White;
 
     // Build the embed for user profile
     const embed = new EmbedBuilder()
@@ -27,13 +22,13 @@ module.exports = async (user, interaction, option) => {
             name: `Perfil de ${user.username}`,
             iconURL: user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }),
         })
-        .setColor(color)
+        .setColor(Colors.White)
         .addFields({
             name: "Estatísticas",
             value: `
-                **Vitórias:** ${foundUser.wins ?? 0} ︱ **Derrotas:** ${foundUser.losses ?? 0}
-                **Crédito disponível:** ${foundUser.credit !== 0 ? foundUser.credit : 0}€ ︱ **Vezes jogadas:** ${foundUser.betsPlayed.length ?? 0}
-                **Blacklist:** ${foundUser.blacklisted ? "Sim" : "Não"} ︱ **Dinheiro perdido:** ${foundUser.moneyLost ?? 0}€
+                **Pontos:** ${foundUser.points} ︱ **Vezes jogadas:** ${foundUser.gamesPlayed.length}
+                **Vitórias** ${foundUser.wins} ︱ **Derrotas:** ${foundUser.losses ?? 0}
+                **Blacklist:** ${foundUser.blacklisted ? "Sim" : "Não"} 
             `,
         })
         .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512, format: 'png' }));

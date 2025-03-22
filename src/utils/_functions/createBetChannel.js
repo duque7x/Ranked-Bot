@@ -1,69 +1,88 @@
-const Bet = require("../../structures/database/bet");
+const Match = require("../../structures/database/match");
 const myColours = require("../../structures/colours");
 const { PermissionFlagsBits, EmbedBuilder, ChannelType, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const formatTeam = require("./formatTeam");
 
-module.exports = async (interaction, bet) => {
+module.exports = async (interaction, match) => {
     const { guild } = interaction;
-    const totalBets = await Bet.countDocuments();
-    const formattedTotalBets = String(totalBets).padStart(3, '0');
+    const totalMatches = await Match.countDocuments();
+    const formattedTotalMatches = String(totalMatches).padStart(3, '0');
+    const { matchType } = match;
+    const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
 
-    const betChannel = await guild.channels.create({
-        name: `💎・aposta・${formattedTotalBets}`,
+    const matchChannel = await guild.channels.create({
+        name: `partida・${formattedTotalMatches}`,
         type: ChannelType.GuildText,
-        topic: bet._id.toString(),
-        //parent: "1339324693110329458",
+        topic: match._id.toString(),
+        parent: "1338988719914618892",
         permissionOverwrites: [
             {
                 id: guild.roles.everyone.id,
                 deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
             },
             {
-                id: bet.players[0],
+                id: match.players[0].id,
                 allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
             },
             {
-                id: bet.players[1],
+                id: match.players[1].id,
                 allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
             },
-
         ]
     });
-    // Notify users
-    const embed = new EmbedBuilder()
-        .setColor(myColours.gun_metal)
-        .setDescription(`# Aposta ${bet.betType}\n> Aposta criada com sucesso, vá para o [canal](https://discord.com/channels/${guild.id}/${betChannel.id}) e consulte as informações.`)
-        .setTimestamp();
 
-    interaction.replied || interaction.deferred
-        ? interaction.followUp({ embeds: [embed], flags: 64 })
-        : interaction.reply({ embeds: [embed], flags: 64 });
+    // 🔹 Shuffle and assign teams
+    const { teamA, teamB } = randomizeTeams(match.players);
+    match.matchChannel = { id: matchChannel.id, name: matchChannel.name };
+    match.teamA = teamA;
+    match.teamB = teamB;
+    await match.save(); // 🔹 Ensure match is saved after team assignment
 
-    bet.betChannel = { id: betChannel.id, name: betChannel.name };
-    await bet.save();
+    interaction.message.edit({
+        embeds: [new EmbedBuilder()
+            .setTitle(`Partida ${matchType} criada com sucesso!`)
+            .setDescription(`Vá ao [canal](https://discord.com/channels/1336809872884371587/${matchChannel.id}) da partida e divirta-se!`)
+            .setTimestamp()
+        ],
+        components: []
+    });
 
-    interaction.message.delete();
-
-    // Embed for the bet channel
+    // Embed for the match channel
     const embedForChannel = new EmbedBuilder()
         .setColor(Colors.White)
-        .setDescription(`# Aposta ${bet.betType}: valor ${bet.amount}€\n> Converse com um dos nossos mediadores para avançar com a aposta.`)
+        .setDescription(`# Partida ${match.matchType}\nCriem a sala e de seguida definam o criador!`)
         .addFields([
-            { name: "Equipa 1", value: `<@${bet.players[0]}>`, inline: true },
-            { name: "Equipa 2", value: `<@${bet.players[1]}>`, inline: true }
+            { name: "Time 1", value: formatTeam(teamA, teamA.length), inline: true },
+            { name: "Time 2", value: formatTeam(teamB, teamB.length), inline: true }
         ])
         .setTimestamp();
 
     // Buttons
     const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`set_winner-${bet._id}`).setLabel("Definir ganhador").setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId(`end_bet-${bet._id}`).setLabel("Encerrar aposta").setStyle(ButtonStyle.Danger)
+        new ButtonBuilder().setCustomId(`set_winner-${match._id}`).setLabel("Definir ganhador").setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`end_match-${match._id}`).setLabel("Encerrar partida").setStyle(ButtonStyle.Danger)
     );
 
-    await betChannel.send({
-        content: `<@&1336838133030977666>, <@${bet.players[0]}>, <@${bet.players[1]}>`,
+    await matchChannel.send({
         embeds: [embedForChannel],
         components: [row]
     });
 
-    return betChannel;
+    return matchChannel;
+};
+
+// 🔹 Helper function to shuffle teams
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    }
+    return array;
+}
+
+// 🔹 Function to randomize teams
+function randomizeTeams(players) {
+    let shuffledPlayers = shuffleArray([...players]); // Clone and shuffle players
+    let half = Math.ceil(shuffledPlayers.length / 2);
+    return { teamA: shuffledPlayers.slice(0, half), teamB: shuffledPlayers.slice(half) };
 }

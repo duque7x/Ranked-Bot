@@ -37,11 +37,11 @@ module.exports = {
 
         switch (subcommand) {
             case "adicionar":
-                const embed = await blacklist_handler("add", interaction.guildId, user, interaction.user.id);
+                const embed = await blacklist_handler("add", interaction.guildId, user, interaction.user.id, interaction);
                 await logChannel.send({ embeds: [embed] });
                 return await interaction.reply({ embeds: [embed] });
             case "remover":
-                const embed2 = await blacklist_handler("remove", interaction.guildId, user, interaction.user.id);
+                const embed2 = await blacklist_handler("remove", interaction.guildId, user, interaction.user.id, interaction);
                 await logChannel.send({ embeds: [embed2] });
                 return await interaction.reply({ embeds: [embed2] });
         }

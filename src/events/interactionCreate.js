@@ -1,7 +1,7 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
 const { returnServerRank, returnUserRank } = require("../utils/utils");
-const outbet_handler = require('../utils/_handlers/outbet_handler');
-const { enterbet_handler, handleBetSelectMenu, endBet_handler, setWinner_handler, btnWinner_handler } = require('../utils/utils').handlers;
+const outmatch_handler = require('../utils/_handlers/outmatch_handler');
+const { entermatch_handler, handleMatchSelectMenu, endMatch_handler, setWinner_handler, btnWinner_handler } = require('../utils/utils').handlers;
 
 module.exports = class InteractionEvent {
     constructor(client) {
@@ -18,17 +18,17 @@ module.exports = class InteractionEvent {
                 return await command.execute(interaction, client);
             }
 
-            let [action, betType, betId, amount] = interaction.customId.split("-");
+            let [action, matchType, matchId, amount] = interaction.customId.split("-");
             let { customId } = interaction;
 
             // 📌 Mapeamento de ações para simplificar if/else
             const handlers = {
-                enter_bet: () => enterbet_handler(interaction),
-                out_bet: () => outbet_handler(interaction, betId),
+                enter_match: () => entermatch_handler(interaction),
+                out_match: () => outmatch_handler(interaction, matchId),
                 see_rank: () => returnServerRank(interaction),
                 see_profile: () => returnUserRank(interaction.user, interaction, "send"),
-                select_menu: () => handleBetSelectMenu(interaction, betId, client),
-                end_bet: () => endBet_handler(interaction),
+                select_menu: () => handleMatchSelectMenu(interaction, matchId, client),
+                end_match: () => endMatch_handler(interaction),
                 set_winner: () => setWinner_handler(interaction),
                 btn_set_winner: () => btnWinner_handler(interaction)
             };

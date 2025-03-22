@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const BotClient = require("..");
-const Bet = require("../structures/database/bet");
+const Bet = require("../structures/database/match");
 
 module.exports = {
     data: new SlashCommandBuilder()

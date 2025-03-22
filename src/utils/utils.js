@@ -19,12 +19,12 @@ class Utils {
         return require("./_functions/addWin");
     }
     
-    static get createBet() {
-        return require("./_functions/createBet");
+    static get createMatch() {
+        return require("./_functions/createMatch");
     }
     
-    static get createBetChannel() {
-        return require("./_functions/createBetChannel");
+    static get createMatchChannel() {
+        return require("./_functions/createMatchChannel");
     }
     
     static get removeCredit() {
@@ -39,8 +39,8 @@ class Utils {
         return require("./_functions/removeWin");
     }
     
-    static get removeWinBet() {
-        return require("./_functions/removeWinBet");
+    static get removeWinMatch() {
+        return require("./_functions/removeWinMatch");
     }
     
     static get returnServerRank() {
@@ -49,16 +49,16 @@ class Utils {
     static get returnUserRank() {
         return require("./_functions/returnUserRank");
     }
-    static get sendBetEmbed() {
-        return require("./_functions/sendBetEmbed");
+    static get sendMatchEmbed() {
+        return require("./_functions/sendMatchEmbed");
     }
     
     static get sendReply() {
         return require("./_functions/sendReply");
     }
     
-    static get setBetWinner() {
-        return require("./_functions/setBetWinner");
+    static get setMatchWinner() {
+        return require("./_functions/setMatchWinner");
     }
     
     static get updateMembers() {
@@ -68,10 +68,10 @@ class Utils {
     static get handlers() {
         return {
             btnWinner_handler: require("./_handlers/btnWinner_handler"),
-            endBet_handler: require("./_handlers/endBet_handler"),
-            enterbet_handler: require("./_handlers/enterbet_handler"),
-            handleBetSelectMenu: require("./_handlers/handleBetSelectMenu"),
-            outbet_handler: require("./_handlers/outbet_handler"),
+            endMatch_handler: require("./_handlers/endMatch_handler"),
+            entermatch_handler: require("./_handlers/entermatch_handler"),
+            handleMatchSelectMenu: require("./_handlers/handleMatchSelectMenu"),
+            outmatch_handler: require("./_handlers/outmatch_handler"),
             setWinner_handler: require("./_handlers/setWinner_handler"),
         };
     }

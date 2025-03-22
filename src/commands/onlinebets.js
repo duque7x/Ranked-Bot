@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require("discord.js");
-const myColours = require("../structures/colours");
-const Bet = require("../structures/database/bet");
-const embed = require("./embed");
+const Bet = require("../structures/database/match");
+
 
 module.exports = {
     data: new SlashCommandBuilder()

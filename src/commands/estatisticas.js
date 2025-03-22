@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, Colors } = require("discord.js");
-const Bet = require("../structures/database/bet");
 const createActivityChart = require("../utils/_functions/createActivityChart");
 
 module.exports = {

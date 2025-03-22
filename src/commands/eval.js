@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { PermissionsBitField, ChannelType, PermissionFlagsBits } = require('discord.js');
 const { inspect } = require('util');
-const Bet = require("../structures/database/bet");
+const Bet = require("../structures/database/match");
 const User = require("../structures/database/User");
 
 module.exports = {

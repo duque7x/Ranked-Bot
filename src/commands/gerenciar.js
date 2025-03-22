@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const Config = require("../structures/database/configs");
-const Bet = require("../structures/database/bet");
+const Bet = require("../structures/database/match");
 const { setBetWinner, removeWin, removeWinBet, sendReply, errorMessages } = require("../utils/utils");
 const myColours = require("../structures/colours");
 const { ChatInputCommandInteraction } = require("discord.js");

@@ -1,4 +1,4 @@
-const Bet = require("../../structures/database/bet");
+const Bet = require("../../structures/database/match");
 const endBetFunction = require("../_functions/endBetFunction");
 const sendReply = require("../_functions/sendReply");
 const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");

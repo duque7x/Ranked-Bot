@@ -8,7 +8,8 @@ const {
     StringSelectMenuBuilder, 
     SlashCommandBuilder 
 } = require("discord.js");
-const Bet = require("../structures/database/bet");
+const Bet = require("../structures/database/match");
+
 const { createBet } = require("../utils/utils");
 
 module.exports = {

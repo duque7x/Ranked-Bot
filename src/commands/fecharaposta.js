@@ -1,7 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require("discord.js");
 const myColours = require("../structures/colours");
 const endBetFunction = require("../utils/_functions/endBetFunction");
-const Bet = require("../structures/database/bet");
+const Bet = require("../structures/database/match");
+
 const { errorMessages } = require("../utils/utils");
 
 module.exports = {

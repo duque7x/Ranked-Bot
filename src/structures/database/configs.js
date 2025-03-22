@@ -6,7 +6,7 @@ const configSchema = new mongoose.Schema({
         name: { type: String}
     },
     state: {
-        bets: {
+        matchs: {
             status: {
                 type: String,
                 enum: ["on", "off"],

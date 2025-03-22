@@ -5,21 +5,9 @@ const userSchema = new mongoose.Schema({
         name: String,
         id: String
     },
-    credit: {
+    points: {
         type: Number,
         default: 0
-    },
-    isAdmin: {
-        type: Boolean,
-        default: false
-    },
-    adminPoints: {
-        type: Number,
-        default: 0
-    },
-    blacklisted: {
-        type: Boolean,
-        default: false
     },
     wins: {
         type: Number,
@@ -29,13 +17,13 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    betsPlayed: {
+    gamesPlayed: {
         type: Array,
         default: []
     },
-    moneyLost: {
-        type: Number,
-        default: 0
+    blacklisted: {
+        type: Boolean,
+        default: false
     },
 });
 

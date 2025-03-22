@@ -1,3 +1,3 @@
 module.exports = (arr, value) => {
-    return arr.filter(item => item !== value);
+    return arr.filter(item => item.id !== value.id);
 }

@@ -1,6 +1,7 @@
 const QuickChart = require("quickchart-js");
 const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
-const Bet = require('../../structures/database/bet');
+const Bet = require("../../structures/database/match");
+
 
 module.exports = async function createChart() {
     // Buscar todas as apostas e contar por data

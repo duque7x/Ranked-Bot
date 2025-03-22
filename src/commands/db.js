@@ -4,7 +4,7 @@ const {
     Colors,
     SlashCommandBuilder
 } = require("discord.js");
-const Bet = require("../structures/database/bet");
+const Bet = require("../structures/database/match");
 const User = require("../structures/database/User");
 const { returnUserRank } = require("../utils/utils");
 const mongoose = require('mongoose');
@@ -50,14 +50,14 @@ module.exports = {
         if (!foundBet) return this.sendTemporaryMessage(interaction, "# Esta aposta não existe!");
 
         const winner = foundBet.winner ? `<@${foundBet.winner}>` : "Não há vencedor definido...";
-
+        const color =  { };
         const embed = new EmbedBuilder()
             .setDescription(`# Aposta ${foundBet._id}`)
             .addFields(
                 { name: "Estado", value: foundBet.status ?? "Desconhecido", inline: true },
                 { name: "Tipo", value: foundBet.betType ?? "Desconhecido", inline: true },
                 { name: "Dinheiro ganho", value: `${foundBet.amount}€`, inline: true },
-                { name: "Jogadores", value: foundBet.players?.length ? foundBet.players.map(player => `<@${player}>`).join(", ") : "Nenhum", inline: true },
+                { name: "Jogadores", value: foundBet.players?.length ? foundBet.players.map(player => `<@${player.id}>`).join(", ") : "Nenhum", inline: true },
                 { name: "Ganhador", value: winner ?? "Nenhum", inline: true },
                 { name: "Canal", value: foundBet.betChannel?.id ? `<#${foundBet.betChannel.id}>` : "Desconhecido", inline: true },
                 { name: "Criada em", value: foundBet.createdAt ? new Date(foundBet.createdAt).toLocaleString() : "Desconhecido", inline: true }
@@ -112,12 +112,14 @@ module.exports = {
         const choice = interaction.options.getString("escolha");
 
         if (choice == "bet") {
+            interaction.deferReply();
             const bets = await Bet.find({});
 
             await Promise.all(bets.map(bet => bet.deleteOne()));
 
-            interaction.reply({ content: "# Apaguei todas APOSTAS!" });
+            interaction.followUp({ content: "# Apaguei todas APOSTAS!" });
         } else if (choice == "users") {
+            interaction.deferReply();
             const users = await User.find({});
 
             await Promise.all(
@@ -131,7 +133,7 @@ module.exports = {
                     await user.save();
                 }));
 
-            interaction.reply({ content: "# Resetei as estatisticas para os usuarios." })
+            interaction.followUp({ content: "# Resetei as estatisticas para os usuarios." })
 
         }
     }
