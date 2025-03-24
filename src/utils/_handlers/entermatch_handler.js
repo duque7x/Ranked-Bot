@@ -30,7 +30,7 @@ module.exports = async function enterBet_handler(interaction) {
     if (ongoingMatchs.length > 0) {
         let msg = ongoingMatchs.map(match => match._id);
 
-        return sendReply(interaction, `# Você já está em outra aposta! <#${ongoingMatchs[0].matchChannel?.id || ""}>\n-# Id da aposta(s): ${msg.join(", ")}\n-# Chame um ADM se esta tendo problemas.`);
+        return sendReply(interaction, `# Você já está em outra partida! <#${ongoingMatchs[0].matchChannel?.id || ""}>\n-# Id da partida(s): ${msg.join(", ")}\n-# Chame um ADM se esta tendo problemas.`);
     }
 
     if (!match) return sendReply(interaction, errorMessages.match_off);

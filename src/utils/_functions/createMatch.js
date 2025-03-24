@@ -1,9 +1,8 @@
 const Match = require("../../structures/database/match");
 const sendReply = require("./sendReply");
 
-module.exports = async (interaction, channel, matchType, sendOrNot) => {
+module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
     try {
-        const { user } = interaction;
         const userId = user.id;
 
         // Find matches where the user is a player
@@ -15,7 +14,7 @@ module.exports = async (interaction, channel, matchType, sendOrNot) => {
         if (ongoingMatchs.length > 0) {
             let msg = ongoingMatchs.map(match => match._id);
 
-            return sendReply(interaction, `# Você já está em outra aposta! <#${ongoingMatchs[0].matchChannel?.id || ""}>\n-# Id da aposta(s): ${msg.join(", ")}\n-# Chame um ADM se esta tendo problemas.`);
+            return sendReply(interaction, `# Você já está em outra partida! <#${ongoingMatchs[0].matchChannel?.id || ""}>\n-# Id da partida(s): ${msg.join(", ")}\n-# Chame um ADM se esta tendo problemas.`);
         }
 
         // Determine max team size
@@ -42,6 +41,6 @@ module.exports = async (interaction, channel, matchType, sendOrNot) => {
 
         return match;
     } catch (err) {
-        console.error(`Erro ao criar aposta no canal ${channel.name}:`, err);
+        console.error(`Erro ao criar partida no canal ${channel.name}:`, err);
     }
 }

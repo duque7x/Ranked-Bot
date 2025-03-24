@@ -1,7 +1,7 @@
 const Match = require("../../structures/database/match");
 const sendReply = require("../_functions/sendReply");
-const addLossWithAmount = require("../_functions/addLossWithAmount");
-const setmatchWinner = require("../_functions/setBetWinner");
+const setMatchWinner = require("../_functions/setMatchWinner");
+const setMatchLosers = require("../_functions/setMatchLosers");
 const { EmbedBuilder, Colors } = require("discord.js");
 const errorMessages = require("../utils").errorMessages;
 
@@ -11,15 +11,17 @@ module.exports = async function btnWinner(interaction) {
 
     // Buscar partida no banco de dados
     const match = await Match.findOne({ _id: matchId });
-    if (!match) return sendReply(interaction, "partida não encontrada.");
-
-    // Verificar se a partida já tem um vencedor
-    if (match.winner) return sendReply(interaction, errorMessages.bet_won + `\nId: **${matchId}**`);
+    if (!match) return sendReply(interaction, "Partida não encontrada.");
     
-    await setmatchWinner(match, match[winningTeam]);
+    // Verificar se a partida já tem um vencedor
+    if (match.winnerTeam.length !== 0) return sendReply(interaction, errorMessages.bet_won + `\nId: **${matchId}**`);
+
+    await setMatchWinner(match, match[winningTeam]);
+    await setMatchLosers(match, match[losingTeam]);
 
     const winnerEmbed = new EmbedBuilder()
-        .setDescription(`# Ganhador da partida!\n-# Vitória adicionada ao **time** ${winningTeam.split("team")[1] == "A" ? 1 : 2}!`)
+        .setTitle("Ganhador(es) da partida")
+        .setDescription(`Vitória adicionada ao **time ${winningTeam.split("team")[1] == "A" ? 1 : 2}**!`)
         .setColor(0x00ff00)
         .setTimestamp();
 

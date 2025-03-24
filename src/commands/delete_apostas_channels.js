@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const BotClient = require("..");
-const Bet = require("../structures/database/match");
+const Match = require("../structures/database/match");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -26,7 +26,7 @@ module.exports = {
      */
     async execute(interaction, client) {
         await interaction.deferReply({ flags: 64 });
-        const deleteBets = interaction.options.getString("apagarapostas");
+        const deletematchs = interaction.options.getString("apagarapostas");
 
 
         const channels = interaction.guild.channels.cache.filter(c =>
@@ -41,11 +41,11 @@ module.exports = {
             await c.delete();
         });
 
-        if (deleteBets == "delete_apostas") {
-            const bets = await Bet.find({});
+        if (deletematchs == "delete_apostas") {
+            const matchs = await Match.find({});
 
-            for (let bet of bets) {
-                await bet.deleteOne();
+            for (let match of matchs) {
+                await match.deleteOne();
             }
         }
         await interaction.followUp({ content: "Tudo apagado.", flags: 64 });

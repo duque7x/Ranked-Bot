@@ -10,11 +10,12 @@ class BotClient extends Client {
 
         this.commands = new Collection();
         this.commandArray = []; // Store commands for registration
+        this.embedSessions = new Map();
+        this.prefixCommands = new Collection();
         this.loadEvents();
         this.loadCommands();
         this.handleProcessErrors();
-        this.embedSessions = new Map();
-
+        
     }
 
     loadEvents() {
@@ -37,6 +38,7 @@ class BotClient extends Client {
 
     loadCommands() {
         const commandFiles = fs.readdirSync(path.join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
+        const writingCommandFiles = fs.readdirSync(path.join(__dirname, 'writingCommands')).filter(file => file.endsWith('.js'));
 
         for (const file of commandFiles) {
             const command = require(path.join(__dirname, 'commands', file));
@@ -45,6 +47,13 @@ class BotClient extends Client {
                 this.commandArray.push(command.data.toJSON()); // Convert to JSON for registration
             } else {
                 console.warn(`Command ${file} is missing "data" or "execute" property.`);
+            }
+            for (const file of writingCommandFiles) {
+                const command = require(path.join(__dirname, 'writingCommands', file));
+
+                if (command.name && command.execute) {
+                    this.prefixCommands.set(command.name, command);
+                }
             }
         }
     }

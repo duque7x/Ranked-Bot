@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const Bet = require("../structures/database/match");
+const Match = require("../structures/database/match");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,31 +13,31 @@ module.exports = {
     async execute(interaction) {
         await interaction.deferReply({ flags: 64 }); // Fixed: Removed `content`
 
-        const bets = await Bet.find();
+        const matches = await Match.find();
 
-        for (let bet of bets) {
+        for (let match of matches) {
             let update = [];
-            
+
             // Convert array fields to strings (use first value or default)
-            if (Array.isArray(bet.betType)) {
-                bet.betType = bet.betType[0] || "";
-                update[bet.betType+bet._id] = "yes";
+            if (Array.isArray(match.matchType)) {
+                match.matchType = match.matchType[0] || "";
+                update[match.matchType + match._id] = "yes";
             }
-            if (Array.isArray(bet.status)) {
-                bet.status = bet.status[0] || "on";
-                update[bet.status+bet._id] = "yes";
+            if (Array.isArray(match.status)) {
+                match.status = match.status[0] || "on";
+                update[match.status + match._id] = "yes";
             }
-            if (Array.isArray(bet.amount)) {
-                bet.amount = bet.amount[0] || "1";
-                update[bet.amount+bet._id] = "yes";
+            if (Array.isArray(match.amount)) {
+                match.amount = match.amount[0] || "1";
+                update[match.amount + match._id] = "yes";
             }
 
             // Ensure 'payed' is a Boolean
-            if (typeof bet.payed !== "boolean") bet.payed = Boolean(bet.payed);
+            if (typeof match.payed !== "boolean") match.payed = Boolean(match.payed);
 
             // Apply updates only if needed
             if (Object.keys(update).length > 0) {
-                await bet.save();
+                await match.save();
             }
         }
 

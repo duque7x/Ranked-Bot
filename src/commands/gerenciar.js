@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const Config = require("../structures/database/configs");
 const Bet = require("../structures/database/match");
-const { setBetWinner, removeWin, removeWinBet, sendReply, errorMessages } = require("../utils/utils");
+const { setBetWinner, removeWin, removeWinBet, sendReply, errorMessages, setMatchWinner } = require("../utils/utils");
 const myColours = require("../structures/colours");
 const { ChatInputCommandInteraction } = require("discord.js");
 const removeItemOnce = require("../utils/_functions/removeItemOnce");
@@ -101,9 +101,10 @@ module.exports = {
         if (!bet) return interaction.reply({ content: "# Aposta nao encontrada", flags: 64 });
 
         if (acão == "addwin") {
-            const result = await setBetWinner(bet, user);
+            const result = await setMatchWinner(bet, [{ id: user, name: user.username }]);
             bet.winner = user.id;
             await bet.save();
+
 
             if (interaction.replied || interaction.deferred) interaction.followUp({ embeds: [result.embed] }).catch(console.error);
             else interaction.reply({ embeds: [result.embed] }).catch(console.error);

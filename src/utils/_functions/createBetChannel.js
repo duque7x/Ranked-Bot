@@ -1,8 +1,14 @@
 const Match = require("../../structures/database/match");
 const myColours = require("../../structures/colours");
-const { PermissionFlagsBits, EmbedBuilder, ChannelType, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { PermissionFlagsBits, EmbedBuilder, ChannelType, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, lazy } = require("discord.js");
 const formatTeam = require("./formatTeam");
 
+/**
+ * 
+ * @param {ChatInputCommandInteraction} interaction 
+ * @param {new Match()} match 
+ * @returns 
+ */
 module.exports = async (interaction, match) => {
     const { guild } = interaction;
     const totalMatches = await Match.countDocuments();
@@ -30,27 +36,10 @@ module.exports = async (interaction, match) => {
             },
         ]
     });
-
-    // 🔹 Shuffle and assign teams
-    const { teamA, teamB } = randomizeTeams(match.players);
-    match.matchChannel = { id: matchChannel.id, name: matchChannel.name };
-    match.teamA = teamA;
-    match.teamB = teamB;
-    await match.save(); // 🔹 Ensure match is saved after team assignment
-
-    interaction.message.edit({
-        embeds: [new EmbedBuilder()
-            .setTitle(`Partida ${matchType} criada com sucesso!`)
-            .setDescription(`Vá ao [canal](https://discord.com/channels/1336809872884371587/${matchChannel.id}) da partida e divirta-se!`)
-            .setTimestamp()
-        ],
-        components: []
-    });
-
     // Embed for the match channel
     const embedForChannel = new EmbedBuilder()
         .setColor(Colors.White)
-        .setDescription(`# Partida ${match.matchType}\nCriem a sala e de seguida definam o criador!`)
+        .setDescription(`# Partida ${matchType}\nCriem a sala e de seguida definam o criador!`)
         .addFields([
             { name: "Time 1", value: formatTeam(teamA, teamA.length), inline: true },
             { name: "Time 2", value: formatTeam(teamB, teamB.length), inline: true }
@@ -67,7 +56,74 @@ module.exports = async (interaction, match) => {
         embeds: [embedForChannel],
         components: [row]
     });
+    await interaction.message.edit({
+        embeds: [new EmbedBuilder()
+            .setTitle(`Partida ${matchType} criada com sucesso!`)
+            .setColor(0x00ff00)
+            .setDescription(`Vai para o [canal](https://discord.com/channels/1336809872884371587/${matchChannel.id}) da partida e divirta-se!`)
+            .setTimestamp()
+        ],
+        components: []
+    });
 
+    const { teamA, teamB } = randomizeTeams(match.players);
+    const teamAVoiceChannel = await guild.channels.create({
+        name: `Team A・${formattedTotalMatches}`,
+        type: ChannelType.GuildVoice,
+        parent: "1338988719914618892",
+        permissionOverwrites: [
+            {
+                id: guild.roles.everyone.id,
+                deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
+            },
+            ...teamA.map(p => ({
+                id: p.id,
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
+            }))
+        ]
+    });
+    const globalVoiceChannel = await guild.channels.create({
+        name: `Global・${formattedTotalMatches}`,
+        type: ChannelType.GuildVoice,
+        parent: "1338988719914618892",
+        permissionOverwrites: [
+            {
+                id: guild.roles.everyone.id,
+                deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+            },
+            ...match.players.map(p => ({
+                id: p.id,
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
+            }))
+        ]
+    });
+    const teamBVoiceChannel = await guild.channels.create({
+        name: `Team B・${formattedTotalMatches}`,
+        type: ChannelType.GuildVoice,
+        parent: "1338988719914618892",
+        permissionOverwrites: [
+            {
+                id: guild.roles.everyone.id,
+                deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+            },
+            ...teamB.map(p => ({
+                id: p.id,
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
+            }))
+        ]
+    });
+    // 🔹 Shuffle and assign teams
+
+    match.matchChannel = { id: matchChannel.id, name: matchChannel.name };
+    match.teamA = teamA;
+    match.teamB = teamB;
+    match.voiceChannels = [
+        { name: teamAVoiceChannel.name, id: teamAVoiceChannel.id },
+        { name: globalVoiceChannel.name, id: globalVoiceChannel.id },
+        { name: teamBVoiceChannel.name, id: teamBVoiceChannel.id },
+    ]
+
+    await match.save(); 
     return matchChannel;
 };
 

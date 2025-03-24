@@ -4,7 +4,7 @@ const {
     Colors,
     SlashCommandBuilder
 } = require("discord.js");
-const Bet = require("../structures/database/match");
+const Match = require("../structures/database/match");
 const User = require("../structures/database/User");
 const { returnUserRank } = require("../utils/utils");
 const mongoose = require('mongoose');
@@ -12,19 +12,19 @@ const mongoose = require('mongoose');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("db")
-        .setDescription("Este comando retorna as informações de uma aposta!")
+        .setDescription("Este comando retorna as informações de uma partida!")
         .addSubcommand(subcommand =>
-            subcommand.setName("bet")
-                .setDescription("Base de dados aposta")
+            subcommand.setName("match")
+                .setDescription("Base de dados partida")
                 .addStringOption(option =>
-                    option.setName("bet_id")
-                        .setDescription("Id da aposta")
+                    option.setName("match_id")
+                        .setDescription("Id da partida")
                         .setRequired(true)
                 )
         )
         .addSubcommand(subcommand =>
             subcommand.setName("user")
-                .setDescription("Base de dados aposta")
+                .setDescription("Base de dados: partida")
                 .addUserOption(option =>
                     option.setName("usuario")
                         .setDescription("Quem você querer ver?")
@@ -33,34 +33,33 @@ module.exports = {
         )
         .addSubcommand(subcommand =>
             subcommand.setName("apagar")
-                .setDescription("Base de dados aposta")
+                .setDescription("Base de dados: partida")
                 .addStringOption(option =>
                     option.setName("escolha")
                         .setDescription("Qual você ira apagar?")
-                        .addChoices({ name: "apostas", value: "bet" }, { name: "ranking", value: "users" },)
+                        .addChoices({ name: "partidas", value: "match" }, { name: "ranking", value: "users" },)
                         .setRequired(true)
                 )
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-    async betHandler(interaction) {
-        const bet_id = interaction.options.getString("bet_id");
+    async matchHandler(interaction) {
+        const match_id = interaction.options.getString("match_id");
 
-        if (!mongoose.Types.ObjectId.isValid(bet_id)) return interaction.reply({ content: "# Id não valido.", flags: 64 });
-        const foundBet = await Bet.findOne({ _id: bet_id });
-        if (!foundBet) return this.sendTemporaryMessage(interaction, "# Esta aposta não existe!");
+        if (!mongoose.Types.ObjectId.isValid(match_id)) return interaction.reply({ content: "# Id não valido.", flags: 64 });
+        const foundmatch = await Match.findOne({ _id: match_id });
+        if (!foundmatch) return this.sendTemporaryMessage(interaction, "# Esta partida não existe!");
 
-        const winner = foundBet.winner ? `<@${foundBet.winner}>` : "Não há vencedor definido...";
-        const color =  { };
+        const winners = foundmatch.winnerTeam.map(user => `<@${user.id}>`).join(", ") || "Não há vencedor definido...";
+
         const embed = new EmbedBuilder()
-            .setDescription(`# Aposta ${foundBet._id}`)
+            .setDescription(`# partida ${foundmatch._id}`)
             .addFields(
-                { name: "Estado", value: foundBet.status ?? "Desconhecido", inline: true },
-                { name: "Tipo", value: foundBet.betType ?? "Desconhecido", inline: true },
-                { name: "Dinheiro ganho", value: `${foundBet.amount}€`, inline: true },
-                { name: "Jogadores", value: foundBet.players?.length ? foundBet.players.map(player => `<@${player.id}>`).join(", ") : "Nenhum", inline: true },
-                { name: "Ganhador", value: winner ?? "Nenhum", inline: true },
-                { name: "Canal", value: foundBet.betChannel?.id ? `<#${foundBet.betChannel.id}>` : "Desconhecido", inline: true },
-                { name: "Criada em", value: foundBet.createdAt ? new Date(foundBet.createdAt).toLocaleString() : "Desconhecido", inline: true }
+                { name: "Estado", value: foundmatch.status ?? "Desconhecido", inline: true },
+                { name: "Tipo", value: foundmatch.matchType ?? "Desconhecido", inline: true },
+                { name: "Jogadores", value: foundmatch.players?.length ? foundmatch.players.map(player => `<@${player.id}>`).join(", ") : "Nenhum", inline: true },
+                { name: "Ganhador(es)", value: winners ?? "Nenhum", inline: true },
+                { name: "Canal", value: foundmatch.matchChannel?.id ? `<#${foundmatch.matchChannel.id}>` : "Desconhecido", inline: true },
+                { name: "Criada em", value: foundmatch.createdAt ? new Date(foundmatch.createdAt).toLocaleString() : "Desconhecido", inline: true }
             );
         return interaction.reply({ embeds: [embed] });
     },
@@ -79,8 +78,8 @@ module.exports = {
 
         try {
             switch (subcommand) {
-                case "bet":
-                    this.betHandler(interaction);
+                case "match":
+                    this.matchHandler(interaction);
                     break;
                 case "user":
                     this.userHandler(interaction);
@@ -92,7 +91,7 @@ module.exports = {
                     break;
             }
         } catch (error) {
-            interaction.reply({ content: "# Tem muitas apostas para mandar nesse momento!", flags: 64 });
+            interaction.reply({ content: "# Tem muitas partidas para mandar nesse momento!", flags: 64 });
         }
     },
 
@@ -111,27 +110,27 @@ module.exports = {
 
         const choice = interaction.options.getString("escolha");
 
-        if (choice == "bet") {
-            interaction.deferReply();
-            const bets = await Bet.find({});
+        if (choice == "match") {
+            await interaction.deferReply();
+            const matchs = await Match.find({});
 
-            await Promise.all(bets.map(bet => bet.deleteOne()));
+            await Promise.all(matchs.map(match => match.deleteOne()));
 
-            interaction.followUp({ content: "# Apaguei todas APOSTAS!" });
+            interaction.followUp({ content: "# Apaguei todas partidaS!" });
         } else if (choice == "users") {
-            interaction.deferReply();
+            await interaction.deferReply();
+
             const users = await User.find({});
 
-            await Promise.all(
-                users.forEach(async user => {
-                    user.wins = 0;
-                    user.losses = 0;
-                    user.betsPlayed = [];
-                    user.moneyLost = 0;
-                    user.credit = 0;
 
-                    await user.save();
-                }));
+            users.forEach(async user => {
+                user.wins = 0;
+                user.losses = 0;
+                user.gamesPlayed = [];
+                user.points = 0;
+
+                await user.save();
+            });
 
             interaction.followUp({ content: "# Resetei as estatisticas para os usuarios." })
 

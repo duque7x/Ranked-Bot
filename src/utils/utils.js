@@ -4,15 +4,11 @@ class Utils {
     }
 
     static get addCredit() {
-        return require("./_functions/addCredit");
+        return require("./_functions/addPoints");
     }
     
     static get addLoss() {
         return require("./_functions/addLoss");
-    }
-    
-    static get addLossWithAmount() {
-        return require("./_functions/addLossWithAmount");
     }
     
     static get addWin() {
@@ -28,7 +24,7 @@ class Utils {
     }
     
     static get removeCredit() {
-        return require("./_functions/removeCredit");
+        return require("./_functions/removePoints");
     }
     
     static get removeLoss() {

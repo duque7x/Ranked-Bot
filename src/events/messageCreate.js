@@ -30,12 +30,12 @@ module.exports = class MessageEvent {
   async execute(message, cl) {
     if (message.author.bot) return;
 
-    const prefix = ".";
+    const prefix = "!";
     // Get the command and arguments  
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift();
-    const command = cl.commands.get(commandName);
-
+    const command = cl.prefixCommands.get(commandName);
+  
     if (message.channel.id == "1338575355665186856" && /^\d+$/.test(message.content)) {
       const serverInfo = await Config.findOne({ "guild.id": message.guildId });
       const blacklist = serverInfo.blacklist;
@@ -59,16 +59,12 @@ module.exports = class MessageEvent {
     }
     if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
     if (!message.content.startsWith(prefix)) return;
-    if (message.content == ".rank") {
-      return returnServerRank(message)
-    } if (message.content.startsWith(".p")) {
-      const user = message.guild.members.cache.get(args[0])?.user ?? message.author;
-      return returnUserRank(user, message, "send")
-    }
-    if (!cl.commands) {
-      console.error('Commands collection is not defined!');
+
+    if (!cl.prefixCommands) {
+      console.error('prefixCommands collection is not defined!');
       return;
     }
+
     if (command) {
       command.execute(message, args, cl);
     }

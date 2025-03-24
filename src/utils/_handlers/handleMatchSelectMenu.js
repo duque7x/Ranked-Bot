@@ -11,7 +11,7 @@ module.exports = async function betSelectMenu_handler(interaction, betId, client
 
     let bet = await Bet.findById(betId);
     if (!bet || bet.status === "off") return sendReply(interaction, errorMessages.bet_off);
-    if (bet.status === "started") return sendReply(interaction, errorMessages.bet_started);
+    if (bet.status === "created") return sendReply(interaction, errorMessages.bet_started);
     if (handler[value]) return await handler[value](interaction, bet, client);
 }
 

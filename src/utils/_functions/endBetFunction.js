@@ -1,27 +1,27 @@
-const { EmbedBuilder, Colors } = require("discord.js");
+const { EmbedBuilder, Colors, ChannelManager } = require("discord.js");
 
-module.exports = async (bet, interaction) => {
-    const channel = interaction.guild.channels.cache.get(bet.betChannel.id);
+module.exports = async (match, interaction) => {
+    const channel = interaction.guild.channels.cache.get(match.matchChannel.id);
     if (!channel) return console.error("Erro: O canal não foi encontrado.");
 
-    bet.status = "off";
-    await bet.save();
-
-    const newEmbed = new EmbedBuilder()
-        .setDescription(`## Aposta fechada por <@${interaction.user.id}>\nObrigado por jogar na **BLOOD APOSTAS 🩸**\n\n-# Volte sempre.`)
+    const endMatchEmbed = new EmbedBuilder()
+        .setDescription(`Fechando a partida...`)
         .setTimestamp()
         .setColor(0xff0000)
-        .setThumbnail(interaction.user.displayAvatarURL({ extension: "png", size: 512 }))
-        .setFields();
 
-    await channel.permissionOverwrites.edit(bet.players[0], {
-        ViewChannel: false
+    match.voiceChannels.forEach(async c => {
+        const vcChannel = interaction.guild.channels.cache.get(c.id);
+        await vcChannel.delete();
     });
 
-    await channel.permissionOverwrites.edit(bet.players[1], {
-        ViewChannel: false
-    });
-    await channel.setName(channel.name.replace("💎", "🔒"));
 
-    return await interaction.reply({ embeds: [newEmbed] });
+    match.status = "off";
+    await match.save();
+    await interaction.reply({ embeds: [endMatchEmbed] });
+
+    setTimeout(() => {
+        channel.delete();
+    }, 4000);
+
+    return match;
 }
