@@ -57,7 +57,10 @@ module.exports = class MessageEvent {
         message.reply({ embeds: [embed] })
       }
     }
-    if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) message.delete();
+    if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      console.log(`Mensagem de ${message.author.username} foi apagada, porque contia link! Mensagem: ${message.content}`);
+      return message.delete();
+    }
     if (!message.content.startsWith(prefix)) return;
 
     if (!cl.prefixCommands) {

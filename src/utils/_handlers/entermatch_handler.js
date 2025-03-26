@@ -52,7 +52,7 @@ module.exports = async function enterBet_handler(interaction) {
     await interaction.message.edit({ embeds: [updatedEmbed] });
 
     if (match.players.length == maximumSize) {
-        return require("../_functions/createBetChannel")(interaction, match);
+        return require("../_functions/createMatchChannel")(interaction, match);
     }
     return;
 }

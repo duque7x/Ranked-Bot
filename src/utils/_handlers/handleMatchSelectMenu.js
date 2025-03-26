@@ -1,20 +1,50 @@
-const Bet = require("../../structures/database/match");
+const { EmbedBuilder } = require("@discordjs/builders");
+const Match = require("../../structures/database/match");
 const sendReply = require("../_functions/sendReply");
-const { errorMessages } = require("../utils");
+const { StringSelectMenuInteraction, TextInputBuilder, Colors, StringSelectMenuOptionBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { ModalBuilder } = require("@discordjs/builders");
+const { ActionRowBuilder } = require("@discordjs/builders");
 
-module.exports = async function betSelectMenu_handler(interaction, betId, client) {
-    const value = interaction.values[0];
-    const handler = {
-        start_bet_value: require("../_functions/startBet").bind(this),
-        go_back: goBack
-    };
+/**
+ * 
+ * @param {StringSelectMenuInteraction} interaction 
+ * @param {*} client 
+ * @returns 
+ */
+module.exports = async function matchSelectMenu_handler(interaction, client) {
+    const { user, customId } = interaction;
+    const [option, matchId] = interaction.values[0].split("-");
+    const match = await Match.findOne({ _id: matchId });
 
-    let bet = await Bet.findById(betId);
-    if (!bet || bet.status === "off") return sendReply(interaction, errorMessages.bet_off);
-    if (bet.status === "created") return sendReply(interaction, errorMessages.bet_started);
-    if (handler[value]) return await handler[value](interaction, bet, client);
-}
+    if (!match) return interaction.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setTitle("Partida offline")
+                .setDescription("Esta partida não se encontra na base de dados")
+                .setColor(0xff00000)
+                .setTimestamp()
+        ]
+    });
+    const playersOption = match.players.map((pl, index) => new StringSelectMenuOptionBuilder()
+        .setLabel(`${pl.name}`)
+        .setValue(`creator-${pl.id}-${matchId}`)
+        .setDescription(`Definir que o jogador *${pl.name} foi o criador da sala`));
 
-function goBack(interaction) {
-    return sendReply(interaction, "# ...")
+    if (option == "creator") {
+        return interaction.reply({
+            embeds: [new EmbedBuilder()
+                .setTitle("Definir o criador da sala")
+                .setDescription("Somente os capitões poderam definir o criador")
+                .setColor(Colors.Grey)
+                .setTimestamp()
+            ],
+            components: [
+                new ActionRowBuilder().addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId(`setcreator-${match._id}`)
+                        .addOptions(playersOption)
+                )]
+        })
+
+    }
 }

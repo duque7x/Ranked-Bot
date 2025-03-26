@@ -31,10 +31,6 @@ module.exports = {
                 { upsert: true, new: true }
             );
         }
-
-
-
-
         return interaction.editReply({ content: "# Registrei todos os membros!" });
     }
 };

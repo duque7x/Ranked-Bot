@@ -36,6 +36,10 @@ module.exports = {
                 .setLabel("Alterar Cor")
                 .setStyle(1),
             new ButtonBuilder()
+                .setCustomId("edit_image")
+                .setLabel("Alterar Imagem")
+                .setStyle(1),
+            new ButtonBuilder()
                 .setCustomId("send_embed")
                 .setLabel("Enviar Embed")
                 .setStyle(3)

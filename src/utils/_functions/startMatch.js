@@ -1,4 +1,4 @@
-const createBetChannel = require("./createBetChannel");
+const createBetChannel = require("./createMatchChannel");
 
 module.exports = async (interaction, bet, client) => {
     if (bet.players.length !== 2) return require("./sendReply")(interaction, "# A aposta não está preenchida!");

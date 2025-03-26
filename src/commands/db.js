@@ -49,18 +49,19 @@ module.exports = {
         const foundmatch = await Match.findOne({ _id: match_id });
         if (!foundmatch) return this.sendTemporaryMessage(interaction, "# Esta partida não existe!");
 
-        const winners = foundmatch.winnerTeam.map(user => `<@${user.id}>`).join(", ") || "Não há vencedor definido...";
+        const winners = foundmatch.winnerTeam.map(user => user.id ? `<@${user.id}>` : "Não há vencedor definido...").join(", ");
 
         const embed = new EmbedBuilder()
-            .setDescription(`# partida ${foundmatch._id}`)
+            .setDescription(`# Partida ${foundmatch._id}`)
             .addFields(
                 { name: "Estado", value: foundmatch.status ?? "Desconhecido", inline: true },
                 { name: "Tipo", value: foundmatch.matchType ?? "Desconhecido", inline: true },
                 { name: "Jogadores", value: foundmatch.players?.length ? foundmatch.players.map(player => `<@${player.id}>`).join(", ") : "Nenhum", inline: true },
-                { name: "Ganhador(es)", value: winners ?? "Nenhum", inline: true },
+                { name: "Ganhador(es)", value: winners, inline: true },
                 { name: "Canal", value: foundmatch.matchChannel?.id ? `<#${foundmatch.matchChannel.id}>` : "Desconhecido", inline: true },
                 { name: "Criada em", value: foundmatch.createdAt ? new Date(foundmatch.createdAt).toLocaleString() : "Desconhecido", inline: true }
-            );
+            )
+            .setColor(Colors.DarkerGrey);
         return interaction.reply({ embeds: [embed] });
     },
     async userHandler(interaction) {

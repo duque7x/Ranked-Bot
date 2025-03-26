@@ -3,7 +3,7 @@ const Match = require("../structures/database/match");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("onmatchs")
+        .setName("onmatches")
         .setDescription("Manda uma embed com as partidas online.")
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 

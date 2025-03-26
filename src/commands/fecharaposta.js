@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require("discord.js");
 const myColours = require("../structures/colours");
-const endBetFunction = require("../utils/_functions/endBetFunction");
-const Bet = require("../structures/database/match");
+const endMatchFunction = require("../utils/_functions/endMatchFunction");
+const Match = require("../structures/database/match");
 
 const { errorMessages } = require("../utils/utils");
 
@@ -10,7 +10,7 @@ module.exports = {
         .setName("fecharaposta")
         .setDescription("Fecha uma determinada aposta.")
         .addStringOption(option => option
-            .setName("bet_id")
+            .setName("match_id")
             .setDescription("O id da aposta")
             .setRequired(true)
         )
@@ -20,11 +20,11 @@ module.exports = {
      * @param {import("discord.js").ChatInputCommandInteraction} interaction
      */
     async execute(interaction) {
-        const bet_id = interaction.options.getString("bet_id");
-        const bet = await Bet.findOne({ _id: bet_id });
+        const match_id = interaction.options.getString("match_id");
+        const match = await Match.findOne({ _id: match_id });
 
-        if (!bet) return interaction.reply({ content: errorMessages.bet_off, flags: 64 });
+        if (!match) return interaction.reply({ content: errorMessages.bet_off, flags: 64 });
 
-        return await endBetFunction(bet, interaction);
+        return await endMatchFunction(match, interaction);
     }
 };

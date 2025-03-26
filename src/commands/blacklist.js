@@ -10,8 +10,8 @@ module.exports = {
             .setName("adicionar")
             .setDescription("Adiciona um jogador a blacklist")
             .addUserOption(option => option
-                .setName("usuario")
-                .setDescription("Qual usuario a ser adicionado?")
+                .setName("usuário")
+                .setDescription("Qual usuário a ser adicionado?")
                 .setRequired(true)
             )
         )
@@ -19,8 +19,8 @@ module.exports = {
             .setName("remover")
             .setDescription("Remove um jogador da blacklist")
             .addUserOption(option => option
-                .setName("usuario")
-                .setDescription("Qual usuario a ser removido?")
+                .setName("usuário")
+                .setDescription("Qual usuário a ser removido?")
                 .setRequired(true)
             )
         )
@@ -31,11 +31,11 @@ module.exports = {
      * @returns 
      */
     async execute(interaction) {
-        const subcommand = interaction.options.getSubcommand();
-        const user = interaction.options.getUser("usuario");
+        const subCommand = interaction.options.getSubcommand();
+        const user = interaction.options.getUser("usuário");
         const logChannel = interaction.guild.channels.cache.get("1340360434414522389") ?? interaction.guild.channels.cache.find(c => c.name.includes("logs"));
 
-        switch (subcommand) {
+        switch (subCommand) {
             case "adicionar":
                 const embed = await blacklist_handler("add", interaction.guildId, user, interaction.user.id, interaction);
                 await logChannel.send({ embeds: [embed] });

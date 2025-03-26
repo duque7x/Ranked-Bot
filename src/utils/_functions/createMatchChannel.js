@@ -1,20 +1,20 @@
 const Match = require("../../structures/database/match");
 const myColours = require("../../structures/colours");
-const { PermissionFlagsBits, EmbedBuilder, ChannelType, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, lazy } = require("discord.js");
-const formatTeam = require("./formatTeam");
+const { PermissionFlagsBits, EmbedBuilder, ChannelType, Colors, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, lazy, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("discord.js");
 
 /**
  * 
  * @param {ChatInputCommandInteraction} interaction 
- * @param {new Match()} match 
+ * @param {Match} match 
  * @returns 
  */
-module.exports = async (interaction, match) => {
+module.exports = async (interaction, match = new Match()) => {
     const { guild } = interaction;
     const totalMatches = await Match.countDocuments();
     const formattedTotalMatches = String(totalMatches).padStart(3, '0');
     const { matchType } = match;
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
+    const { teamA, teamB } = randomizeTeams(match.players);
 
     const matchChannel = await guild.channels.create({
         name: `partida・${formattedTotalMatches}`,
@@ -36,20 +36,28 @@ module.exports = async (interaction, match) => {
             },
         ]
     });
+    const embedTeamA = formatTeam(teamA, teamA.length),
+        embedTeamB = formatTeam(teamB, teamB.length);
+
+
     // Embed for the match channel
     const embedForChannel = new EmbedBuilder()
-        .setColor(Colors.White)
+        .setColor(Colors.Grey)
         .setDescription(`# Partida ${matchType}\nCriem a sala e de seguida definam o criador!`)
         .addFields([
-            { name: "Time 1", value: formatTeam(teamA, teamA.length), inline: true },
-            { name: "Time 2", value: formatTeam(teamB, teamB.length), inline: true }
+            { name: "Time 1", value: embedTeamA, inline: true },
+            { name: "Time 2", value: embedTeamB, inline: true }
         ])
         .setTimestamp();
 
     // Buttons
     const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`set_winner-${match._id}`).setLabel("Definir ganhador").setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId(`end_match-${match._id}`).setLabel("Encerrar partida").setStyle(ButtonStyle.Danger)
+        new StringSelectMenuBuilder().setCustomId(`select_menu-${match._id}`).addOptions(
+            new StringSelectMenuOptionBuilder().setLabel("Definir Criador").setValue(`creator-${match._id}`).setEmoji("🛠️"),
+            new StringSelectMenuOptionBuilder().setLabel("Definir Mvp").setValue(`mvp-${match._id}`).setEmoji("⭐"),
+            new StringSelectMenuOptionBuilder().setLabel("Definir Vencedor").setValue(`winner-${match._id}`).setEmoji("🥇"),
+            new StringSelectMenuOptionBuilder().setLabel("Encerrar partida").setValue(`end_match-${match._id}`),
+        )
     );
 
     await matchChannel.send({
@@ -59,14 +67,14 @@ module.exports = async (interaction, match) => {
     await interaction.message.edit({
         embeds: [new EmbedBuilder()
             .setTitle(`Partida ${matchType} criada com sucesso!`)
-            .setColor(0x00ff00)
+            .setColor(Colors.LightGrey)
             .setDescription(`Vai para o [canal](https://discord.com/channels/1336809872884371587/${matchChannel.id}) da partida e divirta-se!`)
             .setTimestamp()
         ],
         components: []
     });
 
-    const { teamA, teamB } = randomizeTeams(match.players);
+
     const teamAVoiceChannel = await guild.channels.create({
         name: `Team A・${formattedTotalMatches}`,
         type: ChannelType.GuildVoice,
@@ -117,13 +125,15 @@ module.exports = async (interaction, match) => {
     match.matchChannel = { id: matchChannel.id, name: matchChannel.name };
     match.teamA = teamA;
     match.teamB = teamB;
+    match.leaders = [teamA[0], teamB[0]];
     match.voiceChannels = [
         { name: teamAVoiceChannel.name, id: teamAVoiceChannel.id },
         { name: globalVoiceChannel.name, id: globalVoiceChannel.id },
         { name: teamBVoiceChannel.name, id: teamBVoiceChannel.id },
     ]
+    match.status = "on";
 
-    await match.save(); 
+    await match.save();
     return matchChannel;
 };
 
@@ -141,4 +151,10 @@ function randomizeTeams(players) {
     let shuffledPlayers = shuffleArray([...players]); // Clone and shuffle players
     let half = Math.ceil(shuffledPlayers.length / 2);
     return { teamA: shuffledPlayers.slice(0, half), teamB: shuffledPlayers.slice(half) };
+}
+
+function formatTeam(team, size) {
+    return Array.from({ length: size }, (_, i) =>
+        team[i] ? `${i == 0 || i == (size / 2 - 1) ? "**Capitão**" : "**Jogador:** "} <@${team[i].id}>` : "Slot vazio"
+    ).join("\n");
 }

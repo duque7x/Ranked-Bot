@@ -65,7 +65,7 @@ class Utils {
         return {
             btnWinner_handler: require("./_handlers/btnWinner_handler"),
             endMatch_handler: require("./_handlers/endMatch_handler"),
-            entermatch_handler: require("./_handlers/entermatch_handler"),
+            entermatch_handler: require("./_handlers/enterMatch_handler"),
             handleMatchSelectMenu: require("./_handlers/handleMatchSelectMenu"),
             outmatch_handler: require("./_handlers/outmatch_handler"),
             setWinner_handler: require("./_handlers/setWinner_handler"),

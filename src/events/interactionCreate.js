@@ -1,6 +1,8 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
 const { returnServerRank, returnUserRank } = require("../utils/utils");
 const outmatch_handler = require('../utils/_handlers/outmatch_handler');
+const shutMatch_handler = require('../utils/_handlers/shutMatch_handler');
+const creator_handler = require('../utils/_handlers/creator_handler');
 const { entermatch_handler, handleMatchSelectMenu, endMatch_handler, setWinner_handler, btnWinner_handler } = require('../utils/utils').handlers;
 
 module.exports = class InteractionEvent {
@@ -18,7 +20,7 @@ module.exports = class InteractionEvent {
                 return await command.execute(interaction, client);
             }
 
-            let [action, matchType, matchId, amount] = interaction.customId.split("-");
+            let [action, matchType, matchId] = interaction.customId.split("-");
             let { customId } = interaction;
 
             // 📌 Mapeamento de ações para simplificar if/else
@@ -27,12 +29,15 @@ module.exports = class InteractionEvent {
                 out_match: () => outmatch_handler(interaction, matchId),
                 see_rank: () => returnServerRank(interaction),
                 see_profile: () => returnUserRank(interaction.user, interaction, "send"),
-                select_menu: () => handleMatchSelectMenu(interaction, matchId, client),
+                select_menu: () => handleMatchSelectMenu(interaction, client),
                 end_match: () => endMatch_handler(interaction),
                 set_winner: () => setWinner_handler(interaction),
-                btn_set_winner: () => btnWinner_handler(interaction)
+                btn_set_winner: () => btnWinner_handler(interaction),
+                shut_match: () => shutMatch_handler(interaction, matchId),
+                setcreator: () => creator_handler(interaction)
             };
-
+            console.log(action, customId);
+            
             if (handlers[action]) return await handlers[action]();
 
             // 📌 Verifica se a interação está relacionada a edição de embeds
@@ -45,7 +50,8 @@ module.exports = class InteractionEvent {
             const modalConfigs = {
                 edit_title: { id: "modal_title", title: "Alterar Título", fieldId: "title_input", label: "Novo título:", style: TextInputStyle.Short },
                 edit_description: { id: "modal_description", title: "Alterar Descrição", fieldId: "desc_input", label: "Nova descrição:", style: TextInputStyle.Paragraph },
-                edit_color: { id: "modal_color", title: "Alterar Cor", fieldId: "color_input", label: "Cor em HEX (ex: #ff0000)", style: TextInputStyle.Short }
+                edit_color: { id: "modal_color", title: "Alterar Cor", fieldId: "color_input", label: "Cor em HEX (ex: #ff0000)", style: TextInputStyle.Short },
+                edit_image: { id: "modal_image", title: "Alterar Imagem", fieldId: "image_input", label: "Url de uma Imagem", style: TextInputStyle.Paragraph }
             };
 
             if (modalConfigs[customId]) {
@@ -57,7 +63,8 @@ module.exports = class InteractionEvent {
                 const embed = new EmbedBuilder()
                     .setTitle(embedData.title)
                     .setDescription(embedData.description)
-                    .setColor(embedData.color);
+                    .setColor(embedData.color)
+                    ;
 
                 await channel.send({ embeds: [embed] });
                 client.embedSessions.delete(interaction.user.id);
@@ -89,7 +96,8 @@ module.exports = class InteractionEvent {
         const fieldIdMap = {
             modal_title: "title_input",
             modal_description: "desc_input",
-            modal_color: "color_input"
+            modal_color: "color_input",
+            image_url: "image_input"
         };
 
         const fieldId = fieldIdMap[interaction.customId];

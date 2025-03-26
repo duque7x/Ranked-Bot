@@ -16,7 +16,8 @@ const matchSchema = new mongoose.Schema({
     teamA: { type: [{ id: String, name: String }], default: [] },
     teamB: { type: [{ id: String, name: String }], default: [] },
     losers: { type: [{ id: String, name: String }], default: [] },
-    leaders: { type: [{ id: String, name: String }], default: []  }
+    leaders: { type: [{ id: String, name: String }], default: []  },
+    roomCreator: { type: [{ id: String, name: String }], default: []  }
 });
 
 const Match = mongoose.model("Match", matchSchema);
