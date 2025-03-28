@@ -68,7 +68,6 @@ class Utils {
             entermatch_handler: require("./_handlers/enterMatch_handler"),
             handleMatchSelectMenu: require("./_handlers/handleMatchSelectMenu"),
             outmatch_handler: require("./_handlers/outmatch_handler"),
-            setWinner_handler: require("./_handlers/setWinner_handler"),
         };
     }
 }

@@ -11,7 +11,16 @@ module.exports = async function btnWinner(interaction) {
 
     // Buscar partida no banco de dados
     const match = await Match.findOne({ _id: matchId });
-    if (!match) return sendReply(interaction, "Partida não encontrada.");
+    if (!match) return interaction.reply({
+        embeds: [
+            new EmbedBuilder()
+                .setTitle("Partida offline")
+                .setDescription("Esta partida não se encontra na base de dados")
+                .setColor(0xff0000)
+                .setTimestamp()
+        ],
+        flags: 64
+    });
     
     // Verificar se a partida já tem um vencedor
     if (match.winnerTeam.length !== 0) return sendReply(interaction, errorMessages.bet_won + `\nId: **${matchId}**`);

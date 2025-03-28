@@ -28,8 +28,8 @@ module.exports = async (user, interaction, option) => {
                 inline: true
             },
             {
-                name: "Vezes jogadas",
-                value: `${foundUser.gamesPlayed.length}`,
+                name: "MVPs",
+                value: `${foundUser.mvps}`,
                 inline: true
             },
             {
@@ -40,6 +40,11 @@ module.exports = async (user, interaction, option) => {
             {
                 name: "Derrotas",
                 value: `${foundUser.losses}`,
+                inline: true
+            },
+            {
+                name: "Vezes jogadas",
+                value: `${foundUser.gamesPlayed.length}`,
                 inline: true
             },
             {

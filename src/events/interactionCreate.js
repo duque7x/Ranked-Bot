@@ -2,7 +2,9 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedB
 const { returnServerRank, returnUserRank } = require("../utils/utils");
 const outmatch_handler = require('../utils/_handlers/outmatch_handler');
 const shutMatch_handler = require('../utils/_handlers/shutMatch_handler');
-const creator_handler = require('../utils/_handlers/creator_handler');
+const creator_handler = require('../utils/_handlers/match_menu_handler');
+const match_menu_handler = require('../utils/_handlers/match_menu_handler');
+const match_confirm_handler = require('../utils/_handlers/match_confirm_handler');
 const { entermatch_handler, handleMatchSelectMenu, endMatch_handler, setWinner_handler, btnWinner_handler } = require('../utils/utils').handlers;
 
 module.exports = class InteractionEvent {
@@ -22,7 +24,8 @@ module.exports = class InteractionEvent {
 
             let [action, matchType, matchId] = interaction.customId.split("-");
             let { customId } = interaction;
-
+                console.log(customId);
+                
             // 📌 Mapeamento de ações para simplificar if/else
             const handlers = {
                 enter_match: () => entermatch_handler(interaction),
@@ -31,12 +34,12 @@ module.exports = class InteractionEvent {
                 see_profile: () => returnUserRank(interaction.user, interaction, "send"),
                 select_menu: () => handleMatchSelectMenu(interaction, client),
                 end_match: () => endMatch_handler(interaction),
-                set_winner: () => setWinner_handler(interaction),
                 btn_set_winner: () => btnWinner_handler(interaction),
                 shut_match: () => shutMatch_handler(interaction, matchId),
-                setcreator: () => creator_handler(interaction)
+                match_selectmenu: () => match_menu_handler(interaction),
+                match_confirm: () => match_confirm_handler(interaction),
             };
-            console.log(action, customId);
+
             
             if (handlers[action]) return await handlers[action]();
 

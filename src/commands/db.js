@@ -49,7 +49,7 @@ module.exports = {
         const foundmatch = await Match.findOne({ _id: match_id });
         if (!foundmatch) return this.sendTemporaryMessage(interaction, "# Esta partida não existe!");
 
-        const winners = foundmatch.winnerTeam.map(user => user.id ? `<@${user.id}>` : "Não há vencedor definido...").join(", ");
+        const winners = foundmatch.winnerTeam.length ? foundmatch.winnerTeam.map(user => `<@${user.id}>`).join(", ") : "Não há vencedor definido";
 
         const embed = new EmbedBuilder()
             .setDescription(`# Partida ${foundmatch._id}`)
@@ -58,6 +58,8 @@ module.exports = {
                 { name: "Tipo", value: foundmatch.matchType ?? "Desconhecido", inline: true },
                 { name: "Jogadores", value: foundmatch.players?.length ? foundmatch.players.map(player => `<@${player.id}>`).join(", ") : "Nenhum", inline: true },
                 { name: "Ganhador(es)", value: winners, inline: true },
+                { name: "Criador", value: `<@${foundmatch.creatorId}>`, inline: true },
+                { name: "Criador da sala(no jogo)", value: `<@${foundmatch.roomCreator.id}>`, inline: true },
                 { name: "Canal", value: foundmatch.matchChannel?.id ? `<#${foundmatch.matchChannel.id}>` : "Desconhecido", inline: true },
                 { name: "Criada em", value: foundmatch.createdAt ? new Date(foundmatch.createdAt).toLocaleString() : "Desconhecido", inline: true }
             )

@@ -1,4 +1,4 @@
-const { Message } = require("discord.js");
+const { Message, PermissionFlagsBits } = require("discord.js");
 const { returnServerRank } = require("../utils/utils");
 const verifyChannel = require("../utils/_functions/verifyChannel");
 module.exports = {
@@ -10,7 +10,14 @@ module.exports = {
      * @param {BotClient} client 
      */
     async execute(message, args, client) {
-        await verifyChannel({ allowedChannelId: "1342561854777720845", channelId: interaction.channel.id, event: "user_rank", isAdmin: interaction.member.permissions.has(PermissionFlagsBits.Administrator), name: "fila" });
+        const verified = verifyChannel({
+            allowedChannelId: "1342561854777720845",
+            channelId: message.channel.id,
+            event: message,
+            isAdmin: message.member.permissions.has(PermissionFlagsBits.Administrator),
+            name: "rank"
+        });
+        if (verified) return;
         return returnServerRank(message);
     }
 };

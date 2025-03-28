@@ -2,6 +2,7 @@ const { Message, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const { returnUserRank, createMatch } = require("../utils/utils");
 const Config = require("../structures/database/configs");
 const User = require("../structures/database/User");
+const verifyChannel = require("../utils/_functions/verifyChannel");
 
 module.exports = {
     name: "fila", // Command name
@@ -15,16 +16,15 @@ module.exports = {
         const { guildId } = message;
         const serverConfig = await Config.findOne({ "guild.id": guildId });
         const userProfile = await User.findOne({ "player.id": message.author.id });
+        const verified = verifyChannel({
+            allowedChannelId: "1342561854777720845",
+            channelId: message.channel.id,
+            event: message,
+            isAdmin: message.member.permissions.has(PermissionFlagsBits.Administrator),
+            name: "profile"
+        });
 
-        if (message.channelId !== "1353098806123827211" && !message.member.permissions.has(PermissionFlagsBits.Administrator))
-            return message.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setTitle(`Você não pode criar filas neste canal`)
-                        .setTimestamp()
-                        .setColor(0xff0000)
-                ]
-            });
+        if (verified) return;
 
         if (serverConfig.state.matchs.status === "off") {
             return message.reply({ content: "-# As filas estão fechadas no momento!", flags: 64 });
@@ -40,8 +40,8 @@ module.exports = {
             });
         const matchType = args[0];
 
-        if (!["1x1", "2x2", "3x3", "4x4", "5x5"].includes(matchType)) {
-            await message.reply({
+        if (!["1x1", "2x2", "3x3", "4x4", "5x5", "6x6"].includes(matchType)) {
+            return await message.reply({
                 embeds:
                     [new EmbedBuilder()
                         .setTitle("Tipo da aposta não compativel!")
@@ -52,6 +52,6 @@ module.exports = {
             });
 
         }
-        await createMatch(message, message.channel, matchType, true, message.author);
+        return await createMatch(message, message.channel, matchType, true, message.author);
     }
 };

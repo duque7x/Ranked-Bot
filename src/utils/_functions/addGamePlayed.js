@@ -8,6 +8,8 @@ module.exports = async (userId, matchId) => {
         },
         { upsert: true, new: true }
     );
+    
+    if (userProfile.gamesPlayed.find(e => e == matchId)) return;
 
     userProfile.gamesPlayed.push(matchId);
     userProfile.save();

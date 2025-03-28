@@ -8,20 +8,18 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
         // Find matches where the user is a player
         let activeMatchs = await Match.find({ "players": { $elemMatch: { id: userId } } });
         // Filter ongoing matches (not "off" or "shutted")
-        let ongoingMatchs = activeMatchs.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
+        let ongoingMatchs = await activeMatchs.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
 
         // Prevent user from joining another match if already in one
         if (ongoingMatchs.length > 0) {
             let msg = ongoingMatchs.map(match => match._id);
 
-            return sendReply(interaction, `# Você já está em outra partida! <#${ongoingMatchs[0].matchChannel?.id || ""}>\n-# Id da partida(s): ${msg.join(", ")}\n-# Chame um ADM se esta tendo problemas.`);
+            return await sendReply(interaction, `# Você já está em outra partida! <#${ongoingMatchs[0].matchChannel?.id || ""}>\n-# Id da partida(s): ${msg.join(", ")}\n-# Chame um ADM se esta tendo problemas.`);
         }
 
         // Determine max team size
-        const maximumSize = matchType.includes("x") 
-            ? 2 * Number(matchType.split("x")[0]) 
-            : 2 * Number(matchType.split("v")[0]);
-
+        const maximumSize = 2 * Number(matchType.split("x")[0]);
+           
         // Create the match
         const match = new Match({
             maximumSize,

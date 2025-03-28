@@ -32,7 +32,7 @@ module.exports = async function shutMatch_handler(interaction, matchId) {
 
     const updatedEmbed = new EmbedBuilder()
         .setTitle("Partida encerrada com successo!")
-        .setDescription("Partida encerrada por: " + userId)
+        .setDescription(`Partida encerrada por <@${userId}>`)
         .setTimestamp()
         .setColor(Colors.DarkButNotBlack);
 
