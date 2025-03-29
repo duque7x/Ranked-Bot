@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, Colors } = require("discord.js");
-const createActivityChart = require("../utils/_functions/createActivityChart");
+const createActivityChart = require("../utils/functions/createActivityChart");
 
 module.exports = {
     data: new SlashCommandBuilder()

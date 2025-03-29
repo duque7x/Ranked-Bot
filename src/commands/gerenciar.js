@@ -4,7 +4,7 @@ const Bet = require("../structures/database/match");
 const { setBetWinner, removeWin, removeWinBet, sendReply, errorMessages, setMatchWinner, removeWinMatch } = require("../utils/utils");
 const myColours = require("../structures/colours");
 const { ChatInputCommandInteraction } = require("discord.js");
-const removeItemOnce = require("../utils/_functions/removeItemOnce");
+const removeItemOnce = require("../utils/functions/removeItemOnce");
 
 module.exports = {
     data: new SlashCommandBuilder()

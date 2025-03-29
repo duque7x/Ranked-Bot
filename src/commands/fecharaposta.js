@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require("discord.js");
 const myColours = require("../structures/colours");
-const endMatchFunction = require("../utils/_functions/endMatchFunction");
+const endMatchFunction = require("../utils/functions/endMatchFunction");
 const Match = require("../structures/database/match");
 
 const { errorMessages } = require("../utils/utils");
