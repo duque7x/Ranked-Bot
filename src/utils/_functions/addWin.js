@@ -5,8 +5,7 @@ module.exports = async (userId) => {
     const userProfile = await User.findOneAndUpdate(
         { "player.id": userId },
         {
-            $inc: { wins: 1 },
-            $set: { "player.id": userId }
+            $inc: { wins: +1 },
         },
         { new: true, upsert: true }
     );
