@@ -1,6 +1,6 @@
 const { Message, PermissionFlagsBits } = require("discord.js");
 const { returnServerRank } = require("../utils/utils");
-const verifyChannel = require("../utils/_functions/verifyChannel");
+const verifyChannel = require("../utils/functions/verifyChannel");
 module.exports = {
     name: "rank", // Command name
 
