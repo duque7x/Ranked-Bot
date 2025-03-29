@@ -5,70 +5,70 @@ class Utils {
     }
 
     static get addCredit() {
-        return require("./_functions/addPoints");
+        return require("./functions/addPoints");
     }
     
     static get addLoss() {
-        return require("./_functions/addLoss");
+        return require("./functions/addLoss");
     }
     
     static get addWin() {
-        return require("./_functions/addWin");
+        return require("./functions/addWin");
     }
     
     static get createMatch() {
-        return require("./_functions/createMatch");
+        return require("./functions/createMatch");
     }
     
     static get createMatchChannel() {
-        return require("./_functions/createMatchChannel");
+        return require("./functions/createMatchChannel");
     }
     
     static get removeCredit() {
-        return require("./_functions/removePoints");
+        return require("./functions/removePoints");
     }
     
     static get removeLoss() {
-        return require("./_functions/removeLoss");
+        return require("./functions/removeLoss");
     }
     
     static get removeWin() {
-        return require("./_functions/removeWin");
+        return require("./functions/removeWin");
     }
     
     static get removeWinMatch() {
-        return require("./_functions/removeWinMatch");
+        return require("./functions/removeWinMatch");
     }
     
     static get returnServerRank() {
-        return require("./_functions/returnServerRank");
+        return require("./functions/returnServerRank");
     }
     static get returnUserRank() {
-        return require("./_functions/returnUserRank");
+        return require("./functions/returnUserRank");
     }
     static get sendMatchEmbed() {
-        return require("./_functions/sendMatchEmbed");
+        return require("./functions/sendMatchEmbed");
     }
     
     static get sendReply() {
-        return require("./_functions/sendReply");
+        return require("./functions/sendReply");
     }
     
     static get setMatchWinner() {
-        return require("./_functions/setMatchWinner");
+        return require("./functions/setMatchWinner");
     }
     
     static get updateMembers() {
-        return require("./_functions/updateMembers");
+        return require("./functions/updateMembers");
     }
 
     static get handlers() {
         return {
-            btnWinner_handler: require("./_handlers/btnWinner_handler"),
-            endMatch_handler: require("./_handlers/endMatch_handler"),
+            btnWinner_handler: require("./handlers/btnWinner_handler"),
+            endMatch_handler: require("./handlers/endMatch_handler"),
             entermatch_handler: require(path.join(__dirname, "_handlers/enterMatch_handler")),
-            handleMatchSelectMenu: require("./_handlers/handleMatchSelectMenu"),
-            outmatch_handler: require("./_handlers/outmatch_handler"),
+            handleMatchSelectMenu: require("./handlers/handleMatchSelectMenu"),
+            outmatch_handler: require("./handlers/outmatch_handler"),
         };
     }
 }

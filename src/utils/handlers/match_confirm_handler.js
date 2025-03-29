@@ -1,12 +1,12 @@
 const Match = require("../../structures/database/match");
-const addPoints = require("../_functions/addPoints");
-const sendReply = require("../_functions/sendReply");
+const addPoints = require("../functions/addPoints");
+const sendReply = require("../functions/sendReply");
 const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits, StringSelectMenuInteraction, ButtonInteraction } = require("discord.js");
-const addMvp = require("../_functions/addMvp");
-const setMatchWinner = require("../_functions/setMatchWinner");
-const setMatchLosers = require("../_functions/setMatchLosers");
+const addMvp = require("../functions/addMvp");
+const setMatchWinner = require("../functions/setMatchWinner");
+const setMatchLosers = require("../functions/setMatchLosers");
 const endMatch_handler = require("./endMatch_handler");
-const endMatchFunction = require("../_functions/endMatchFunction");
+const endMatchFunction = require("../functions/endMatchFunction");
 
 /**
  * 

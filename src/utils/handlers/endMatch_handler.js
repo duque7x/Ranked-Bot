@@ -1,6 +1,6 @@
 const Match = require("../../structures/database/match");
-const endmatchFunction = require("../_functions/endMatchFunction");
-const sendReply = require("../_functions/sendReply");
+const endmatchFunction = require("../functions/endMatchFunction");
+const sendReply = require("../functions/sendReply");
 const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
 const { errorMessages} = require("../utils");
 

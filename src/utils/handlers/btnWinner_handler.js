@@ -1,7 +1,7 @@
 const Match = require("../../structures/database/match");
-const sendReply = require("../_functions/sendReply");
-const setMatchWinner = require("../_functions/setMatchWinner");
-const setMatchLosers = require("../_functions/setMatchLosers");
+const sendReply = require("../functions/sendReply");
+const setMatchWinner = require("../functions/setMatchWinner");
+const setMatchLosers = require("../functions/setMatchLosers");
 const { EmbedBuilder, Colors } = require("discord.js");
 const errorMessages = require("../utils").errorMessages;
 

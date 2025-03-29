@@ -1,9 +1,9 @@
 const Match = require("../../structures/database/match");
-const sendReply = require("../_functions/sendReply");
+const sendReply = require("../functions/sendReply");
 const Config = require('../../structures/database/configs');
 const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
 const { errorMessages, returnUserRank } = require("../utils");
-const formatTeam = require("../_functions/formatTeam");
+const formatTeam = require("../functions/formatTeam");
 
 module.exports = async function enterBet_handler(interaction) {
     const serverConfig = await Config.findOneAndUpdate(
@@ -52,7 +52,7 @@ module.exports = async function enterBet_handler(interaction) {
     await interaction.message.edit({ embeds: [updatedEmbed] });
 
     if (match.players.length == maximumSize) {
-        return require("../_functions/createMatchChannel")(interaction, match);
+        return require("../functions/createMatchChannel")(interaction, match);
     }
     return;
 }

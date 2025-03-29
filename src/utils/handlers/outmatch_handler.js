@@ -1,6 +1,6 @@
 const Match = require("../../structures/database/match");
-const formatTeam = require("../_functions/formatTeam");
-const returnErrorToMember = require("../_functions/returnErrorToMember");
+const formatTeam = require("../functions/formatTeam");
+const returnErrorToMember = require("../functions/returnErrorToMember");
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
 const { sendReply, errorMessages } = require("../utils");
 
