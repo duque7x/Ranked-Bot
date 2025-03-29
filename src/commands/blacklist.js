@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChatInputCommandInteraction } = require("discord.js");
 const myColours = require("../structures/colours");
-const blacklist_handler = require("../utils/_handlers/blacklist_handler");
+const blacklist_handler = require("../utils/handlers/blacklist_handler");
 
 module.exports = {
     data: new SlashCommandBuilder()

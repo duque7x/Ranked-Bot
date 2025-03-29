@@ -1,7 +1,7 @@
 const { EmbedBuilder, Colors } = require("discord.js");
 const Config = require("../../structures/database/configs");
 const User = require("../../structures/database/User");
-const returnUserRank = require("../_functions/returnUserRank");
+const returnUserRank = require("../functions/returnUserRank");
 
 module.exports = async (action, guildId, user, adminId, interaction) => {
     const serverConfig = await Config.findOne({ "guild.id": guildId });
