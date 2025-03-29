@@ -105,7 +105,7 @@ const client = new BotClient({
         IntentsBitField.Flags.MessageContent,
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.DirectMessages,
-
+        IntentsBitField.Flags.GuildExpressions
     ],
     partials: [Partials.Message, Partials.Channel],
 });

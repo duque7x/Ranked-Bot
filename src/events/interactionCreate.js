@@ -1,10 +1,9 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
 const { returnServerRank, returnUserRank } = require("../utils/utils");
-const outmatch_handler = require('../utils/_handlers/outmatch_handler');
-const shutMatch_handler = require('../utils/_handlers/shutMatch_handler');
-const creator_handler = require('../utils/_handlers/match_menu_handler');
-const match_menu_handler = require('../utils/_handlers/match_menu_handler');
-const match_confirm_handler = require('../utils/_handlers/match_confirm_handler');
+const outmatch_handler = require('../utils/handlers/outmatch_handler');
+const shutMatch_handler = require('../utils/handlers/shutMatch_handler');
+const match_menu_handler = require('../utils/handlers/match_menu_handler');
+const match_confirm_handler = require('../utils/handlers/match_confirm_handler');
 const { entermatch_handler, handleMatchSelectMenu, endMatch_handler, setWinner_handler, btnWinner_handler } = require('../utils/utils').handlers;
 
 module.exports = class InteractionEvent {
