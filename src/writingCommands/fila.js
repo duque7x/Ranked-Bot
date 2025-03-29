@@ -2,7 +2,7 @@ const { Message, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const { returnUserRank, createMatch } = require("../utils/utils");
 const Config = require("../structures/database/configs");
 const User = require("../structures/database/User");
-const verifyChannel = require("../utils/_functions/verifyChannel");
+const verifyChannel = require("../utils/functions/verifyChannel");
 
 module.exports = {
     name: "fila", // Command name
