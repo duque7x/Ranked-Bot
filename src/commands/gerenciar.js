@@ -5,6 +5,7 @@ const { setBetWinner, removeWin, removeWinBet, sendReply, errorMessages, setMatc
 const myColours = require("../structures/colours");
 const { ChatInputCommandInteraction } = require("discord.js");
 const removeItemOnce = require("../utils/functions/removeItemOnce");
+const setMatchLosers = require("../utils/functions/setMatchLosers");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -26,14 +27,12 @@ module.exports = {
                         .addChoices(
                             { name: "Adicionar Vitória Para Time 1", value: "addwin-teamA" },
                             { name: "Adicionar Vitória Para Time 2", value: "addwin-teamB" },
-                            { name: "Remover Vitória Para Time 1", value: "removewin-teamA" },
-                            { name: "Remover Vitória Para Time 2", value: "removewin-teamB" },
-                            { name: "Adicionar jogador", value: "add_player" },
-                            { name: "Remover jogador", value: "remove_player" },
-                            { name: "Alterar para off", value: "status_off" },
-                            { name: "Alterar para created", value: "status_created" },
-                            { name: "Alterar para on", value: "status_on" },
-                            { name: "Alterar para shutted", value: "status_shutted" },
+                            { name: "Remover Vitória Do Time 1", value: "removewin-teamA" },
+                            { name: "Remover Vitória Do Time 2", value: "removewin-teamB" },
+                            { name: "Alterar estado da partida para off", value: "status_off" },
+                            { name: "Alterar estado da partida para created", value: "status_created" },
+                            { name: "Alterar estado da partida para on", value: "status_on" },
+                            { name: "Alterar estado da partida para shutted", value: "status_shutted" },
                         )
                 )
         )
@@ -45,8 +44,7 @@ module.exports = {
                         .setDescription("Opção a ser alterada")
                         .setRequired(true)
                         .addChoices(
-                            { name: "Apostas", value: "matchs" },
-                            { name: "Ranking", value: "rank" }
+                            { name: "Apostas", value: "matches" }
                         )
                 )
         ),
@@ -69,7 +67,10 @@ module.exports = {
 
         if (action.startsWith("addwin")) {
             const team = match[action.split("-")[1]];
-            await setMatchWinner(match, team);
+            const losingTeam = match[action.split("-")[1] == "teamA" ? "teamB" : "teamA"];
+
+            await setMatchWinner(match, team, interaction.guildId);
+            await setMatchLosers(match, losingTeam, interaction.guildId);
 
             const embed = new EmbedBuilder().setTitle(`Time vencedor agora é o: Time ${action.split("-")[1].replace("team", "") == "A" ? "1" : "2"}`).setColor(Colors.Aqua).setTimestamp();
 
@@ -108,7 +109,7 @@ module.exports = {
         if (!serverConfig) {
             serverConfig = new Config({
                 guild: { id: interaction.guildId, name: interaction.guild.name },
-                state: { matchs: { status: "on" }, rank: { status: "on" } }
+                state: { matches: { status: "on" }, rank: { status: "on" } }
             });
             await serverConfig.save();
         }

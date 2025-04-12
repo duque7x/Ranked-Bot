@@ -3,18 +3,18 @@ const Match = require("../structures/database/match");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("onmatches")
-        .setDescription("Manda uma embed com as partidas online.")
+        .setName("partidason")
+        .setDescription("Manda uma ou varias embed com as partidas online.")
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     /**
      * @param {import("discord.js").ChatInputCommandInteraction} interaction
      */
     async execute(interaction) {
-        const matchs = await Match.find({});
+        const matches = await Match.find({});
         let embeds = [];
 
-        matchs.filter(match => match.status === "created" || match.status === "on").forEach((match, index) => {
+        matches.filter(match => match.status === "created" || match.status === "on").forEach((match, index) => {
             embeds.push(new EmbedBuilder()
                 .setTitle(`Partida ${index + 1}`)
                 .addFields([
@@ -53,15 +53,27 @@ module.exports = {
                         value: `<@${match.creatorId}>`,
                         inline: true
                     }
+                    ,
+                    {
+                        name: "Criador da sala",
+                        value: `${match.roomCreator.id ? `<@${match.roomCreator.id}>`: "Não definido"}`,
+                        inline: true
+                    }
                 ])
             );
         });
 
         if (embeds.length > 0) {
-            interaction.reply({ embeds });
-        } else {
-            interaction.reply({ content: "# Não há partidas abertas.", flags: 64 });
-        }
+            await interaction.reply({ content: `# Partidas abertas:`, flags: 64 });
+          
+            for (let i = 0; i < embeds.length; i += 10) {
+              const chunk = embeds.slice(i, i + 10);
+              await interaction.followUp({ embeds: chunk });
+            }
+          } else {
+            await interaction.reply({ content: "# Não há partidas abertas.", flags: 64 });
+          }
+          
     }
 };
 

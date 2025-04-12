@@ -1,14 +1,8 @@
 const User = require("../../structures/database/User");
 
-module.exports = async (user) => {
-    const userId = user.id;
-
-    return await User.findOneAndUpdate(
-        { "player.id": userId, losses: { $gt: 0 } },
-        {
-            $inc: { losses: -1 }
-        },
-        { upsert: true, new: true }
-    );
-
-}
+module.exports = async (userId, amount = 1) => {
+  const userProfile = await User.findOrCreate(userId);
+  
+  userProfile.losses = Math.max(0, userProfile.losses - amount);
+  return await userProfile.save();
+};

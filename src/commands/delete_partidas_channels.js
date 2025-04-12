@@ -26,7 +26,7 @@ module.exports = {
      */
     async execute(interaction, client) {
         await interaction.deferReply({ flags: 64 });
-        const deletematchs = interaction.options.getString("apagarpartidas");
+        const deletematches = interaction.options.getString("apagarpartidas");
 
 
         const channels = interaction.guild.channels.cache.filter(c =>
@@ -41,10 +41,10 @@ module.exports = {
             await c.delete();
         });
 
-        if (deletematchs == "delete_partidas") {
-            const matchs = await Match.find({});
+        if (deletematches == "delete_partidas") {
+            const matches = await Match.find({});
 
-            for (let match of matchs) {
+            for (let match of matches) {
                 await match.deleteOne();
             }
         }

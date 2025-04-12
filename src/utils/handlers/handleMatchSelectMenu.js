@@ -7,7 +7,8 @@ const { StringSelectMenuInteraction,
     StringSelectMenuBuilder,
     EmbedBuilder,
     ButtonStyle,
-    Options
+    Options,
+    PermissionFlagsBits
 } = require("discord.js");
 
 /**
@@ -22,7 +23,8 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
     const match = await Match.findOne({ _id: matchId });
     const userId = user.id;
     const leadersId = match.leaders.map(p => p.id);
-    if (!leadersId.some(id => id === userId)) return interaction.reply({
+    if (!leadersId.some(id => id === userId) && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) 
+        return interaction.reply({
         embeds: [
             new EmbedBuilder()
                 .setTitle("Você não pode alterar esta partida.")

@@ -9,11 +9,11 @@ module.exports = async (interaction, match, channelToSend) => {
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
 
     const embed = new EmbedBuilder()
-        .setTitle(`Partida ${matchType}`)
+        .setTitle(`Partida ${matchType} | Normal`)
         .setDescription(`Entre na fila e aguarde preencher para apartida começar!`)
         .addFields([
-            { name: "Time 1", value: formatTeam(players.slice(0, teamSize), teamSize), inline: true },
-            { name: "Time 2", value: formatTeam(players.slice(teamSize), teamSize), inline: true }
+            { name: "Equipe 1", value: formatTeam(players.slice(0, teamSize), teamSize), inline: true },
+            { name: "Equipe 2", value: formatTeam(players.slice(teamSize), teamSize), inline: true }
         ])
         .setColor(0xCEFEFF);
 

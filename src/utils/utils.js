@@ -1,4 +1,3 @@
-const path = require("path");
 class Utils {
     static get errorMessages() {
         return require("./errorMessagesData");
@@ -64,7 +63,6 @@ class Utils {
 
     static get handlers() {
         return {
-            btnWinner_handler: require("./handlers/btnWinner_handler"),
             endMatch_handler: require("./handlers/endMatch_handler"),
             entermatch_handler: require("./handlers/enterMatch_handler"),
             handleMatchSelectMenu: require("./handlers/handleMatchSelectMenu"),

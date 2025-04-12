@@ -18,7 +18,7 @@ module.exports = {
         const roleIds = ["1338983241759064228", "1350144276834680912"];
 
         for (const member of members.values()) {
-            if (member.user.bot) continue; // Skip bots
+            if (member.user.bot) return; // Skip bots
 
             for (let roleId of roleIds) {
                 if (!member.roles.cache.has(roleId)) {
@@ -26,8 +26,8 @@ module.exports = {
                 }
             }
             await User.findOneAndUpdate(
-                { "player.id": member.id },
-                { $set: { player: { name: member.user.username, id: member.id } } }, // Ensures update
+                { "player.id": member.user.id },
+                { $set: { player: { name: member.user.username, id: member.user.id } } }, // Ensures update
                 { upsert: true, new: true }
             );
         }

@@ -4,56 +4,125 @@ const Config = require('../../structures/database/configs');
 const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
 const { errorMessages, returnUserRank } = require("../utils");
 const formatTeam = require("../functions/formatTeam");
+const User = require("../../structures/database/User");
 
 module.exports = async function enterBet_handler(interaction) {
-    const serverConfig = await Config.findOneAndUpdate(
-        { "guild.id": interaction.guild.id },  // Find the document by guild ID
-        { $setOnInsert: { guild: { name: interaction.guild.name, id: interaction.guild.id } } },  // Only set this if the document doesn't exist
-        { new: true, upsert: true }  // Return the updated document, and create one if it doesn't exist
-    );
-    const { user } = interaction;
-    const userProfile = (await returnUserRank(user, interaction)).foundUser;
-
-    await interaction.deferUpdate({ flags: 64 });
-    let [action, matchType, matchId, amount] = interaction.customId.split("-");
-    const userId = interaction.user.id;
-    const maximumSize = matchType.includes("x")
-        ? 2 * Number(matchType.split("x")[0])
-        : 2 * Number(matchType.split("v")[0]);
-
-    // Find matches where the user is a player
-    let [activeMatchs, match] = await Promise.all([await Match.find({ "players": { $elemMatch: { id: userId } } }), await Match.findOne({ _id: matchId })]);
-    // Filter ongoing matches (not "off" or "shutted")
-    let ongoingMatchs = activeMatchs.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
-
-    // Prevent user from joining another match if already in one
-    if (ongoingMatchs.length > 0) {
-        let msg = ongoingMatchs.map(match => match._id);
-
-        return sendReply(interaction, `# Você já está em outra partida! <#${ongoingMatchs[0].matchChannel?.id || ""}>\n-# Id da partida(s): ${msg.join(", ")}\n-# Chame um ADM se esta tendo problemas.`);
+    if (!interaction.member.voice.channel && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+        return await interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Canal de voz")
+                    .setDescription("Você tem que estar conectado a um canal de voz para entrar uma fila!")
+                    .setColor(0xff0000)
+                    .setTimestamp()
+            ],
+            flags: 64
+        });
     }
 
-    if (!match) return sendReply(interaction, errorMessages.match_off);
-    if (serverConfig.state.matchs.status === "off") return interaction.followUp({ embeds: errorMessages.matchs_off, flags: 64 });
-    if (userProfile.blacklisted == true) return sendReply(interaction, errorMessages.blacklist);
-    if (match.players.some(i => i.id == userId)) return sendReply(interaction, `# Você já está na aposta!\n-# Id da aposta(s): ${match._id}\n-# Chame um ADM se esta tendo problemas.`);
+    const serverConfig = await Config.findOneAndUpdate(
+        { "guild.id": interaction.guild.id },
+        { $setOnInsert: { guild: { name: interaction.guild.name, id: interaction.guild.id } } },
+        { new: true, upsert: true }
+    );
+
+    const { user } = interaction;
+    const userProfile = await User.findOrCreate(user.id);
+
+    // Check if match exists and save channel info
+    const [action, matchType, matchId, amount] = interaction.customId.split("-");
+    const userId = interaction.user.id;
+    const maximumSize = matchType.includes("x") ? 2 * Number(matchType.split("x")[0]) : 2 * Number(matchType.split("v")[0]);
+
+    let [activeMatchs, match] = await Promise.all([
+        await Match.find({ "players": { $elemMatch: { id: userId } } }),
+        await Match.findOne({ _id: matchId })
+    ]);
+
+    if (!match) {
+        return interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Partida offline")
+                    .setDescription("Esta partida não se encontra na base de dados")
+                    .setColor(0xff0000)
+                    .setTimestamp(),
+            ],
+            flags: 64,
+        });
+    }
+    if (serverConfig.state.matches.status === "off") {
+        return interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Partidas offline")
+                    .setDescription("As filas estão fechadas de momento!")
+                    .setColor(0xff0000)
+                    .setTimestamp(),
+            ],
+            flags: 64,
+        });
+    }
+    if (userProfile.blacklisted === true) {
+        return interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Você está na blacklist")
+                    .setDescription("Infelizmente o seu id se encontra na blacklist!")
+                    .setColor(0xff0000)
+                    .setTimestamp(),
+            ],
+            flags: 64,
+        });
+    }
+    if (match.players.some(i => i.id === userId)) {
+        return interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Você já está nessa partida")
+                    .setDescription("-# Se não aparece que você esta na partida, não se preocupe!")
+                    .setTimestamp()
+                    .setColor(0xff0000)
+            ],
+            flags: 64
+        });
+    }
+
+    // Filter ongoing matches
+    let ongoingMatchs = activeMatchs.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
+
+    // Prevent joining another match if already in one
+    if (ongoingMatchs.length > 0) {
+        let msg = ongoingMatchs.map(m => m._id);
+        return interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Você já está em outra partida")
+                    .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
+                    .setTimestamp()
+                    .setColor(0xff0000)
+            ],
+            flags: 64
+        });
+    }
+
+    // Add player to match and save
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
-    const { players } = match;
-
     match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
+    userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });
     await match.save();
-
+    await userProfile.save();
 
     const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
         .setFields([
-            { name: "Time 1", value: formatTeam(players.slice(0, teamSize), teamSize), inline: true },
-            { name: "Time 2", value: formatTeam(players.slice(teamSize), teamSize), inline: true }
-        ])
+            { name: "Time 1", value: formatTeam(match.players.slice(0, teamSize), teamSize), inline: true },
+            { name: "Time 2", value: formatTeam(match.players.slice(teamSize), teamSize), inline: true }
+        ]);
+
     await interaction.message.edit({ embeds: [updatedEmbed] });
 
-    if (match.players.length == maximumSize) {
+    if (match.players.length === maximumSize) {
         return require("../functions/createMatchChannel")(interaction, match);
     }
     return;
 }
-

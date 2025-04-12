@@ -35,8 +35,10 @@ module.exports = class MessageEvent {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift();
     const command = cl.prefixCommands.get(commandName);
-  
-    if (message.channel.id == "1338575355665186856" && /^\d+$/.test(message.content)) {
+    
+    if (message.channel.id == "1338575355665186856") {
+      if (!/^\d+$/.test(message.content)) return message.delete();
+      
       const serverInfo = await Config.findOne({ "guild.id": message.guildId });
       const blacklist = serverInfo.blacklist;
       if (blacklist.some(id => id.startsWith(message.content))) {
@@ -52,7 +54,6 @@ module.exports = class MessageEvent {
           .setDescription(`O id **${message.content}** não está blacklist.`)
           .setTimestamp()
           .setColor(Colors.Red)
-          .setFooter({ text: "Nota: para sair da blacklist você precisa pagar 1,50€" });
 
         message.reply({ embeds: [embed] })
       }

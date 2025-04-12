@@ -1,44 +1,38 @@
-const { EmbedBuilder, Colors } = require("discord.js");
 const Config = require("../../structures/database/configs");
 const User = require("../../structures/database/User");
-const returnUserRank = require("../functions/returnUserRank");
 
-module.exports = async (action, guildId, user, adminId, interaction) => {
-    const serverConfig = await Config.findOne({ "guild.id": guildId });
-    const userProfile = (await returnUserRank(user, interaction)).foundUser;
+module.exports = async (options) => {
+  const { guildId, user, adminId, action } = options;
+
+  try {
+    const [serverConfig, userProfile] = await Promise.all([
+      Config.findOne({ "guild.id": guildId }),
+      User.findOrCreate(user.id),
+    ]);
+
+    const isUserBlacklisted =
+      serverConfig.blacklist.some((id) => id.startsWith(user.id)) ||
+      userProfile.blacklisted;
 
     if (action === "add") {
-        if (serverConfig.blacklist.some(id => id.startsWith(user.id))) {
-            return await interaction.reply({ content: `# ${user} já está na blacklist!`, flags: 64 });
-        }
+      if (isUserBlacklisted) return "already_in";
 
-        serverConfig.blacklist.push(`${user.id}-${adminId}-${Date.now()}`);
-        userProfile.blacklisted = true;
-        await serverConfig.save();
-        await userProfile.save();
-
-        const embed = new EmbedBuilder()
-            .setTitle("Blacklist")
-            .setColor(0xff0000)
-            .setDescription(`${user} foi adicionado à blacklist!\n\n-# Por <@${adminId}>`)
-            .setTimestamp()
-            .setThumbnail(user.displayAvatarURL());
-
-        return embed;
-    } else if (action === "remove") {
-        // Fix: Correctly filter out entries that belong to the user
-        serverConfig.blacklist = serverConfig.blacklist.filter(id => !id.startsWith(user.id));
-        userProfile.blacklisted = false;
-        await serverConfig.save();
-        await userProfile.save();
-
-        const embed = new EmbedBuilder()
-            .setTitle("Blacklist")
-            .setColor(Colors.Grey)
-            .setDescription(`${user} foi removido da blacklist!\n-# Por <@${adminId}>`)
-            .setTimestamp()
-            .setThumbnail(user.displayAvatarURL());
-
-        return embed;
+      serverConfig.blacklist.push(`${user.id}-${adminId}-${Date.now()}`);
+      userProfile.blacklisted = true;
+    } else if (action === "remove" && userProfile.blacklisted) {
+      serverConfig.blacklist = serverConfig.blacklist.filter(
+        (id) => !id.startsWith(user.id)
+      );
+      userProfile.blacklisted = false;
+    } else {
+      return true;
     }
-}
+
+    // Save both updated records
+    await Promise.all([serverConfig.save(), userProfile.save()]);
+    return true;
+  } catch (error) {
+    console.error("Error handling blacklist action:", error);
+    return false;
+  }
+};

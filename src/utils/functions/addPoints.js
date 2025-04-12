@@ -1,11 +1,7 @@
 const User = require("../../structures/database/User");
 
 module.exports = async (userId, amount) => {
-    return await User.findOneAndUpdate(
-        { "player.id": userId },
-        {
-            $inc: { points: +amount },
-        },
-        { new: true, upsert: true }
-    );
+    const userProfile = await User.findOrCreate(userId);
+    userProfile.points = userProfile.points + amount;
+    return await userProfile.save();
 }

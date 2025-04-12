@@ -24,7 +24,7 @@ module.exports = async function creator_handler(interaction) {
     const keys = {
         creator: () => "o criador da sala",
         mvp: () => "o mvp da sala",
-        winner: () => `o time ${supposedCreatorId.split("team")[1] == "A" ? 1 : 2} foi vencedor`,
+        winner: () => `que o time ${supposedCreatorId.split("team")[1] == "A" ? 1 : 2} foi vencedor`,
     }
     
     if (keys[option]) {
@@ -47,6 +47,4 @@ module.exports = async function creator_handler(interaction) {
         });
         return await interaction.deferUpdate();
     }
-
-
 }

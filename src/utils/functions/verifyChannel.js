@@ -6,7 +6,6 @@ const { EmbedBuilder } = require("@discordjs/builders")
  */
 module.exports = (options) => {
     const { event, channelId, allowedChannelId, isAdmin, name } = options;
-
     if (channelId !== allowedChannelId && !isAdmin) {
          event.reply({
             embeds: [
@@ -17,9 +16,7 @@ module.exports = (options) => {
                     .setColor(0xff0000)
             ]
         });
-
         return true;
     }
-
     return false;
 }

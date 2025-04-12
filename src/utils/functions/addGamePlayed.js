@@ -1,16 +1,11 @@
 const User = require("../../structures/database/User");
 
-module.exports = async (userId, matchId) => {
-    const userProfile = await User.findOneAndUpdate(
-        { "player.id": userId },
-        {
-            $set: { player: { id: userId } }
-        },
-        { upsert: true, new: true }
-    );
-    
-    if (userProfile.gamesPlayed.find(e => e == matchId)) return;
+module.exports = async (userId, matchId) => {    
+    const userProfile = await User.findOrCreate(userId);
 
-    userProfile.gamesPlayed.push(matchId);
-    userProfile.save();
-}
+    if (!userProfile.gamesPlayed.includes(matchId)) {
+        userProfile.gamesPlayed.push(matchId);
+        await userProfile.save();
+    }
+    return userProfile;
+};

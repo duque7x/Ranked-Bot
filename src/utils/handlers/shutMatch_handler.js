@@ -1,8 +1,5 @@
 const Match = require("../../structures/database/match");
-const formatTeam = require("../functions/formatTeam");
-const returnErrorToMember = require("../functions/returnErrorToMember");
-const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits, Colors } = require("discord.js");
-const { sendReply, errorMessages } = require("../utils");
+const { EmbedBuilder, Colors, PermissionFlagsBits } = require("discord.js");
 
 module.exports = async function shutMatch_handler(interaction, matchId) {
     let match = await Match.findOne({ "_id": matchId });
@@ -17,22 +14,24 @@ module.exports = async function shutMatch_handler(interaction, matchId) {
                 .setTimestamp()
         ]
     });
-    if (match.creatorId !== userId) return interaction.reply({
-        embeds: [
-            new EmbedBuilder()
-                .setTitle("Você não pode encerrar esta partida.")
-                .setDescription(`<@${userId}> não és o usuario que iniciou esta fila.`)
-                .setTimestamp()
-                .setColor(0xff0000)
-        ]
-    });
+    if (match.creatorId !== userId && !interaction.member.permissions.has(PermissionFlagsBits.Administrator))
+        return interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Você não pode encerrar esta partida.")
+                    .setDescription(`<@${userId}> você não tem permissões.`)
+                    .setTimestamp()
+                    .setColor(0xff0000)
+            ],
+            flags: 64
+        });
 
     match.status = "shutted";
     match.save();
 
     const updatedEmbed = new EmbedBuilder()
         .setTitle("Partida encerrada com successo!")
-        .setDescription(`Partida encerrada por <@${userId}>`)
+        .setDescription(`Partida encerrada por <@${userId}>\n-# Esta partida sera apagada da base de dados.`)
         .setTimestamp()
         .setColor(Colors.DarkButNotBlack);
 

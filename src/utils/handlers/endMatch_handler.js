@@ -6,7 +6,6 @@ const { errorMessages} = require("../utils");
 
 module.exports = async function endmatch_handler(interaction) {
     const { member, customId } = interaction;
-    if (!member?.permissions.has(PermissionFlagsBits.Administrator) && !member.roles.cache.has("1336838133030977666")) return sendReply(interaction, "# Você precisa falar com um ADM ou MEDIADOR para fechar a aposta!");
 
     const [action, matchId] = customId.split("-");
     let match = await Match.findById(matchId);

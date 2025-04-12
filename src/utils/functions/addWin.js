@@ -1,13 +1,7 @@
 const User = require("../../structures/database/User");
 
-module.exports = async (userId) => {
-    // Atualiza ou cria o usuário no banco de dados
-    const userProfile = await User.findOneAndUpdate(
-        { "player.id": userId },
-        {
-            $inc: { wins: +1 },
-        },
-        { new: true, upsert: true }
-    );
-    return userProfile;
-}
+module.exports = async (userId, amount = 1) => {
+  const userProfile = await User.findOrCreate(userId);
+  userProfile.wins = userProfile.wins + amount;
+  return await userProfile.save();
+};

@@ -1,0 +1,46 @@
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  Colors,
+  PermissionFlagsBits,
+  ChatInputCommandInteraction,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+} = require("discord.js");
+const User = require("../structures/database/User");
+const myColours = require("../structures/colours");
+const verifyChannel = require("../utils/functions/verifyChannel");
+const { returnServerRank } = require("../utils/utils");
+const Match = require("../structures/database/match");
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("rank")
+    .setDescription("Manda embed com as estatisticas do servidor"),
+  /**
+   *
+   * @param {ChatInputCommandInteraction} interaction
+   * @returns
+   */
+  async execute(interaction) {
+    const isAllowed = await Match.findById(interaction.channel.topic);
+    const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+    const isCorrectChannel = interaction.channel.id === "1342561854777720845";
+    const isMatchChannel = Boolean(isAllowed);
+
+    if (!isAdmin && !isCorrectChannel && !isMatchChannel) {
+      return interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Você não pode usar este comando aqui.")
+            .setDescription(`Vá pro canal <#1342561854777720845> e use o comando.`)
+            .setTimestamp()
+            .setColor(0xff0000),
+        ],
+      });
+    }
+    
+    return returnServerRank(interaction, "send");
+  },
+};

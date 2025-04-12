@@ -20,7 +20,7 @@ module.exports = class ReadyEvent {
    */
   execute(event, client) {
     client.user.setActivity({
-      name: "apostando mais de 100€ em live",
+      name: "vem jogar na SWAG RANKED ",
       type: ActivityType.Custom,
     });
     
