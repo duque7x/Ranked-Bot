@@ -80,7 +80,7 @@ module.exports = async (interaction, match) => {
             flags: 64
         });
     }
-    /* if (match.players.some(i => i.id === userId)) {
+    if (match.players.some(i => i.id === userId)) {
         return interaction.reply({
             embeds: [
                 new EmbedBuilder()
@@ -104,7 +104,7 @@ module.exports = async (interaction, match) => {
             ],
             flags: 64
         });
-    } */
+    }
     if (match.players.length == maximumSize) {
         return createChallengeMatchChannel(interaction, match)
     }
