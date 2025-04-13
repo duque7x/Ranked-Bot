@@ -36,7 +36,7 @@ module.exports = async (interaction, option) => {
 
         return new EmbedBuilder()
             .setThumbnail(firstRanked?.user?.displayAvatarURL())
-            .setTitle("Ranking de Vitórias")
+            .setTitle("Ranking de Pontos")
             .setDescription(
                 paginatedUsers.map((user, index) => `**${start + index + 1}° -** <@${user.player.id}>: ${user.points ?? 0} pontos`
                 ).join("\n") +

@@ -17,7 +17,7 @@ function color(rgb) {
 }
 /**
  *
- * @param {User} user
+ * @param {import("discord.js").User} user
  * @param {ButtonInteraction} interaction
  * @param {string} option
  * @returns
@@ -49,8 +49,9 @@ module.exports = async (user, interaction, option) => {
 
   // Build the embed for user profile
   const embed = new EmbedBuilder()
+  .setAuthor({ name: `Perfil de ${user.username}`, iconURL: user.displayAvatarURL() })
     .setColor(hexColor)
-    .setTitle(`Estatísticas de ${user.username}`)
+    //.setTitle(`Estatísticas de ${user.username}`)
     .addFields(
       {
         name: "Pontos",
