@@ -14,7 +14,7 @@ module.exports = async (guild) => {
             })
             .setColor(0xff0000);
 
-        return generateEmbed;
+        return {generateEmbed};
     }
 
     const firstRankedId = users[0].player.id;
