@@ -15,9 +15,7 @@ module.exports = class {
     if (member.user.bot) return;
     const config = await Config.findOne({ "guild.id": member.guild.id });
 
-    const defaultRole = member.guild.roles.cache.find((r) =>
-      r.name.toLowerCase().includes("membro")
-    );
+    const defaultRole = member.guild.roles.cache.get("1338983241759064228");
     const defaultChannel =
       member.guild.channels.cache.get("1339003136907415642") ||
       member.guild.channels.cache.find((c) => c.name.includes("welcome"));
@@ -66,7 +64,7 @@ module.exports = class {
 
 
         await member.roles.add(defaultRole);
-        await member.roles.add(config.seasonRoleId);
+        //await member.roles.add(config.seasonRoleId);
         console.log(`# Default role assigned to ${member.user.tag}.`);
         defaultChannel.send({ embeds: [embed] });
       } catch (error) {
