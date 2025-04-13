@@ -23,6 +23,8 @@ const User = require("../../structures/database/User");
  * @returns
  */
 module.exports = async (interaction, match = new Match()) => {
+  await interaction.guild.members.fetch();
+
   const { guild } = interaction;
   const totalMatches = await Match.countDocuments();
   const formattedTotalMatches = String(totalMatches).padStart(3, "0");
@@ -32,7 +34,7 @@ module.exports = async (interaction, match = new Match()) => {
     : matchType.split("v").map(Number);
   const { teamA, teamB } = randomizeTeams(match.players);
   const teamAVoiceChannel = await guild.channels.create({
-    name: `Team A・${formattedTotalMatches}`,
+    name: `Equipa 1・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
     parent: "1338988719914618892",
     permissionOverwrites: [
@@ -72,7 +74,7 @@ module.exports = async (interaction, match = new Match()) => {
     ],
   });
   const teamBVoiceChannel = await guild.channels.create({
-    name: `Team B・${formattedTotalMatches}`,
+    name: `Equipa 2・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
     parent: "1338988719914618892",
     permissionOverwrites: [
@@ -100,7 +102,6 @@ module.exports = async (interaction, match = new Match()) => {
     ],
   });
   for (let playerMatch of teamA) {
-    await interaction.guild.members.fetch();
     const member = interaction.guild.members.cache.get(playerMatch.id);
     const userProfile = await User.findOrCreate(member.id);
 
@@ -112,7 +113,6 @@ module.exports = async (interaction, match = new Match()) => {
     if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
   }
   for (let playerMatch of teamB) {
-    await interaction.guild.members.fetch();
     const member = interaction.guild.members.cache.get(playerMatch.id);
     const userProfile = await User.findOrCreate(member.id);
 
@@ -152,7 +152,7 @@ module.exports = async (interaction, match = new Match()) => {
   const embedForChannel = new EmbedBuilder()
     .setColor(Colors.Grey)
     .setDescription(
-      `# Partida ${matchType}\nCriem a sala e de seguida definam o criador!`
+      `# Partida ${matchType} | Normal\nCriem a sala e de seguida definam o criador!`
     )
     .addFields([
       { name: "Time 1", value: embedTeamA, inline: true },

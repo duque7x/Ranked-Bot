@@ -40,6 +40,7 @@ module.exports = async (interaction, match) => {
             flags: 64,
         });
     }
+
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
     const maximumSize = teamSize * 2;
 
@@ -55,6 +56,7 @@ module.exports = async (interaction, match) => {
             flags: 64,
         });
     }
+
     if (userProfile.blacklisted === true) {
         return interaction.reply({
             embeds: [
@@ -68,6 +70,7 @@ module.exports = async (interaction, match) => {
             flags: 64,
         });
     }
+
     if (match.kickedOut.some(i => i.id === userId)) {
         return interaction.reply({
             embeds: [
@@ -106,7 +109,16 @@ module.exports = async (interaction, match) => {
         });
     }
     if (match.players.length == maximumSize) {
-        return createChallengeMatchChannel(interaction, match)
+        await interaction.message.edit({
+            embeds: [
+              new EmbedBuilder()
+                .setTitle(`Partida ${matchType} sendo iniciada...`)
+                .setColor(Colors.LightGrey)
+                .setTimestamp(),
+            ],
+            components: [],
+          });
+        return createChallengeMatchChannel(interaction, match);
     }
     if (match[teamChosen].length == teamSize) {
         return interaction.reply({

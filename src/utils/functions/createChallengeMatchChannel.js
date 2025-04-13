@@ -24,13 +24,15 @@ const formatTeamChallenged = require("./formatTeamChallenged");
  * @returns
  */
 module.exports = async (interaction, match = new Match()) => {
+  await interaction.guild.members.fetch();
+
   const { guild } = interaction;
   const totalMatches = await Match.countDocuments();
   const formattedTotalMatches = String(totalMatches).padStart(3, "0");
   const { matchType, teamA, teamB } = match;
 
   const teamAVoiceChannel = await guild.channels.create({
-    name: `Team A・${formattedTotalMatches}`,
+    name: `⭐ Equipa 1・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
     parent: "1360710246930055208",
     permissionOverwrites: [
@@ -51,7 +53,7 @@ module.exports = async (interaction, match = new Match()) => {
     ],
   });
   const globalVoiceChannel = await guild.channels.create({
-    name: `Global・${formattedTotalMatches}`,
+    name: `⭐ Global・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
     parent: "1360710246930055208",
     permissionOverwrites: [
@@ -70,7 +72,7 @@ module.exports = async (interaction, match = new Match()) => {
     ],
   });
   const teamBVoiceChannel = await guild.channels.create({
-    name: `Team B・${formattedTotalMatches}`,
+    name: `⭐ Equipa 2・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
     parent: "1360710246930055208",
     permissionOverwrites: [
@@ -97,9 +99,7 @@ module.exports = async (interaction, match = new Match()) => {
       })),
     ],
   });
-
   for (let playerMatch of teamA) {
-    await interaction.guild.members.fetch();
     const member = interaction.guild.members.cache.get(playerMatch.id);
     const userProfile = await User.findOrCreate(member.id);
 
@@ -111,9 +111,7 @@ module.exports = async (interaction, match = new Match()) => {
     if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
     await userProfile.save();
   }
-
   for (let playerMatch of teamB) {
-    await interaction.guild.members.fetch();
     const member = interaction.guild.members.cache.get(playerMatch.id);
     const userProfile = await User.findOrCreate(member.id);
 
@@ -127,7 +125,7 @@ module.exports = async (interaction, match = new Match()) => {
   }
 
   const matchChannel = await guild.channels.create({
-    name: `partida・${formattedTotalMatches}`,
+    name: `⭐・partida・${formattedTotalMatches}`,
     type: ChannelType.GuildText,
     topic: match._id.toString(),
     parent: "1360710246930055208",
@@ -154,9 +152,9 @@ module.exports = async (interaction, match = new Match()) => {
 
   // Embed for the match channel
   const embedForChannel = new EmbedBuilder()
-    .setColor(Colors.Grey)
+    .setColor(0x80D1FF)
     .setDescription(
-      `# Partida ${matchType}\nCriem a sala e de seguida definam o criador!`
+      `# Partida ${matchType} | Desafio\nCriem a sala e de seguida definam o criador!`
     )
     .addFields([
       { name: "Time 1", value: embedTeamA, inline: true },
@@ -191,13 +189,14 @@ module.exports = async (interaction, match = new Match()) => {
     embeds: [embedForChannel],
     components: [row],
   });
+
   await interaction.message.edit({
     embeds: [
       new EmbedBuilder()
         .setTitle(`Partida ${matchType} iniciada com sucesso!`)
         .setColor(Colors.LightGrey)
         .setDescription(
-          `Vai para o [canal](https://discord.com/channels/1336809872884371587/${matchChannel.id}) da partida e divirta-se!`
+          `O canal da partida é <#${matchChannel.id}>`
         )
         .setTimestamp(),
     ],
