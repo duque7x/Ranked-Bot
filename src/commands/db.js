@@ -261,7 +261,7 @@ module.exports = {
                     new EmbedBuilder()
                         .setTitle("Apagados")
                         .setColor(0xff0000)
-                        .setDescription("Usuarios apagados com sucesso.")
+                        .setDescription("Usuários apagados com sucesso.")
                         .setFooter({ text: "Por: " + interaction.user.username })
                         .setTimestamp()
                 ]

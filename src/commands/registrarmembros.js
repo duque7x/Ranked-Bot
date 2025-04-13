@@ -18,7 +18,8 @@ module.exports = {
         const members = interaction.guild.members.cache;
 
         for (const member of members.values()) {
-            if (member.user.bot) return; 
+            if (member.user.bot) continue; 
+
             if (!member.roles.cache.has("1338983241759064228")) {
                 await member.roles.add("1338983241759064228").catch(console.error);
             }
