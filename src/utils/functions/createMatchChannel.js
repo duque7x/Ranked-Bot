@@ -36,7 +36,7 @@ module.exports = async (interaction, match = new Match()) => {
   const teamAVoiceChannel = await guild.channels.create({
     name: `Equipa 1・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
-    parent: "1338988719914618892",
+    parent: "1360710246930055208",
     permissionOverwrites: [
       {
         id: guild.roles.everyone.id,
@@ -57,7 +57,7 @@ module.exports = async (interaction, match = new Match()) => {
   const globalVoiceChannel = await guild.channels.create({
     name: `Global・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
-    parent: "1338988719914618892",
+    parent: "1360710246930055208",
     permissionOverwrites: [
       {
         id: guild.roles.everyone.id,
@@ -76,7 +76,7 @@ module.exports = async (interaction, match = new Match()) => {
   const teamBVoiceChannel = await guild.channels.create({
     name: `Equipa 2・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
-    parent: "1338988719914618892",
+    parent: "1360710246930055208",
     permissionOverwrites: [
       {
         id: guild.roles.everyone.id,
@@ -109,8 +109,8 @@ module.exports = async (interaction, match = new Match()) => {
       channelId: member.voice.channelId,
       matchId: match._id,
     });
-
-    if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
+    await userProfile.save();
+    if (member.voice.channel) await moveToChannel(member, teamAVoiceChannel);
   }
   for (let playerMatch of teamB) {
     const member = interaction.guild.members.cache.get(playerMatch.id);
@@ -120,14 +120,14 @@ module.exports = async (interaction, match = new Match()) => {
       channelId: member.voice.channelId,
       matchId: match._id,
     });
-
+    await userProfile.save();
     if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
   }
   const matchChannel = await guild.channels.create({
     name: `partida・${formattedTotalMatches}`,
     type: ChannelType.GuildText,
     topic: match._id.toString(),
-    parent: "1338988719914618892",
+    parent: "1360710246930055208",
     permissionOverwrites: [
       {
         id: guild.roles.everyone.id,
@@ -168,17 +168,18 @@ module.exports = async (interaction, match = new Match()) => {
         new StringSelectMenuOptionBuilder()
           .setLabel("Definir Criador")
           .setValue(`creator-${match._id}`)
-          .setEmoji("🛠️"),
+          .setEmoji("<:emoji_13:1361026264449679551>"),
         new StringSelectMenuOptionBuilder()
           .setLabel("Definir Mvp")
           .setValue(`mvp-${match._id}`)
-          .setEmoji("⭐"),
+          .setEmoji("<:74:1361026016771965069>"),
         new StringSelectMenuOptionBuilder()
           .setLabel("Definir Vencedor")
           .setValue(`winner-${match._id}`)
-          .setEmoji("🥇"),
+          .setEmoji("<a:yellow_trofeu:1360606464946868445>"),
         new StringSelectMenuOptionBuilder()
           .setLabel("Encerrar partida")
+          .setEmoji("<:5483discordticemoji:1361026395601371267>")
           .setValue(`end_match-${match._id}`)
       )
   );
@@ -211,7 +212,6 @@ module.exports = async (interaction, match = new Match()) => {
   ];
   match.status = "on";
 
-  await userProfile.save();
   await match.save();
   return matchChannel;
 };
