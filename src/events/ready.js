@@ -22,7 +22,7 @@ module.exports = class ReadyEvent {
    */
   async execute(event, client) {
     client.user.setActivity({
-      name: "vem jogar na SWAG RANKED ",
+      name: "discord.gg/swagranked",
       type: ActivityType.Custom,
     });
     const guild = client.guilds.cache.get("1336809872884371587");
