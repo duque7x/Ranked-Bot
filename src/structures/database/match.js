@@ -19,7 +19,7 @@ const matchSchema = new mongoose.Schema({
     enum: ["off", "created", "on", "shutted"],
   }, // Single string, default to "on"
   winnerTeam: { type: Array }, // Single strin
-  maximumSize: { type: Number, default: 2 }, // Single strin
+  maximumSize: { type: Number, default: 4 }, // Single strin
   creatorId: {
     type: String,
     default: "00000000000000000",
