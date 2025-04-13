@@ -57,7 +57,6 @@ module.exports = class InteractionEvent {
         see_rank: () => returnServerRank(interaction, client),
         see_profile: () => returnUserRank(interaction.user, interaction, "send", client),
         select_menu: () => handleMatchSelectMenu(interaction, client),
-        end_match: () => endMatch_handler(interaction, client),
         shut_match: () => shutMatch_handler(interaction, matchId, client),
         match_selectmenu: () => match_menu_handler(interaction, client),
         match_confirm: () => match_confirm_handler(interaction, client),
@@ -100,7 +99,7 @@ module.exports = class InteractionEvent {
         },
         update_rank: async () => {
           const { embed, row } = await returnServerRank(interaction);
-
+          const page = 0;
           if (!embed)
             return interaction.reply({
               embeds: [
@@ -114,25 +113,9 @@ module.exports = class InteractionEvent {
               ],
             });
           const message = await interaction.message.edit({
-            embeds: [await embed()], // Await to resolve the async function
-            components: [row()],
+            embeds: [await embed(matchType)], // Await to resolve the async function
+            components: [row(matchType)],
             withResponse: true,
-          });
-
-          // Collector for button interactions
-          const collector = message.createMessageComponentCollector({
-            time: 120000,
-          });
-
-          collector.on("collect", async (btnInteraction) => {
-            if (btnInteraction.customId === "prev") page--;
-            if (btnInteraction.customId === "next") page++;
-
-            await btnInteraction.message.edit({
-              embeds: [await embed()], // Await to resolve the async function
-              components: [await row()],
-              withResponse: true,
-            });
           });
 
           if (!interaction.deferred && !interaction.replied) {
@@ -185,7 +168,9 @@ module.exports = class InteractionEvent {
           await interaction.deferUpdate();
         },
         challenge_match: () => challengeMatch_handler(interaction),
-        kickout_selectmenu: () => kickoutSelectMenu_handler(interaction)
+        kickout_selectmenu: () => kickoutSelectMenu_handler(interaction),
+        next: () => this.updatePage(interaction, 1),
+        prev: () => this.updatePage(interaction, -1),
       };
 
       if (handlers[action]) return await handlers[action]();
@@ -372,4 +357,18 @@ module.exports = class InteractionEvent {
     const unixTimestamp = Math.floor(expiration.getTime() / 1000);
     return `Valida ate: <t:${unixTimestamp}:f>`; // Ex: "em 45 minutos"
   }
+  updatePage = async (interaction, pageChange = 1) => {
+    const { customId } = interaction;
+    const [_, rawPage] = customId.split("-").map(Number);
+    const page = rawPage + pageChange;
+
+    const { embed, row } = await returnServerRank(interaction);
+
+    await interaction.message.edit({
+      embeds: [await embed(page)],
+      components: [row(page)],
+    });
+
+    await interaction.deferUpdate();
+  };
 };
