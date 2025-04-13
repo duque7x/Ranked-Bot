@@ -52,6 +52,16 @@ const userSchema = new mongoose.Schema({
         }],
         default: []
     },
+    adverts: {
+        type: [
+            {
+                addedBy: String,
+                addedWhen: String,
+                reason: String,
+            }
+        ],
+        default: []
+    }
 });
 
 // Static method to find or create a user
