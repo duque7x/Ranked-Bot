@@ -3,6 +3,8 @@ const path = require("path");
 const { Client, Collection, ChannelType, PermissionsBitField, ActivityType, ActivityFlags, EmbedBuilder, Colors } = require("discord.js");
 const BotClient = require("..");
 const chalk = require('chalk');
+const scheduleDailyMessage = require("../utils/functions/scheduleMessage");
+const dailyRank = require("../utils/functions/allTimeRankReturned");
 
 module.exports = class ReadyEvent {
   /**
@@ -18,14 +20,19 @@ module.exports = class ReadyEvent {
    * @param {ReadyEvent} event 
    * @param {BotClient} client 
    */
-  execute(event, client) {
+  async execute(event, client) {
     client.user.setActivity({
       name: "vem jogar na SWAG RANKED ",
       type: ActivityType.Custom,
     });
-    
+    const guild = client.guilds.cache.get("1336809872884371587");
+
     console.log(chalk.bgBlue(`O bot está on! Com o nome ${this.client.user.username} e com ${this.client.guilds.cache.size} guildas`));
     this.client.guilds.cache.forEach(g => console.log(chalk.bgBlack(`Nome da guilda: ${g.name}. Membros ${g.members.cache.size}`)));
+
+    scheduleDailyMessage(client, "1359980755639468094", "1361011042640990298",
+      { embeds: [ (await dailyRank(guild)).generateEmbed()] }
+    )
   }
-  
+
 };
