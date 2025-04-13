@@ -62,7 +62,8 @@ module.exports = async (interaction, match) => {
                     .setTitle("Você está na blacklist")
                     .setDescription("Infelizmente o seu id se encontra na blacklist!")
                     .setColor(0xff0000)
-                    .setTimestamp(),
+                    .setTimestamp()
+                    .setFooter({ text: "Para sair abre um ticket!" }),
             ],
             flags: 64,
         });
