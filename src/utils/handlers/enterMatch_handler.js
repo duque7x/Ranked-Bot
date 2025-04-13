@@ -1,14 +1,14 @@
 const Match = require("../../structures/database/match");
-const sendReply = require("../functions/sendReply");
 const Config = require('../../structures/database/configs');
-const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
-const { errorMessages, returnUserRank } = require("../utils");
+const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const formatTeam = require("../functions/formatTeam");
 const User = require("../../structures/database/User");
 
 module.exports = async function enterBet_handler(interaction) {
+    await interaction.deferUpdate();
+
     if (!interaction.member.voice.channel && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
-        return await interaction.reply({
+        return await interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Canal de voz")
@@ -40,7 +40,7 @@ module.exports = async function enterBet_handler(interaction) {
     ]);
 
     if (!match) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Partida offline")
@@ -52,7 +52,7 @@ module.exports = async function enterBet_handler(interaction) {
         });
     }
     if (serverConfig.state.matches.status === "off") {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Partidas offline")
@@ -64,7 +64,7 @@ module.exports = async function enterBet_handler(interaction) {
         });
     }
     if (userProfile.blacklisted === true) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você está na blacklist")
@@ -76,7 +76,7 @@ module.exports = async function enterBet_handler(interaction) {
         });
     }
     if (match.players.some(i => i.id === userId)) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está nessa partida")
@@ -93,8 +93,7 @@ module.exports = async function enterBet_handler(interaction) {
 
     // Prevent joining another match if already in one
     if (ongoingMatchs.length > 0) {
-        let msg = ongoingMatchs.map(m => m._id);
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está em outra partida")
@@ -110,8 +109,7 @@ module.exports = async function enterBet_handler(interaction) {
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
     match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
     userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });
-    await match.save();
-    await userProfile.save();
+
 
     const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
         .setFields([
@@ -124,5 +122,7 @@ module.exports = async function enterBet_handler(interaction) {
     if (match.players.length === maximumSize) {
         return require("../functions/createMatchChannel")(interaction, match);
     }
+    await match.save();
+    await userProfile.save();
     return;
 }
