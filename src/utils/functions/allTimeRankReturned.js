@@ -5,17 +5,16 @@ module.exports = async (guild) => {
     const users = (await User.find({})).filter(u => u.points > 0).sort((a, b) => b.points - a.points).slice(0, 10);
 
     if (users.length == 0) {
-        return reply({
-            embeds: [new EmbedBuilder()
-                .setTitle("Sem usuarios registrados!")
-                .setTimestamp()
-                .setDescription("Nenhum usuário deste servidor está registado")
-                .setFooter({
-                    text: "Chame um ADM para o ajudar!"
-                })
-                .setColor(0xff0000)
-            ]
-        });
+        return (() => new EmbedBuilder()
+            .setTitle("Sem usuarios registrados!")
+            .setTimestamp()
+            .setDescription("Nenhum usuário deste servidor está registado")
+            .setFooter({
+                text: "Chame um ADM para o ajudar!"
+            })
+            .setColor(0xff0000)
+        )
+
     }
 
     const firstRankedId = users[0].player.id;
@@ -32,5 +31,5 @@ module.exports = async (guild) => {
             .setTimestamp();
     };
 
-    return {generateEmbed};
+    return { generateEmbed };
 }

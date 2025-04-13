@@ -4,7 +4,7 @@ const { Client, Collection, ChannelType, PermissionsBitField, ActivityType, Acti
 const BotClient = require("..");
 const chalk = require('chalk');
 const scheduleDailyMessage = require("../utils/functions/scheduleMessage");
-const dailyRank = require("../utils/functions/allTimeRankReturned");
+const allTimeRankReturned = require("../utils/functions/allTimeRankReturned");
 
 module.exports = class ReadyEvent {
   /**
@@ -31,7 +31,7 @@ module.exports = class ReadyEvent {
     this.client.guilds.cache.forEach(g => console.log(chalk.bgBlack(`Nome da guilda: ${g.name}. Membros ${g.members.cache.size}`)));
 
     scheduleDailyMessage(client, "1359980755639468094", "1361011042640990298",
-      { embeds: [ (await dailyRank(guild)).generateEmbed()] }
+      { embeds: [ (await allTimeRankReturned(guild)).generateEmbed()] }
     )
   }
 
