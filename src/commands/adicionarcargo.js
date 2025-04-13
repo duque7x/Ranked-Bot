@@ -1,4 +1,9 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChatInputCommandInteraction } = require("discord.js");
+const {
+    SlashCommandBuilder,
+    EmbedBuilder,
+    PermissionFlagsBits,
+    ChatInputCommandInteraction,
+} = require("discord.js");
 const myColours = require("../structures/colours");
 
 module.exports = {
@@ -15,83 +20,59 @@ module.exports = {
                 .setDescription("O usuário que receberá o cargo.")
                 .setRequired(true)
         )
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles), // Apenas quem pode gerenciar cargos pode usar
-/**
- * 
- * @param {ChatInputCommandInteraction} interaction 
- * @returns 
- */
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    /**
+     * @param {ChatInputCommandInteraction} interaction 
+     */
     async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
-
         const role = interaction.options.getRole("cargo");
-        const member = interaction.guild.members.cache.get(interaction.options.getUser("usuario").id);
+        const user = interaction.options.getUser("usuario");
+        const member = interaction.guild.members.cache.get(user.id);
 
-        if (!role || !member) {
-            return interaction.reply({ content: "Cargo ou usuário não encontrado.", flags: 64 });
+        if (!member) {
+            return interaction.reply({ content: "Usuário não encontrado no servidor.", flags: 64 });
         }
 
-        if (role.name.toLowerCase().includes("dono")) {
+        if (role.name.toLowerCase().includes("ceo")) {
             return interaction.reply({ content: "Você não pode atribuir esse cargo.", flags: 64 });
         }
 
-        // Definição de rótulos para os cargos
-        const prematives = {
-            administrador: "ADM │",
-            staff: "STAFF │",
-            mediadores: "MED │",
-            ss: "SS │",
-            analista: "ANALISE │",
+        const prefixos = {
+            diretor: "DIR |",
+            ss: "SS |",
+            dev: "DEV |",
+            staff: "STAFF |",
+            helper: "HELPER |",
+            ticket: "SUP |",
         };
 
-        let roleTag = "";
-        for (const key in prematives) {
-            if (role.name.toLowerCase().includes(key)) {
-                roleTag = prematives[key];
-                break;
+        const lowerRoleName = role.name.toLowerCase();
+        const roleTag = Object.entries(prefixos).find(([key]) => lowerRoleName.includes(key))?.[1] || "";
+        const currentName = member.displayName;
+        const hasTag = currentName.startsWith(roleTag);
+        const displayName = hasTag ? currentName : `${roleTag} ${currentName}`;
+        
+
+        try {
+            await member.roles.add(role);
+
+            if (displayName !== member.displayName) {
+                await member.setNickname(displayName, `Cargo ${role.name} adicionado por ${interaction.member.displayName}`);
             }
-        }
 
-        const displayName = `${roleTag} ${member.user.username}`;
-        const logChannel = interaction.guild.channels.cache.get("1340360434414522389");
-
-        if (member.roles.cache.has(role.id) && member.nickname !== displayName) {
             const embed = new EmbedBuilder()
-                .setTitle("Gerenciador de cargos!")
-                .setDescription(`O ${member} já tinha esse cargo, mas não o nome!\n\n-# Por: <@${interaction.user.id}>`)
+                .setTitle("Cargo atribuído com sucesso!")
+                .setDescription(`O cargo <@&${role.id}> foi adicionado a ${member}.\n\n-# Por: <@${interaction.user.id}>`)
                 .setColor(myColours.bright_blue_ocean)
                 .setTimestamp()
                 .setThumbnail(member.user.displayAvatarURL())
-                .setFooter({ text: "Por APOSTAS" });
+                .setFooter({ text: `Por ${interaction.client.user.username}` });
 
-            member.setNickname(displayName, `Nome alterado!`).catch(() => this.sendTemporaryMessage(interaction, "Ocorreu um erro ao tentar mudar o nome."));
-            interaction.reply({ embeds: [embed] });
-            if (logChannel) logChannel.send({ embeds: [embed] });
-            return;
+            return interaction.reply({ embeds: [embed] });
+        } catch (error) {
+            console.error("Erro ao adicionar cargo:", error);
+            return interaction.reply({ content: "Ocorreu um erro ao tentar adicionar o cargo.", flags: 64 });
         }
-
-        member.roles.add(role).then(() => {
-            const embed = new EmbedBuilder()
-                .setTitle("Gerenciador de cargos!")
-                .setDescription(`O cargo <@&${role.id}> foi adicionado a ${member}!\n\n-# Por: <@${interaction.user.id}>`)
-                .setColor(myColours.bright_blue_ocean)
-                .setTimestamp()
-                .setThumbnail(member.user.displayAvatarURL())
-                .setFooter({ text: "Por APOSTAS" });
-
-            member.setNickname(displayName, `Cargo ${role.name} adicionado!`).catch(() => this.sendTemporaryMessage(interaction, "Ocorreu um erro ao tentar mudar o nome."));
-            interaction.reply({ embeds: [embed] });
-            if (logChannel) logChannel.send({ embeds: [embed] });
-        }).catch(err => {
-            console.error(err);
-            interaction.reply({ content: "Ocorreu um erro ao tentar adicionar o cargo.", flags: 64 });
-        });
     },
-
-    sendTemporaryMessage(interaction, content) {
-        interaction.reply({ content, flags: 64 }).then(mg => {
-            setTimeout(() => mg.delete().catch(() => { }), 2000);
-        });
-    }
-    
 };
