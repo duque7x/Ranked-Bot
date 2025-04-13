@@ -30,8 +30,8 @@ module.exports = class ReadyEvent {
     console.log(chalk.bgBlue(`O bot está on! Com o nome ${this.client.user.username} e com ${this.client.guilds.cache.size} guildas`));
     this.client.guilds.cache.forEach(g => console.log(chalk.bgBlack(`Nome da guilda: ${g.name}. Membros ${g.members.cache.size}`)));
 
-    scheduleDailyMessage(client, "1359980755639468094", "1361054779090145520",
-      { embeds: [ (await allTimeRankReturned(guild)).generateEmbed()] }
+    scheduleDailyMessage(client, "1359980755639468094", "1361094577192308798",
+      { content: "", embeds: [(await allTimeRankReturned(guild)).generateEmbed()] },
     )
   }
 
