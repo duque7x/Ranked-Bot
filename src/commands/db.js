@@ -113,7 +113,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setTitle("Resetado")
-                        .setColor(0xff000)
+                        .setColor(0xff0000)
                         .setDescription("Partidas resetadas com sucesso!")
                         .setTimestamp()
                         .setFooter({ text: "Por: " + interaction.user.username })
@@ -150,7 +150,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setTitle("Resetado")
-                        .setColor(0xff000)
+                        .setColor(0xff0000)
                         .setDescription("Usuários resetados com sucesso")
                         .setFooter({ text: "Por: " + interaction.user.username })
                         .setTimestamp()
@@ -159,7 +159,7 @@ module.exports = {
             const users = await User.find({});
 
             users.forEach(async player => {
-                if (!player.player ||!player.player.id  || player.player.name == "undefined" || player.player.name == "null")
+                if (!player.player || !player.player.id || player.player.name == "undefined" || player.player.name == "null")
                     await player.deleteOne();
             });
         }
@@ -221,14 +221,51 @@ module.exports = {
         const choice = interaction.options.getString("escolha");
 
         if (choice == "match") {
-            await interaction.deferReply();
+            await interaction.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("Apagando...")
+                        .setColor(Colors.DarkRed)
+                        .setDescription("Este procedimento pode demorar alguns minutos!")
+                        .setTimestamp()
+                ], flags: 64
+            });
+
             await Match.deleteMany({});
 
-            return interaction.followUp({ content: "# Apaguei todas partidas!" });
+            await interaction.editReply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("Apagadas")
+                        .setColor(0xff0000)
+                        .setDescription("Partidas apagadas com sucesso.")
+                        .setFooter({ text: "Por: " + interaction.user.username })
+                        .setTimestamp()
+                ]
+            }); 
         } else if (choice == "users") {
-            await interaction.deferReply();
-            await User.deleteMany({});
-            return interaction.followUp({ content: "# Apaguei todos usuarios que estavam registrados!" })
+            await interaction.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("Apagando...")
+                        .setColor(Colors.DarkRed)
+                        .setDescription("Este procedimento pode demorar alguns minutos!")
+                        .setTimestamp()
+                ], flags: 64
+            });
+
+            await User.deleteMany({}); 
+
+            await interaction.editReply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("Apagados")
+                        .setColor(0xff0000)
+                        .setDescription("Usuarios apagados com sucesso.")
+                        .setFooter({ text: "Por: " + interaction.user.username })
+                        .setTimestamp()
+                ]
+            }); 
         }
     },
     /**
