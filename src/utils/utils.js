@@ -63,7 +63,6 @@ class Utils {
 
     static get handlers() {
         return {
-            endMatch_handler: require("./handlers/endMatch_handler"),
             entermatch_handler: require("./handlers/enterMatch_handler"),
             handleMatchSelectMenu: require("./handlers/handleMatchSelectMenu"),
             outmatch_handler: require("./handlers/outmatch_handler"),
