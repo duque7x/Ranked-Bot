@@ -11,10 +11,10 @@ module.exports = async function outMatch_handler(interaction, matchId) {
     // Check for errors and add to errorTypes array
     if (!match || match.status === "off" || match == null) return sendReply(interaction, errorMessages.bet_off);
     if (!match.players?.some(i => i.id === userId)) return sendReply(interaction, errorMessages.bet_not_in);
-    
+
     // Remove player from the match
     match.players = match.players.filter(player => player.id !== userId);
-    await match.save();
+
 
     const { matchType } = match;
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
@@ -26,7 +26,8 @@ module.exports = async function outMatch_handler(interaction, matchId) {
             { name: "Time 1", value: formatTeam(match.players.slice(0, teamSize), teamSize), inline: true },
             { name: "Time 2", value: formatTeam(match.players.slice(teamSize), teamSize), inline: true }
         ]);
-    
+
     await interaction.message.edit({ embeds: [updatedEmbed] });
+    await match.save();
 };
 

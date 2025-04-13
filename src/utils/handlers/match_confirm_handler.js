@@ -310,7 +310,7 @@ module.exports = async function match_confirm_handler(interaction) {
             `Vitória adicionada ao **time ${winningTeam.split("team")[1] == "A" ? 1 : 2
             }**!`
           )
-          .setColor(0x00ff00)
+          .setColor(0x005F96)
           .setTimestamp();
 
         await msg.edit({ components: [], embeds: [embed] });
@@ -390,7 +390,7 @@ module.exports = async function match_confirm_handler(interaction) {
             `Vitória adicionada ao **time ${winningTeam.split("team")[1] == "A" ? 1 : 2
             }**!`
           )
-          .setColor(0x00ff00)
+          .setColor(0x005F96)
           .setTimestamp();
 
         await msg.edit({ components: [], embeds: [embed] });
@@ -403,43 +403,6 @@ module.exports = async function match_confirm_handler(interaction) {
 
   if (option == "end_match") {
     if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) return endMatchFunction(match, interaction);
-
-    if (match.winnerTeam.length == 0) {
-      return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Vencedores não definidos")
-            .setDescription("Os vencedores desta partida não foram definidos")
-            .setColor(0xff0000)
-            .setTimestamp(),
-        ],
-        flags: 64,
-      });
-    }
-    if (!match.mvp) {
-      return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("MVP não definido")
-            .setDescription("O MVP desta partida não foi definido")
-            .setColor(0xff0000)
-            .setTimestamp(),
-        ],
-        flags: 64,
-      });
-    }
-    if (!match.roomCreator) {
-      return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Criador não definido")
-            .setDescription("O criador(da sala no jogo) não foi definido")
-            .setColor(0xff0000)
-            .setTimestamp(),
-        ],
-        flags: 64,
-      });
-    }
     const msg_btn = ButtonBuilder.from(
       interaction.message.components[0].components[0].data
     );
@@ -516,7 +479,7 @@ async function updateMessage(interaction, data, forName, title, reachedLimit) {
           .setDescription(forName)
           .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
           .setTimestamp()
-          .setColor(0x00ff00),
+          .setColor(0x005F96),
       ],
     });
   }

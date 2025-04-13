@@ -12,6 +12,7 @@ const createChallengeMatchChannel = require("./createChallengeMatchChannel");
  * @returns 
  */
 module.exports = async (interaction, match) => {
+    await interaction.deferUpdate();
     const { customId, guild, user } = interaction;
     const [_, _2, matchId, teamChosen] = interaction.values[0].split("-");
     const userId = user.id;
@@ -29,7 +30,7 @@ module.exports = async (interaction, match) => {
     ]);
 
     if (!match) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Partida offline")
@@ -45,7 +46,7 @@ module.exports = async (interaction, match) => {
     const maximumSize = teamSize * 2;
 
     if (serverConfig.state.matches.status === "off") {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Partidas offline")
@@ -58,7 +59,7 @@ module.exports = async (interaction, match) => {
     }
 
     if (userProfile.blacklisted === true) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você está na blacklist")
@@ -72,7 +73,7 @@ module.exports = async (interaction, match) => {
     }
 
     if (match.kickedOut.some(i => i.id === userId)) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você foi expulso desta partida")
@@ -84,7 +85,7 @@ module.exports = async (interaction, match) => {
         });
     }
     if (match.players.some(i => i.id === userId)) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está nessa partida")
@@ -97,7 +98,7 @@ module.exports = async (interaction, match) => {
     }
     let ongoingMatchs = activeMatchs.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
     if (ongoingMatchs.length > 0) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está em outra partida")
@@ -121,7 +122,7 @@ module.exports = async (interaction, match) => {
         return createChallengeMatchChannel(interaction, match);
     }
     if (match[teamChosen].length == teamSize) {
-        return interaction.reply({
+        return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Equipa cheia")
@@ -145,7 +146,7 @@ module.exports = async (interaction, match) => {
             { name: "Time 2", value: formatTeamChallenged(match.teamB, teamSize), inline: true }
         ]);
 
-    await interaction.update({ embeds: [updatedEmbed] });
+    await interaction.message.edit({ embeds: [updatedEmbed] });
     await match.save();
     await userProfile.save();
 

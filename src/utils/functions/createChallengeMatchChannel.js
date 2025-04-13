@@ -1,218 +1,142 @@
 const Match = require("../../structures/database/match");
+const User = require("../../structures/database/User");
 const myColours = require("../../structures/colours");
+const moveToChannel = require("./moveToChannel");
+const formatTeamChallenged = require("./formatTeamChallenged");
+
 const {
   PermissionFlagsBits,
   EmbedBuilder,
   ChannelType,
   Colors,
   ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ChatInputCommandInteraction,
-  lazy,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
+  ChatInputCommandInteraction,
 } = require("discord.js");
-const moveToChannel = require("./moveToChannel");
-const User = require("../../structures/database/User");
-const formatTeamChallenged = require("./formatTeamChallenged");
 
 /**
- *
  * @param {ChatInputCommandInteraction} interaction
  * @param {Match} match
- * @returns
  */
 module.exports = async (interaction, match = new Match()) => {
   await interaction.guild.members.fetch();
-
   const { guild } = interaction;
+
   const totalMatches = await Match.countDocuments();
-  const formattedTotalMatches = String(totalMatches).padStart(3, "0");
+  const formattedNumber = String(totalMatches).padStart(3, "0");
+
   const { matchType, teamA, teamB } = match;
+  const players = [...teamA, ...teamB];
 
-  const teamAVoiceChannel = await guild.channels.create({
-    name: `⭐ Equipa 1・${formattedTotalMatches}`,
-    type: ChannelType.GuildVoice,
-    parent: "1360710246930055208",
-    permissionOverwrites: [
-      {
-        id: guild.roles.everyone.id,
-        deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
-      },
-      ...teamA.map((p) => ({
-        id: p.id,
-        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
-        deny: [PermissionFlagsBits.UseSoundboard],
-      })),
-      ...teamB.map((p) => ({
-        id: p.id,
-        allow: [PermissionFlagsBits.ViewChannel],
-        deny: [PermissionFlagsBits.Connect, PermissionFlagsBits.UseSoundboard],
-      })),
-    ],
-  });
-  const globalVoiceChannel = await guild.channels.create({
-    name: `⭐ Global・${formattedTotalMatches}`,
-    type: ChannelType.GuildVoice,
-    parent: "1360710246930055208",
-    permissionOverwrites: [
-      {
-        id: guild.roles.everyone.id,
-        deny: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-        ],
-      },
-      ...match.players.map((p) => ({
-        id: p.id,
-        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
-        deny: [PermissionFlagsBits.UseSoundboard],
-      })),
-    ],
-  });
-  const teamBVoiceChannel = await guild.channels.create({
-    name: `⭐ Equipa 2・${formattedTotalMatches}`,
-    type: ChannelType.GuildVoice,
-    parent: "1360710246930055208",
-    permissionOverwrites: [
-      {
-        id: guild.roles.everyone.id,
-        deny: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-        ],
-      },
-      ...teamB.map((p) => ({
-        id: p.id,
-        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
-        deny: [PermissionFlagsBits.UseSoundboard],
-      })),
-      ...teamA.map((p) => ({
-        id: p.id,
-        allow: [PermissionFlagsBits.ViewChannel],
-        deny: [
-          PermissionFlagsBits.Connect,
-          ,
-          PermissionFlagsBits.UseSoundboard,
-        ],
-      })),
-    ],
-  });
-  for (let playerMatch of teamA) {
-    const member = interaction.guild.members.cache.get(playerMatch.id);
+  const createVoiceChannel = async (name, allow = [], deny = []) =>
+    guild.channels.create({
+      name: `⭐ ${name}・${formattedNumber}`,
+      type: ChannelType.GuildVoice,
+      parent: "1360710246930055208",
+      permissionOverwrites: [
+        { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect] },
+        ...allow.map(p => ({
+          id: p.id,
+          allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
+          deny: [PermissionFlagsBits.UseSoundboard],
+        })),
+        ...deny.map(p => ({
+          id: p.id,
+          allow: [PermissionFlagsBits.ViewChannel],
+          deny: [PermissionFlagsBits.Connect, PermissionFlagsBits.UseSoundboard],
+        })),
+      ],
+    });
+
+  // Create voice channels
+  const [teamAVoice, globalVoice, teamBVoice] = await Promise.all([
+    createVoiceChannel("Equipa 1", teamA, teamB),
+    createVoiceChannel("Global", players),
+    createVoiceChannel("Equipa 2", teamB, teamA),
+  ]);
+
+  // Move players and save original channels
+  await Promise.all(players.map(async (player) => {
+    const member = guild.members.cache.get(player.id);
     const userProfile = await User.findOrCreate(member.id);
 
-    await userProfile.originalChannels.push({
+    userProfile.originalChannels.push({
       channelId: member.voice.channelId,
       matchId: match._id,
     });
 
-    if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
+    const isTeamA = teamA.some(p => p.id === member.id);
+    const targetChannel = isTeamA ? teamAVoice : teamBVoice;
+
+    if (member.voice.channel) {
+      await moveToChannel(member, targetChannel);
+    }
+
     await userProfile.save();
-  }
-  for (let playerMatch of teamB) {
-    const member = interaction.guild.members.cache.get(playerMatch.id);
-    const userProfile = await User.findOrCreate(member.id);
+  }));
 
-    await userProfile.originalChannels.push({
-      channelId: member.voice.channelId,
-      matchId: match._id,
-    });
-
-    if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
-    await userProfile.save();
-  }
-
-  const matchChannel = await guild.channels.create({
-    name: `⭐・partida・${formattedTotalMatches}`,
+  // Create match text channel
+  const matchText = await guild.channels.create({
+    name: `⭐・partida・${formattedNumber}`,
     type: ChannelType.GuildText,
     topic: match._id.toString(),
     parent: "1360710246930055208",
     permissionOverwrites: [
-      {
-        id: guild.roles.everyone.id,
-        deny: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-        ],
-      },
-      ...match.players.map((p) => ({
+      { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+      ...players.map(p => ({
         id: p.id,
-        allow: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-        ],
+        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
       })),
     ],
   });
 
-  const embedTeamA = formatTeamChallenged(teamA, teamA.length),
-    embedTeamB = formatTeamChallenged(teamB, teamB.length);
-
-  // Embed for the match channel
-  const embedForChannel = new EmbedBuilder()
+  // Send embed with match info
+  const embed = new EmbedBuilder()
     .setColor(0x80D1FF)
-    .setDescription(
-      `# Partida ${matchType} | Desafio\nCriem a sala e de seguida definam o criador!`
+    .setDescription(`# Partida ${matchType} | Desafio\nCriem a sala e de seguida definam o criador!`)
+    .addFields(
+      { name: "Time 1", value: formatTeamChallenged(teamA, teamA.length), inline: true },
+      { name: "Time 2", value: formatTeamChallenged(teamB, teamB.length), inline: true },
     )
-    .addFields([
-      { name: "Time 1", value: embedTeamA, inline: true },
-      { name: "Time 2", value: embedTeamB, inline: true },
-    ])
     .setTimestamp();
 
-  // Buttons
-  const row = new ActionRowBuilder().addComponents(
+  const menu = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId(`select_menu-${match._id}`)
       .addOptions(
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Definir Criador")
-          .setValue(`creator-${match._id}`)
-          .setEmoji("🛠️"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Definir Mvp")
-          .setValue(`mvp-${match._id}`)
-          .setEmoji("⭐"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Definir Vencedor")
-          .setValue(`winner-${match._id}`)
-          .setEmoji("🥇"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Encerrar partida")
-          .setValue(`end_match-${match._id}`)
+        { label: "Definir Criador", value: `creator-${match._id}`, emoji: "<:emoji_13:1361026264449679551>" },
+        { label: "Definir Mvp", value: `mvp-${match._id}`, emoji: "<:74:1361026016771965069>" },
+        { label: "Definir Vencedor", value: `winner-${match._id}`, emoji: "<a:yellow_trofeu:1360606464946868445>" },
+        { label: "Encerrar partida", value: `end_match-${match._id}`, emoji: "<:5483discordticemoji:1361026395601371267>" }
       )
   );
 
-  await matchChannel.send({
-    embeds: [embedForChannel],
-    components: [row],
-  });
+  await matchText.send({ embeds: [embed], components: [menu] });
 
+  // Edit original message to confirm match started
   await interaction.message.edit({
     embeds: [
       new EmbedBuilder()
         .setTitle(`Partida ${matchType} iniciada com sucesso!`)
         .setColor(Colors.LightGrey)
-        .setDescription(
-          `O canal da partida é <#${matchChannel.id}>`
-        )
+        .setDescription(`O canal da partida é <#${matchText.id}>`)
+        .setImage(guild.iconURL())
         .setTimestamp(),
     ],
     components: [],
   });
 
-  match.matchChannel = { id: matchChannel.id, name: matchChannel.name };
+  // Save match info
+  match.matchChannel = { id: matchText.id, name: matchText.name };
   match.leaders = [teamA[0], teamB[0]];
   match.voiceChannels = [
-    { name: teamAVoiceChannel.name, id: teamAVoiceChannel.id },
-    { name: globalVoiceChannel.name, id: globalVoiceChannel.id },
-    { name: teamBVoiceChannel.name, id: teamBVoiceChannel.id },
+    { name: teamAVoice.name, id: teamAVoice.id },
+    { name: globalVoice.name, id: globalVoice.id },
+    { name: teamBVoice.name, id: teamBVoice.id },
   ];
-
   match.status = "on";
 
   await match.save();
-  return matchChannel;
+  return matchText;
 };
