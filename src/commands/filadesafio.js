@@ -5,8 +5,8 @@ const {
   ChatInputCommandInteraction,
 } = require("discord.js");
 const Config = require("../structures/database/configs");
-const verifyChannel = require("../utils/functions/verifyChannel");
 const createChallengeMatch = require("../utils/functions/createChallengeMatch");
+const User = require("../structures/database/User");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -48,54 +48,93 @@ module.exports = {
    * @returns
    */
   async execute(interaction) {
-    if (!interaction.member.voice.channel && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
-      return await interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Canal de voz")
-            .setDescription(
-              "Você tem que estar conectado a um canal de voz para criar uma fila!"
-            )
-            .setColor(0xff0000)
-            .setTimestamp(),
-        ],
-        flags: 64,
-      });
-    }
-    const { guildId } = interaction;
-    const verified = verifyChannel({
-      allowedChannelId: "1360611496731738242",
-      channelId: interaction.channel.id,
-      event: interaction,
-      isAdmin: interaction.member.permissions.has(
-        PermissionFlagsBits.Administrator
-      ),
-      name: "profile",
-    });
-
-    if (verified) return;
+    const { member, guildId, user, channelId } = interaction;
     const serverConfig = await Config.findOne({ "guild.id": guildId });
+    const userProfile = await User.findOrCreate(user.id);
 
-    if (serverConfig.state.matches.status === "off") {
-      return interaction.reply({
-        content: "-# As filas estão fechadas no momento!",
-        flags: 64,
-      });
-    }
-    const matchType = interaction.options.getSubcommand();
-    const channelToSend = interaction.channel;
     try {
-      await createChallengeMatch(
+      const isInVoice = !!member.voice.channel;
+      const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+
+      if (serverConfig.state.matches.status === "off") {
+        return interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Partidas offline")
+              .setDescription("As filas estão fechadas de momento!")
+              .setColor(0xff0000)
+              .setTimestamp(),
+          ],
+          flags: 64
+        });
+      }
+      if (userProfile.blacklisted === true) {
+        return interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Você está na blacklist")
+              .setDescription("Infelizmente o seu id se encontra na blacklist!")
+              .setColor(0xff0000)
+              .setTimestamp()
+              .setFooter({ text: "Para sair abre um ticket!" }),
+          ],
+          flags: 64,
+        });
+      }
+      if (channelId !== "1360611496731738242" && !isAdmin) {
+        return interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Você não pode criar filas aqui!")
+              .setDescription(`Vá pro canal <#1360611496731738242> e crie uma fila!`)
+              .setTimestamp()
+              .setColor(0xff0000)
+          ],
+          flags: 64
+        });
+      }
+      if (!isInVoice && !isAdmin) {
+        return await interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Canal de voz")
+              .setDescription("Você tem que estar conectado a um canal de voz para criar uma fila!")
+              .setColor(0xff0000)
+              .setTimestamp(),
+          ],
+          flags: 64,
+        });
+      }
+      if (!member.roles.cache.has("1360603166835474529") && !isAdmin) {
+        return await interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Você não tem permissões para criar filas")
+              .setDescription(`Você precisa do cargo <@&1360603166835474529> para criar filas!`)
+              .setColor(0xff0000)
+              .setFooter({ text: `Para adquirir o cargo basta você abrir um ticket!` })
+              .setTimestamp(),
+          ],
+          flags: 64,
+        });
+      }
+
+      const matchType = interaction.options.getSubcommand();
+      const channelToSend = interaction.channel;
+
+      return await createChallengeMatch(
         interaction,
         channelToSend,
         matchType,
         true,
         interaction.user
       );
+
     } catch (err) {
       console.error("Erro ao criar fila:", err);
-      interaction.reply({
-        content: "-# Ocorreu um erro ao criar a fila!",
+
+      await interaction.reply({
+        content: "-# Ocorreu um erro ao criar esta fila!",
         flags: 64,
       })
     }
