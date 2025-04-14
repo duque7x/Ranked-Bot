@@ -44,6 +44,8 @@ const quantityChoices = [
 const addPoints = require("../utils/functions/addPoints");
 const removePoints = require("../utils/functions/removePoints");
 const Config = require("../structures/database/configs");
+const updateRankUsersRank = require("../utils/functions/updateRankUsersRank");
+
 /**
  * @type {import('discord.js').SlashCommandBuilder}
  */
@@ -103,13 +105,14 @@ module.exports = {
     const embed = new EmbedBuilder()
       .setColor(subcommand === "adicionar" ? Colors.LightGrey : 0xff0000)
       .setDescription(
-        `# Gerenciador de vitórias\n <@${user.id}> agora tem **${wins}** ${
-          wins >= 0 && wins !== 1 ? `vitórias` : `vitória`
+        `# Gerenciador de vitórias\n <@${user.id}> agora tem **${wins}** ${wins >= 0 && wins !== 1 ? `vitórias` : `vitória`
         }`
       )
       .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
       .setTimestamp();
 
-    return interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
+
+    return await updateRankUsersRank(await interaction.guild.members.fetch());
   },
 };

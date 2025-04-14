@@ -7,7 +7,7 @@ const {
 } = require("discord.js");
 const addPoints = require("../utils/functions/addPoints");
 const removePoints = require("../utils/functions/removePoints");
-
+const updateRankUsersRank = require("../utils/functions/updateRankUsersRank");
 /**
  * @type {import('discord.js').SlashCommandBuilder}
  */
@@ -62,13 +62,13 @@ module.exports = {
     const embed = new EmbedBuilder()
       .setColor(subcommand === "adicionar" ? Colors.LightGrey : 0xff0000)
       .setDescription(
-        `# Gerenciador de pontos\n <@${user.id}> agora tem **${points}** ${
-          points >= 0 && points !== 1 ? `pontos` : `ponto`
+        `# Gerenciador de pontos\n <@${user.id}> agora tem **${points}** ${points >= 0 && points !== 1 ? `pontos` : `ponto`
         }`
       )
       .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
       .setTimestamp();
 
-    return interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
+    return await updateRankUsersRank(await interaction.guild.members.fetch());
   },
 };
