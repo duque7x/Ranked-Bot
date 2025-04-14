@@ -20,6 +20,7 @@ module.exports = {
       const isInVoice = !!member.voice.channel;
       const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
       const matchType = args[0];
+      console.log({ userProfile , serverConfig });
 
       if (serverConfig.state.matches.status === "off") {
         return message.reply({

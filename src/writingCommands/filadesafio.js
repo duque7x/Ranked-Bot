@@ -19,6 +19,7 @@ module.exports = {
       const isInVoice = !!member.voice.channel;
       const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
       const matchType = args[0];
+      const hasRole = member.roles.cache.has("1360603166835474529");
 
       if (serverConfig.state.matches.status === "off") {
         return message.reply({
@@ -43,12 +44,12 @@ module.exports = {
           ],
         });
       }
-      if (channelId !== "1353098806123827211" && !isAdmin) {
+      if (channelId !== "1360611496731738242" && !isAdmin) {
         return message.reply({
           embeds: [
             new EmbedBuilder()
               .setTitle("Você não pode criar filas aqui!")
-              .setDescription(`Vá pro canal <#1353098806123827211> e crie uma fila!`)
+              .setDescription(`Vá pro canal <#1360611496731738242> e crie uma fila!`)
               .setTimestamp()
               .setColor(0xff0000)
           ]
@@ -65,12 +66,12 @@ module.exports = {
           ],
         });
       }
-      if (!member.roles.cache.has("1350144276834680912") && !isAdmin) {
+      if (!hasRole && !isAdmin) {
         return await message.reply({
           embeds: [
             new EmbedBuilder()
-              .setTitle("Você não tem permissões para criar filas")
-              .setDescription(`Você precisa do cargo <@&1350144276834680912> para criar filas!`)
+              .setTitle("Você não tem permissões para criar filas desafio")
+              .setDescription(`Você precisa do cargo <@&1360603166835474529> para criar filas desafio!`)
               .setColor(0xff0000)
               .setFooter({ text: `Para adquirir o cargo basta você abrir um ticket!` })
               .setTimestamp(),
