@@ -8,7 +8,9 @@ const {
   ChatInputCommandInteraction,
   ButtonInteraction,
   ModalSubmitInteraction,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  StringSelectMenuBuilder,
+  StringSelectMenuInteraction
 } = require("discord.js");
 const { returnServerRank, returnUserRank } = require("../utils/utils");
 const outmatch_handler = require("../utils/handlers/outmatch_handler");
@@ -26,6 +28,8 @@ const {
   setWinner_handler,
 } = require("../utils/utils").handlers;
 const kickoutSelectMenu_handler = require("../utils/handlers/kickoutSelectMenuHandler");
+const { StringSelectMenuOptionBuilder } = require("discord.js");
+const resolveProtectionType = require("../utils/functions/resolveProtectionType");
 
 module.exports = class InteractionEvent {
   constructor(client) {
@@ -33,7 +37,7 @@ module.exports = class InteractionEvent {
   }
   /**
    *
-   * @param {ModalSubmitInteraction} interaction
+   * @param {StringSelectMenuInteraction} interaction
    * @param {BotClient} client
    * @returns
    */
@@ -61,6 +65,8 @@ module.exports = class InteractionEvent {
         match_selectmenu: () => match_menu_handler(interaction, client),
         match_confirm: () => match_confirm_handler(interaction, client),
         update_user_rank: async () => {
+          await interaction.deferUpdate();
+
           if (interaction.user.id !== matchType && (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator))) {
             return interaction.reply({
               embeds: [
@@ -93,37 +99,22 @@ module.exports = class InteractionEvent {
               ],
             });
           }
-
           await interaction.message.edit({ embeds: [embed] });
-          await interaction.deferUpdate();
         },
         update_rank: async () => {
+          await interaction.deferUpdate();
           const { embed, row } = await returnServerRank(interaction);
           const page = 0;
-          if (!embed)
-            return interaction.reply({
-              embeds: [
-                new EmbedBuilder()
-                  .setTitle("Algo foi errado!")
-                  .setTimestamp()
-                  .setFooter({
-                    text: "Chame um ADM para o ajudar!",
-                  })
-                  .setColor(0xff0000),
-              ],
-            });
-          const message = await interaction.message.edit({
-            embeds: [await embed(matchType)], // Await to resolve the async function
-            components: [row(matchType)],
-            withResponse: true,
-          });
+          console.log({ embed });
 
-          if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferUpdate();
-          }
+          await interaction.message.edit({
+            embeds: [await embed(page)], // Await to resolve the async function
+            withResponse: true,
+            components: row ? [row(page)] : [],
+          });
         },
         setup_select_menu: () => setup_handler(interaction),
-        show_protections: async () => {
+        activate_protections: async () => {
           if ((matchType !== interaction.user.id) && (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator))) {
             return interaction.reply({
               embeds: [new EmbedBuilder(
@@ -137,35 +128,36 @@ module.exports = class InteractionEvent {
               flags: 64
             })
           }
+
           const foundUser = await User.findOrCreate(matchType);
+          const protections = foundUser.protections;
+          const message = protections.length !== 0 ? `Você tem ${protections?.length} proteções, qual você quer ativar?` : "Você não tem proteções para ativar!";
+          console.log({ protections });
+          
+          const row = protections.length !== 0 ?
+            [
+              new ActionRowBuilder().addComponents(
+              new StringSelectMenuBuilder()
+                .setCustomId(`menu_activate_protections-${matchType}`)
+                .addOptions(
+                  ...protections.map(p => new StringSelectMenuOptionBuilder()
+                    .setLabel(`Proteção: ${resolveProtectionType(p.type)}`)
+                    .setDescription(`Ativar ${resolveProtectionType(p.type)} por 30 minutos.`)
+                    .setValue(`${p.type}`)
+                  )))] : [];
 
-          const protections =
-            foundUser.protections?.map((p) => ({
-              name: p.type,
-              value: this.getRemainingTime(p), // <-- usa função externa ou passa corretamente o `this`
-            })) ?? [];
+          await interaction.reply({ content: message, components: row, flags: 64 });
+        },
+        menu_activate_protections: async () => {
+          const option = interaction.values[0];
+          const userProfile = await User.findOrCreate(matchType);
+          const protection = userProfile.protections.find(p => p.type == option);
 
-          const embed = EmbedBuilder.from(interaction.message.embeds.at(0));
+          protection.activatedWhen = new Date();
+          const time = this.getRemainingTime(protection)
 
-          // Remove campos antigos de proteção (opcional: limpeza)
-          embed.data.fields = embed.data.fields.filter(
-            (f) =>
-              !foundUser.protections.some((p) => p.type === f.name) &&
-              f.name !== "Sem proteções" &&
-              f.name !== "Proteções"
-          );
-
-          if (protections.length > 0) {
-            embed.addFields(
-              { name: "Proteções", value: "\n\n" },
-              ...protections
-            );
-          } else {
-            embed.addFields({ name: "Sem proteções", value: "\n\n" });
-          }
-
-          await interaction.message.edit({ embeds: [embed] });
-          await interaction.deferUpdate();
+          await interaction.reply(time);
+          await userProfile.save();
         },
         challenge_match: () => challengeMatch_handler(interaction),
         kickout_selectmenu: () => kickoutSelectMenu_handler(interaction),
@@ -344,9 +336,12 @@ module.exports = class InteractionEvent {
     });
   }
   getRemainingTime(protection) {
+    if (protection.activatedWhen) {
+      
+    }
     const [hours, minutes] = protection.longevity.split(":").map(Number);
 
-    const expiration = new Date(protection.when);
+    const expiration = new Date();
     expiration.setHours(expiration.getHours() + hours);
     expiration.setMinutes(expiration.getMinutes() + minutes);
 
@@ -355,6 +350,8 @@ module.exports = class InteractionEvent {
     if (diffMs <= 0) return "Expirado";
 
     const unixTimestamp = Math.floor(expiration.getTime() / 1000);
+    console.log({ hours, minutes, activatedWhen: protection.activatedWhen });
+    
     return `Valida ate: <t:${unixTimestamp}:f>`; // Ex: "em 45 minutos"
   }
   updatePage = async (interaction, pageChange = 1) => {
