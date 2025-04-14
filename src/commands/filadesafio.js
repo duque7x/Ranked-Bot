@@ -55,7 +55,7 @@ module.exports = {
     try {
       const isInVoice = !!member.voice.channel;
       const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
-
+      const hasRole = member.roles.cache.has("1360603166835474529");
       if (serverConfig.state.matches.status === "off") {
         return interaction.reply({
           embeds: [
@@ -105,14 +105,14 @@ module.exports = {
           flags: 64,
         });
       }
-      if (!member.roles.cache.has("1360603166835474529") && !isAdmin) {
+      if (!hasRole && !isAdmin) {
         return await interaction.reply({
           embeds: [
             new EmbedBuilder()
-              .setTitle("Você não tem permissões para criar filas")
-              .setDescription(`Você precisa do cargo <@&1360603166835474529> para criar filas!`)
+              .setTitle("Você não tem permissões para criar filas desafio")
+              .setDescription(`Você precisa do cargo <@&1360603166835474529> para criar filas desafio!`)
               .setColor(0xff0000)
-              .setFooter({ text: `Para adquirir o cargo basta você abrir um ticket!` })
+              .setFooter({ text: `Para adquirir o cargo, basta abrir um ticket!` })
               .setTimestamp(),
           ],
           flags: 64,
