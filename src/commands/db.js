@@ -189,6 +189,7 @@ module.exports = {
             )
             .setColor(Colors.DarkerGrey);
         return interaction.reply({ embeds: [embed] });
+        
     },
     /**
      * 

@@ -1,16 +1,9 @@
 const {
   SlashCommandBuilder,
   EmbedBuilder,
-  Colors,
   PermissionFlagsBits,
-  ChatInputCommandInteraction,
-  ButtonBuilder,
-  ButtonStyle,
-  ActionRowBuilder,
+  ChatInputCommandInteraction
 } = require("discord.js");
-const User = require("../structures/database/User");
-const myColours = require("../structures/colours");
-const verifyChannel = require("../utils/functions/verifyChannel");
 const { returnServerRank } = require("../utils/utils");
 const Match = require("../structures/database/match");
 

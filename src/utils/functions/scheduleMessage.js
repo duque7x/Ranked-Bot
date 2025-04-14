@@ -1,6 +1,6 @@
-function scheduleDailyMessage(client, channelId, lastMessageId,messageContent) {
-  const sendAtHour = 18; // 6 PM
-  const sendAtMin = 30; // 
+function scheduleDailyMessage(client, channelId, lastMessageId, messageContent) {
+  const sendAtHour = 20;
+  const sendAtMin = 26;
   const now = new Date();
   const sendAt = new Date();
 
@@ -11,19 +11,19 @@ function scheduleDailyMessage(client, channelId, lastMessageId,messageContent) {
 
   setTimeout(
     async function sendAndReschedule() {
-    const channel = await client.channels.fetch(channelId).catch(() => null);
-    if (!channel) return;
+      const channel = await client.channels.fetch(channelId).catch(() => null);
+      if (!channel) return;
 
-    if (lastMessageId) {
-      try {
-        const oldMsg = await channel.messages.fetch(lastMessageId);
-        await oldMsg.edit(messageContent);
-      } catch (err) {
-        console.warn("Failed to delete previous message:", err.message);
+      if (lastMessageId) {
+        try {
+          const oldMsg = await channel.messages.fetch(lastMessageId);
+          await oldMsg.edit(messageContent);
+        } catch (err) {
+          console.warn("Failed to delete previous message:", err.message);
+        }
       }
-    }
-    setTimeout(sendAndReschedule, 24 * 60 * 60 * 1000);
-  }, delay);
+      setTimeout(sendAndReschedule, 24 * 60 * 60 * 1000);
+    }, delay);
 }
 
 module.exports = scheduleDailyMessage;
