@@ -5,6 +5,7 @@ const {
   Colors,
 } = require("discord.js");
 const blacklist_handler = require("../utils/handlers/blacklist_handler");
+const Config = require("../structures/database/configs");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -39,11 +40,14 @@ module.exports = {
    * @returns
    */
   async execute(interaction) {
+    const { guildId } = interaction;
     const user = interaction.options.getUser("usuário");
     const subCommand = interaction.options.getSubcommand();
     const logChannel =
       interaction.guild.channels.cache.get("1340360434414522389") ||
       interaction.guild.channels.cache.find((c) => c.name.includes("logs"));
+
+    const config = await Config.findOne({ "guild.id": guildId });
 
     // Reply with initial waiting message
     await interaction.reply({
@@ -85,7 +89,7 @@ module.exports = {
         embed
           .setColor(Colors.DarkGrey)
           .setDescription(
-            `# Gerenciador blacklist\n<@${user.id}> já se encontra na blacklist`
+            `# Gerenciador blacklist\n<@${user.id}> já se encontra na blacklist\n\n-# Adicionado por <@${config.blacklist.find(p => p.startsWith(user.id)).split("-")[1] ?? "1355544935662883100"}>`
           );
       }
     } else if (subCommand === "remover" && response === true) {

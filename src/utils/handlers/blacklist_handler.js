@@ -10,9 +10,7 @@ module.exports = async (options) => {
       User.findOrCreate(user.id),
     ]);
 
-    const isUserBlacklisted =
-      serverConfig.blacklist.some((id) => id.startsWith(user.id)) ||
-      userProfile.blacklisted;
+    const isUserBlacklisted = serverConfig.blacklist.some((id) => id.startsWith(user.id)) && userProfile.blacklisted;
 
     if (action === "add") {
       if (isUserBlacklisted) return "already_in";
