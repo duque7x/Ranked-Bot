@@ -34,5 +34,4 @@ module.exports = class ReadyEvent {
       { content: "", embeds: [(await allTimeRankReturned(guild)).generateEmbed()] },
     )
   }
-
 };
