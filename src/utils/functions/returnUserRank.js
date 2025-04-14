@@ -49,7 +49,7 @@ module.exports = async (user, interaction, option) => {
 
   // Build the embed for user profile
   const embed = new EmbedBuilder()
-  .setAuthor({ name: `Perfil de ${user.username}`, iconURL: user.displayAvatarURL() })
+    .setAuthor({ name: `Perfil de ${user.username}`, iconURL: user.displayAvatarURL() })
     .setColor(hexColor)
     //.setTitle(`Estatísticas de ${user.username}`)
     .addFields(
@@ -79,6 +79,11 @@ module.exports = async (user, interaction, option) => {
         inline: true,
       },
       {
+        name: "Advertências",
+        value: `${foundUser.adverts.length ?? 0}`,
+        inline: true,
+      },
+      {
         name: "Blacklist",
         value: `${foundUser.blacklisted ? "Sim" : "Não"}`,
         inline: true,
@@ -90,8 +95,8 @@ module.exports = async (user, interaction, option) => {
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`show_protections-${user.id}`)
-      .setLabel("Mostrar proteções")
+      .setCustomId(`activate_protections-${user.id}`)
+      .setLabel("Ativar proteções")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`update_user_rank-${user.id}`)
