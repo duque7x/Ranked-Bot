@@ -23,8 +23,6 @@ const User = require("../../structures/database/User");
  * @returns
  */
 module.exports = async (interaction, match = new Match()) => {
-  await interaction.guild.members.fetch();
-
   const { guild } = interaction;
   const totalMatches = await Match.countDocuments();
   const formattedTotalMatches = String(totalMatches).padStart(3, "0");
@@ -32,7 +30,7 @@ module.exports = async (interaction, match = new Match()) => {
   const [teamSize] = matchType.includes("x")
     ? matchType.split("x").map(Number)
     : matchType.split("v").map(Number);
-  const { teamA, teamB } = randomizeTeams(match.players);
+
   const teamAVoiceChannel = await guild.channels.create({
     name: `Equipa 1・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
@@ -101,6 +99,7 @@ module.exports = async (interaction, match = new Match()) => {
       })),
     ],
   });
+
   for (let playerMatch of teamA) {
     const member = interaction.guild.members.cache.get(playerMatch.id);
     const userProfile = await User.findOrCreate(member.id);
@@ -123,6 +122,7 @@ module.exports = async (interaction, match = new Match()) => {
     await userProfile.save();
     if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
   }
+  const { teamA, teamB } = randomizeTeams(match.players);
   const matchChannel = await guild.channels.create({
     name: `partida・${formattedTotalMatches}`,
     type: ChannelType.GuildText,
@@ -238,7 +238,7 @@ function randomizeTeams(players) {
 function formatTeam(team, size) {
   return Array.from({ length: size }, (_, i) =>
     team[i]
-      ? `${i == 0 || i == size / 2 - 1 ? "**Capitão**" : "**Jogador:** "} <@${team[i].id
+      ? `${i == 0 || i == (size / 2) - 1 ? "**Capitão**" : "**Jogador:** "} <@${team[i].id
       }>`
       : "Slot vazio"
   ).join("\n");

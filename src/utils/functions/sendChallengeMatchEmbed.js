@@ -7,6 +7,7 @@ module.exports = async (interaction, match, channelToSend) => {
     const outmatchId = `challenge_match-out_match-${_id}`;
     const shutMatchId = `challenge_match-shut_match-${_id}`;
     const kick_outId = `challenge_match-kick_out-${_id}`;
+    const startId = `challenge_match-start-${_id}`;
 
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
     const maxSize = teamSize * 2;
@@ -36,6 +37,10 @@ module.exports = async (interaction, match, channelToSend) => {
                 .setLabel("Sair da partida")
                 .setDescription(`Selecione esta opção se quiser sair da partida`)
                 .setValue(outmatchId),
+            new StringSelectMenuOptionBuilder()
+                .setLabel("Iniciar da partida")
+                .setDescription(`Selecione esta opção para iniciar esta partida`)
+                .setValue(startId),
             new StringSelectMenuOptionBuilder()
                 .setLabel("Expulsar jogador")
                 .setValue(kick_outId)

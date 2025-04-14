@@ -1,8 +1,9 @@
 const Match = require("../../structures/database/match");
 const Config = require('../../structures/database/configs');
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const { EmbedBuilder, PermissionFlagsBits, Colors } = require("discord.js");
 const formatTeam = require("../functions/formatTeam");
 const User = require("../../structures/database/User");
+const updateRankUsersRank = require("../functions/updateRankUsersRank");
 
 module.exports = async function enterBet_handler(interaction) {
     await interaction.deferUpdate();
@@ -19,25 +20,24 @@ module.exports = async function enterBet_handler(interaction) {
             flags: 64
         });
     }
-
-    const serverConfig = await Config.findOneAndUpdate(
-        { "guild.id": interaction.guild.id },
-        { $setOnInsert: { guild: { name: interaction.guild.name, id: interaction.guild.id } } },
-        { new: true, upsert: true }
-    );
-
-    const { user } = interaction;
-    const userProfile = await User.findOrCreate(user.id);
-
-    // Check if match exists and save channel info
-    const [action, matchType, matchId, amount] = interaction.customId.split("-");
-    const userId = interaction.user.id;
-    const maximumSize = matchType.includes("x") ? 2 * Number(matchType.split("x")[0]) : 2 * Number(matchType.split("v")[0]);
-
-    let [activeMatchs, match] = await Promise.all([
-        await Match.find({ "players": { $elemMatch: { id: userId } } }),
-        await Match.findOne({ _id: matchId })
+    const [action, matchType, matchId] = interaction.customId.split("-");
+    const [serverConfig, userProfile, activeMatches, match] = await Promise.all([
+        Config.findOneAndUpdate(
+            { "guild.id": interaction.guild.id },
+            { $setOnInsert: { guild: { name: interaction.guild.name, id: interaction.guild.id } } },
+            { new: true, upsert: true }
+        ),
+        User.findOrCreate(userId),
+        Match.find({
+            "players": { $elemMatch: { id: userId } },
+            status: { $nin: ["off", "shutted"] }
+        }).sort({ createdAt: -1 }),
+        Match.findOne({ _id: matchId })
     ]);
+    const userId = interaction.user.id;
+    const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
+    const maximumSize = teamSize * 2;
+    
 
     if (!match) {
         return interaction.followUp({
@@ -89,15 +89,15 @@ module.exports = async function enterBet_handler(interaction) {
     }
 
     // Filter ongoing matches
-    let ongoingMatchs = activeMatchs.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
+    let ongoingMatches = activeMatches.filter(b => (b.status !== "off" && b.status !== "shutted") && b._id !== match._id).sort((a, b) => b.createdAt - a.createdAt);
 
     // Prevent joining another match if already in one
-    if (ongoingMatchs.length > 0) {
+    if (ongoingMatches.length > 0) {
         return interaction.followUp({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está em outra partida")
-                    .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
+                    .setDescription(`Canal: <#${ongoingMatches[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
                     .setTimestamp()
                     .setColor(0xff0000)
             ],
@@ -105,8 +105,6 @@ module.exports = async function enterBet_handler(interaction) {
         });
     }
 
-    // Add player to match and save
-    const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
     match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
     userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });
 
@@ -120,9 +118,21 @@ module.exports = async function enterBet_handler(interaction) {
     await interaction.message.edit({ embeds: [updatedEmbed] });
 
     if (match.players.length === maximumSize) {
+        await interaction.message.edit({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle(`Fila ${matchType} | Normal`)
+                    .setDescription(`Fila **iniciada**, aguarde a criação dois canais da fila.`)
+                    .setTimestamp()
+                    .setColor(Colors.DarkerGrey)
+            ],
+            components: []
+        });
+
         return require("../functions/createMatchChannel")(interaction, match);
     }
-    await match.save();
-    await userProfile.save();
+
+    await Promise.allSettled([match.save(), userProfile.save()]);
+    await updateRankUsersRank(await interaction.guild.members.fetch());
     return;
 }

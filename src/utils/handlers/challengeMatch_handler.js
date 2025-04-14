@@ -10,6 +10,7 @@ const enterMatch_handler = require("./enterMatch_handler");
 const outChallengeMatch = require("../functions/outChallengeMatch");
 const shutChallengeMatch = require("../functions/shutChallengeMatch");
 const kickOutChallengeMatch = require("../functions/kickOutChallengeMatch");
+const createChallengeMatchChannel = require("../functions/createChallengeMatchChannel");
 
 /**
  * 
@@ -55,7 +56,8 @@ module.exports = async function challengeMatch_handler(interaction) {
         enter_match: () => enterChallengeMatch(interaction, match),
         out_match: () => outChallengeMatch(interaction, match),
         shut_match: () => shutChallengeMatch(interaction, match),
-        kick_out: () => kickOutChallengeMatch(interaction, match)
+        kick_out: () => kickOutChallengeMatch(interaction, match),
+        start: () => createChallengeMatchChannel(interaction, match)
     }
 
     if (options[userAction]) return options[userAction]();

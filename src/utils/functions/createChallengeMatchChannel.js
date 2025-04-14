@@ -20,14 +20,36 @@ const {
  * @param {Match} match
  */
 module.exports = async (interaction, match = new Match()) => {
-  await interaction.guild.members.fetch();
   const { guild } = interaction;
-
   const totalMatches = await Match.countDocuments();
   const formattedNumber = String(totalMatches).padStart(3, "0");
-
   const { matchType, teamA, teamB } = match;
   const players = [...teamA, ...teamB];
+  const userId = interaction.user.id;
+
+  if (match.creatorId !== userId && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+    return interaction.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Você não pode encerrar esta partida.")
+          .setDescription(`<@${userId}> você não tem permissões.`)
+          .setTimestamp()
+          .setColor(0xff0000)
+      ],
+      flags: 64
+    });
+  }
+  await interaction.message.edit({
+    embeds: [
+      new EmbedBuilder()
+        .setTitle(`Fila ${matchType} | Desafio`)
+        .setDescription(`Fila **iniciada**, aguarde a criação dois canais da fila.`)
+        .setTimestamp()
+        .setColor(Colors.DarkGold)
+    ],
+    components: []
+  });
+  await interaction.guild.members.fetch();
 
   const createVoiceChannel = async (name, allow = [], deny = []) =>
     guild.channels.create({
