@@ -18,6 +18,7 @@ const setMatchLosers = require("../functions/setMatchLosers");
 const endMatchFunction = require("../functions/endMatchFunction");
 const User = require("../../structures/database/User");
 const Config = require("../../structures/database/configs");
+const updateRankUsersRank = require("../functions/updateRankUsersRank");
 
 /**
  *
@@ -104,7 +105,7 @@ module.exports = async function match_confirm_handler(interaction) {
         } else {
           await addPoints(supposedUserId, config.points.creator);
         }
-
+        await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
       }
 
@@ -172,7 +173,7 @@ module.exports = async function match_confirm_handler(interaction) {
         } else {
           await addPoints(supposedUserId, config.points.creator);
         }
-
+        await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
       }
     },
@@ -216,6 +217,7 @@ module.exports = async function match_confirm_handler(interaction) {
         }
         await addMvp(supposedUserId);
         await userProfile.save();
+        await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
       }
       if (matchAlreadyConfirmed) {
@@ -282,6 +284,7 @@ module.exports = async function match_confirm_handler(interaction) {
         }
         await addMvp(supposedUserId);
         await userProfile.save();
+        await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
       }
     },
@@ -394,6 +397,7 @@ module.exports = async function match_confirm_handler(interaction) {
           .setTimestamp();
 
         await msg.edit({ components: [], embeds: [embed] });
+        await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
       }
     },
