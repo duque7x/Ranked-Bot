@@ -6,6 +6,7 @@ const myColours = require("../structures/colours");
 const { ChatInputCommandInteraction } = require("discord.js");
 const removeItemOnce = require("../utils/functions/removeItemOnce");
 const setMatchLosers = require("../utils/functions/setMatchLosers");
+const updateRankUsersRank = require("../utils/functions/updateRankUsersRank");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -101,6 +102,7 @@ module.exports = {
 
             interaction.reply({ embeds: [embed] });
         }
+        return await updateRankUsersRank(await interaction.guild.members.fetch());
     },
     async configHandler(interaction) {
         const option = interaction.options.getString("opção");
