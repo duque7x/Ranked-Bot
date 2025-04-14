@@ -37,11 +37,12 @@ const userSchema = new mongoose.Schema({
             },
             longevity: String, // now + when ends
             addedBy: String,
-            when: {
+            activatedWhen: {
                 type: Date, // <-- salva com new Date()
                 default: () => new Date()
             },
-            expired: Boolean
+            expired: Boolean,
+            addedWhen: Date
         }],
         default: []
     },
