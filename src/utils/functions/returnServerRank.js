@@ -9,17 +9,16 @@ module.exports = async (interaction, option) => {
     //let page = 0;
 
     if (users.length == 0) {
-        return interaction.reply({
-            embeds: [new EmbedBuilder()
-                .setTitle("Sem usuarios registrados!")
-                .setTimestamp()
-                .setDescription("Nenhum usuário deste servidor está registado")
-                .setFooter({
-                    text: "Chame um ADM para o ajudar!"
-                })
-                .setColor(0xff0000)
-            ]
-        });
+        let embed = () => new EmbedBuilder()
+            .setTitle("Sem usuarios registrados!")
+            .setTimestamp()
+            .setDescription("Nenhum usuário deste servidor está registado")
+            .setFooter({
+                text: "Chame um ADM para o ajudar!"
+            })
+            .setColor(0xff0000);
+        if (option == "send") return interaction.reply({ embeds: [embed()] });
+        return { embed };
     }
 
     const userRankPosition = users.findIndex(u => u.player.id === interaction.member.user.id) + 1;
@@ -28,7 +27,7 @@ module.exports = async (interaction, option) => {
 
     const generateEmbed = async (page = 0) => {
         if (page <= -1) page = 0;
-        
+
         const start = page * perPage;
         const paginatedUsers = users.slice(start, start + perPage);
         const returnedUser = await require("./returnUserRank")(interaction.member.user, interaction);
