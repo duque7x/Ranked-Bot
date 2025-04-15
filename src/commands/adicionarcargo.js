@@ -45,7 +45,6 @@ module.exports = {
             staff: "STAFF |",
             helper: "HELPER |",
             ticket: "SUP |",
-
         };
 
         const lowerRoleName = role.name.toLowerCase();
@@ -54,11 +53,10 @@ module.exports = {
         const hasTag = currentName.startsWith(roleTag);
         const displayName = hasTag ? currentName : `${roleTag} ${currentName}`;
         
-
         try {
             await member.roles.add(role);
 
-            if (displayName !== member.displayName) {
+            if (displayName !== member.displayName && member.roles.highest.position < role.position) {
                 await member.setNickname(displayName, `Cargo ${role.name} adicionado por ${interaction.member.displayName}`);
             }
 
