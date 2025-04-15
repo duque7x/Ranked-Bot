@@ -29,16 +29,16 @@ module.exports = class MessageEvent {
    */
   async execute(message, cl) {
     if (message.author.bot) return;
-
+    const { member } = message;
     const prefix = "!";
     // Get the command and arguments  
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift();
     const command = cl.prefixCommands.get(commandName);
-    
+
     if (message.channel.id == "1338575355665186856") {
       if (!/^\d+$/.test(message.content)) return message.delete();
-      
+
       const serverInfo = await Config.findOne({ "guild.id": message.guildId });
       const blacklist = serverInfo.blacklist;
       if (blacklist.some(id => id.startsWith(message.content))) {
@@ -58,7 +58,9 @@ module.exports = class MessageEvent {
         message.reply({ embeds: [embed] })
       }
     }
-    if (this.isLink(message.content) && !message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+    const hasLinkRole = member.roles.cache.has("1361766445264142346");
+    const isAdmin = message.member.permissions.has(PermissionFlagsBits.Administrator)
+    if (this.isLink(message.content) && !isAdmin && !hasLinkRole) {
       console.log(`Mensagem de ${message.author.username} foi apagada, porque contia link! Mensagem: ${message.content}`);
       return message.delete();
     }
