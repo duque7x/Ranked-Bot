@@ -1,6 +1,6 @@
 function scheduleDailyMessage(client, channelId, lastMessageId, messageContent) {
   const sendAtHour = 16;
-  const sendAtMin = 0;
+  const sendAtMin = 6;
   const now = new Date();
   const sendAt = new Date();
 
@@ -11,6 +11,7 @@ function scheduleDailyMessage(client, channelId, lastMessageId, messageContent) 
 
   setTimeout(
     async function sendAndReschedule() {
+      console.log(`Enviando a mensagem agora: ${Date.now()}. Delay: ${delay}`);
       const channel = await client.channels.fetch(channelId).catch(() => null);
       if (!channel) return;
 
