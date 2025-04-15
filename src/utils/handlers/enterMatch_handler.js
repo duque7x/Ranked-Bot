@@ -133,6 +133,5 @@ module.exports = async function enterBet_handler(interaction) {
     }
 
     await Promise.allSettled([match.save(), userProfile.save()]);
-    await updateRankUsersRank(await interaction.guild.members.fetch());
     return;
 }
