@@ -134,7 +134,7 @@ module.exports = async (interaction, match = new Match()) => {
         .setTitle(`Partida ${matchType} criada com succeso!`)
         .setColor(0xFFCF69)
         .setDescription(
-          `Esta partida foi criada neste [canal](https://discord.com/channels/1336809872884371587/${matchText.id}).\n-# Qualquer tipo de problema chame um ADM!`
+          `Esta partida foi criada neste [canal](https://discord.com/channels/1336809872884371587/${matchText.id})\n-# Qualquer tipo de problema chame um ADM!`
         )
         .setTimestamp(),
     ],

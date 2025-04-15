@@ -11,8 +11,9 @@ module.exports = {
      * @param {import("discord.js").ChatInputCommandInteraction} interaction
      */
     async execute(interaction) {
-        const sent = await interaction.reply({ content: 'Pingando...', withResponse: true, flags: 64 });
-        const ping = sent.createdTimestamp - interaction.createdTimestamp;
+        const now = Date.now();
+        await interaction.reply({ content: 'Pingando...', withResponse: true, flags: 64 });
+        const ping = Date.now() - now;
         await interaction.editReply(`Pong! Latentia é ${ping}ms.`);
     }
 };
