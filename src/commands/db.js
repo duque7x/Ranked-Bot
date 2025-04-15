@@ -200,8 +200,6 @@ module.exports = {
         await returnUserRank(user, interaction, "send");
     },
     async deleteHandler(interaction) {
-        if (interaction.user.id !== "877598927149490186") return;
-
         const choice = interaction.options.getString("escolha");
 
         if (choice == "match") {
