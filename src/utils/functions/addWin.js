@@ -1,6 +1,8 @@
 const User = require("../../structures/database/User");
 
 module.exports = async (userId, amount = 1) => {
+  amount = amount ?? 1;
+
   const userProfile = await User.findOrCreate(userId);
   userProfile.wins = userProfile.wins + amount;
   return await userProfile.save();
