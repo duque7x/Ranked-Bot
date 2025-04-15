@@ -15,7 +15,7 @@ const removeProtection = require("../utils/functions/removeProtection");
  */
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("proteções")
+        .setName("itens")
         .setDescription("Este comando adiciona ou remove proteções de um usuário.")
         .addSubcommand((cmd) =>
             cmd
@@ -154,7 +154,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor(subcommand === "adicionar" ? Colors.LightGrey : 0xff0000)
             .setDescription(
-                `# Gerenciador de proteções\n <@${user.id}> agora tem **${protections.length}** ${protections.length >= 0 && protections.length !== 1 ? `proteções` : `proteções`
+                `# Gerenciador de proteções\n <@${user.id}> agora tem **${protections.length}** ${protections.length >= 0 && protections.length !== 1 ? `proteções` : `proteção`
                 }\n\n-# Adicionada por <@${interaction.user.id}>`
             )
             .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))

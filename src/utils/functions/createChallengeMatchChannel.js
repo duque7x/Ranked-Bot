@@ -73,8 +73,8 @@ module.exports = async (interaction, match = new Match()) => {
 
   // Create voice channels
   const [teamAVoice, globalVoice, teamBVoice] = await Promise.all([
-    createVoiceChannel("Equipa 1", teamA, teamB),
     createVoiceChannel("Global", players),
+    createVoiceChannel("Equipa 1", teamA, teamB),
     createVoiceChannel("Equipa 2", teamB, teamA),
   ]);
 

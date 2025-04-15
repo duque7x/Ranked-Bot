@@ -44,7 +44,7 @@ module.exports = async (interaction, match) => {
                     .setTimestamp(),
             ],
             flags: 64,
-        })
+        });
     }
     if (serverConfig.state.matches.status === "off") {
         return interaction.followUp({
@@ -96,7 +96,6 @@ module.exports = async (interaction, match) => {
         });
     }
     let ongoingMatchs = activeMatches.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
-
     if (ongoingMatchs.length > 0) {
         return interaction.followUp({
             embeds: [
@@ -122,7 +121,10 @@ module.exports = async (interaction, match) => {
         });
     }
     console.log(`${interaction.member.displayName} escolheu o time: ${teamChosen} = `, { teamChosen: match[teamChosen] });
-
+    match[teamChosen].push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
+    match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
+    userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });
+    
     const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
         .setFields([
             { name: "Time 1", value: formatTeamChallenged(match.teamA, teamSize), inline: true },
@@ -131,9 +133,6 @@ module.exports = async (interaction, match) => {
 
     await interaction.message.edit({ embeds: [updatedEmbed] });
 
-    match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
-    match[teamChosen].push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
-    userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });
 
     await Promise.allSettled([match.save(), userProfile.save()]);
 

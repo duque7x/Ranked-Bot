@@ -22,17 +22,28 @@ module.exports = {
   async execute(interaction, client) {
     const match_id = interaction.options.getString("id");
     const match = await Match.findOne({ _id: match_id });
-
+    if (!match) {
+      return interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Partida offline")
+            .setDescription("Esta partida não se encontra na base de dados")
+            .setColor(0xff0000)
+            .setTimestamp(),
+        ],
+        flags: 64,
+      });
+    }
     await interaction.reply({
       embeds: [
         new EmbedBuilder()
-          .setTitle("Fim da fila")
           .setDescription(`Fechando esta partida...`)
           .setTimestamp()
           .setFooter({ text: "Bom jogo!" })
           .setColor(0xff0000),
       ],
       components: [],
+      flags: 64
     });
 
 

@@ -30,7 +30,27 @@ module.exports = async (interaction, match = new Match()) => {
   const [teamSize] = matchType.includes("x")
     ? matchType.split("x").map(Number)
     : matchType.split("v").map(Number);
+  const { teamA, teamB } = randomizeTeams(match.players);
 
+  const globalVoiceChannel = await guild.channels.create({
+    name: `Global・${formattedTotalMatches}`,
+    type: ChannelType.GuildVoice,
+    parent: "1360710246930055208",
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone.id,
+        deny: [
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.SendMessages,
+        ],
+      },
+      ...match.players.map((p) => ({
+        id: p.id,
+        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
+        deny: [PermissionFlagsBits.UseSoundboard],
+      })),
+    ],
+  });
   const teamAVoiceChannel = await guild.channels.create({
     name: `Equipa 1・${formattedTotalMatches}`,
     type: ChannelType.GuildVoice,
@@ -49,25 +69,6 @@ module.exports = async (interaction, match = new Match()) => {
         id: p.id,
         allow: [PermissionFlagsBits.ViewChannel],
         deny: [PermissionFlagsBits.Connect, PermissionFlagsBits.UseSoundboard],
-      })),
-    ],
-  });
-  const globalVoiceChannel = await guild.channels.create({
-    name: `Global・${formattedTotalMatches}`,
-    type: ChannelType.GuildVoice,
-    parent: "1360710246930055208",
-    permissionOverwrites: [
-      {
-        id: guild.roles.everyone.id,
-        deny: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-        ],
-      },
-      ...match.players.map((p) => ({
-        id: p.id,
-        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
-        deny: [PermissionFlagsBits.UseSoundboard],
       })),
     ],
   });
@@ -122,7 +123,6 @@ module.exports = async (interaction, match = new Match()) => {
     await userProfile.save();
     if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
   }
-  const { teamA, teamB } = randomizeTeams(match.players);
   const matchChannel = await guild.channels.create({
     name: `partida・${formattedTotalMatches}`,
     type: ChannelType.GuildText,

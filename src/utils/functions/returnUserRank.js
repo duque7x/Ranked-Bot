@@ -96,7 +96,7 @@ module.exports = async (user, interaction, option) => {
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`activate_protections-${user.id}`)
-      .setLabel("Ativar proteções")
+      .setLabel("Ativar")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`update_user_rank-${user.id}`)

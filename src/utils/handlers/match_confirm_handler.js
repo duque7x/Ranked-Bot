@@ -82,11 +82,7 @@ module.exports = async function match_confirm_handler(interaction) {
       if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
 
-        match.roomCreator = {
-          id: supposedUserId,
-          name: supposedUser.user.username,
-        };
-        await match.save();
+
         await updateMessage(
           interaction,
           msg_btn,
@@ -105,6 +101,11 @@ module.exports = async function match_confirm_handler(interaction) {
         } else {
           await addPoints(supposedUserId, config.points.creator);
         }
+        match.roomCreator = {
+          id: supposedUserId,
+          name: supposedUser.user.username,
+        };
+        await match.save();
         await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
       }
@@ -150,11 +151,7 @@ module.exports = async function match_confirm_handler(interaction) {
       if (confirmedCount >= countLimit) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
 
-        match.roomCreator = {
-          id: supposedUserId,
-          name: supposedUser.user.username,
-        };
-        await match.save();
+
         await updateMessage(
           interaction,
           msg_btn,
@@ -173,6 +170,11 @@ module.exports = async function match_confirm_handler(interaction) {
         } else {
           await addPoints(supposedUserId, config.points.creator);
         }
+        match.roomCreator = {
+          id: supposedUserId,
+          name: supposedUser.user.username,
+        };
+        await match.save();
         await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
       }
@@ -194,9 +196,7 @@ module.exports = async function match_confirm_handler(interaction) {
         countLimit;
       if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
-        match.mvp = { id: supposedUserId, name: supposedUser.user.username };
 
-        await match.save();
         await updateMessage(
           interaction,
           msg_btn,
@@ -216,6 +216,8 @@ module.exports = async function match_confirm_handler(interaction) {
           await addPoints(supposedUserId, config.points.mvp);
         }
         await addMvp(supposedUserId);
+        match.mvp = { id: supposedUserId, name: supposedUser.user.username };
+        await match.save();
         await userProfile.save();
         await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
@@ -256,14 +258,11 @@ module.exports = async function match_confirm_handler(interaction) {
         });
 
         await match.save();
-
         await updateMessage(interaction, msg_btn, "", "", false);
       }
       if (confirmedCount >= countLimit) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
-        match.mvp = { id: supposedUserId, name: supposedUser.user.username };
 
-        await match.save();
         await updateMessage(
           interaction,
           msg_btn,
@@ -283,6 +282,9 @@ module.exports = async function match_confirm_handler(interaction) {
           await addPoints(supposedUserId, config.points.mvp);
         }
         await addMvp(supposedUserId);
+
+        match.mvp = { id: supposedUserId, name: supposedUser.user.username };
+        await match.save();
         await userProfile.save();
         await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
@@ -384,19 +386,20 @@ module.exports = async function match_confirm_handler(interaction) {
         const losingTeam = winningTeam === "teamA" ? "teamB" : "teamA";
         const msg = interaction.message;
 
+        await msg.edit({
+          components: [], embeds: [
+            new EmbedBuilder()
+              .setTitle("Ganhador(es) da partida")
+              .setDescription(
+                `Vitória adicionada ao **time ${winningTeam.split("team")[1] == "A" ? 1 : 2
+                }**!`
+              )
+              .setColor(0x005F96)
+              .setTimestamp()]
+        });
         await setMatchWinner(match, match[winningTeam], interaction.guildId);
         await setMatchLosers(match, match[losingTeam], interaction.guildId);
 
-        const embed = new EmbedBuilder()
-          .setTitle("Ganhador(es) da partida")
-          .setDescription(
-            `Vitória adicionada ao **time ${winningTeam.split("team")[1] == "A" ? 1 : 2
-            }**!`
-          )
-          .setColor(0x005F96)
-          .setTimestamp();
-
-        await msg.edit({ components: [], embeds: [embed] });
         await updateRankUsersRank(await interaction.guild.members.fetch());
         return;
       }

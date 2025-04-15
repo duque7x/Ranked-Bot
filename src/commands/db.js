@@ -9,6 +9,7 @@ const Match = require("../structures/database/match");
 const User = require("../structures/database/User");
 const { returnUserRank } = require("../utils/utils");
 const mongoose = require('mongoose');
+const returnMatchStats = require("../utils/functions/returnMatchStats");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -145,7 +146,6 @@ module.exports = {
                     }
                 }
             );
-
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
@@ -166,30 +166,13 @@ module.exports = {
     },
     async matchHandler(interaction) {
         const id = interaction.options.getString("id");
-
         if (!mongoose.Types.ObjectId.isValid(id)) return interaction.reply({ content: "# Id não valido.", flags: 64 });
+
         const foundmatch = await Match.findOne({ _id: id });
         if (!foundmatch) return this.sendTemporaryMessage(interaction, "# Esta partida não existe!");
 
-        const winners = foundmatch.winnerTeam.length ? foundmatch.winnerTeam.map(user => `<@${user.id}>`).join(", ") : "Não há vencedor definido";
-
-        const embed = new EmbedBuilder()
-            .setDescription(`# Partida ${foundmatch.matchType}`)
-            .addFields(
-                { name: "Estado", value: foundmatch.status ?? "Desconhecido", inline: true },
-                { name: "Tipo", value: foundmatch.matchType ?? "Desconhecido", inline: true },
-                { name: "Jogadores", value: foundmatch.players?.length ? foundmatch.players.map(player => `<@${player.id}>`).join(", ") : "Nenhum", inline: true },
-                { name: "Equipa 1", value: foundmatch.teamA?.length ? foundmatch.teamA.map(player => `<@${player.id}>`).join(", ") : "Nenhum", inline: true },
-                { name: "Equipa 2", value: foundmatch.teamB?.length ? foundmatch.teamB.map(player => `<@${player.id}>`).join(", ") : "Nenhum", inline: true },
-                { name: "Ganhador(es)", value: winners, inline: true },
-                { name: "Criador", value: `<@${foundmatch.creatorId}>`, inline: true },
-                { name: "Criador da sala(no jogo)", value: foundmatch.roomCreator.id ? `<@${foundmatch.roomCreator.id}>` : "Ainda não definido", inline: true },
-                { name: "Canal", value: foundmatch.matchChannel?.id ? `<#${foundmatch.matchChannel.id}>` : "Desconhecido", inline: true },
-                { name: "Criada em", value: foundmatch.createdAt ? new Date(foundmatch.createdAt).toLocaleString() : "Desconhecido", inline: true }
-            )
-            .setColor(Colors.DarkerGrey);
-        return interaction.reply({ embeds: [embed] });
-        
+        const matchEmbed = returnMatchStats(foundmatch);
+        return interaction.reply({ embeds: [matchEmbed] });
     },
     /**
      * 

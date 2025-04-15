@@ -23,17 +23,17 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
     const match = await Match.findOne({ _id: matchId });
     const userId = user.id;
     const leadersId = match.leaders.map(p => p.id);
-    if (!leadersId.some(id => id === userId) && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) 
+    if (!leadersId.some(id => id === userId) && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator))
         return interaction.reply({
-        embeds: [
-            new EmbedBuilder()
-                .setTitle("Você não pode alterar esta partida.")
-                .setDescription(`<@${userId}> não és um dos capitões`)
-                .setTimestamp()
-                .setColor(0xff0000)
-        ],
-        flags: 64
-    });
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Você não pode alterar esta partida.")
+                    .setDescription(`<@${userId}> não és um dos capitões`)
+                    .setTimestamp()
+                    .setColor(0xff0000)
+            ],
+            flags: 64
+        });
     const matchAlreadyConfirmed = match.confirmed.filter(c => c.typeConfirm === option).length == 2;
 
     if (matchAlreadyConfirmed) {
@@ -56,15 +56,15 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
                 .setTimestamp()
         ]
     });
-    const playersOptionCreator = match.players.map((pl, index) => new StringSelectMenuOptionBuilder()
-        .setLabel(`${pl.name}`)
-        .setValue(`creator-${pl.id}-${matchId}`)
-        .setDescription(`Definir que o jogador *${pl.name} é o criador da sala`));
-
-    const playersOptionMvp = match.players.map((pl, index) => new StringSelectMenuOptionBuilder()
-        .setLabel(`${pl.name}`)
-        .setValue(`creator-${pl.id}-${matchId}`)
-        .setDescription(`Definir que o jogador *${pl.name} foi o mvp da sala`));
+    const returnPlayerOpitons = (players, option, key) => {
+        return players.map((pl, index) =>
+            new StringSelectMenuOptionBuilder()
+                .setLabel(`${interaction.guild.members.cache.get(pl.id).displayName}`)
+                .setValue(`${option}-${pl.id}-${matchId}`)
+                .setDescription(`Definir que o jogador *${pl.name} ${key}`))
+    }
+    const playersOptionCreator = returnPlayerOpitons(match.players, `creator`, "foi o criador da sala");
+    const playersOptionMvp = returnPlayerOpitons(match.players, `mvp`, "foi o mvp da sala");
 
     if (option === "creator") {
         return interaction.reply({
@@ -96,23 +96,25 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
                         .setCustomId(`match_selectmenu-winner-${matchId}`)
                         .addOptions(
                             new StringSelectMenuOptionBuilder()
-                                .setLabel(`Time 1`)
+                                .setLabel(`Equipe 1`)
                                 .setValue(`winner-teamA-${matchId}`)
-                                .setDescription(`Definir o time vencedor`),
+                                .setDescription(`Definir que a equipa 1 ganhou`),
                             new StringSelectMenuOptionBuilder()
-                                .setLabel(`Time 2`)
+                                .setLabel(`Equipe 2`)
                                 .setValue(`winner-teamB-${matchId}`)
-                                .setDescription(`Definir o time vencedor`))
+                                .setDescription(`Definir que a equipa 2 ganhou`)
+                        )
                 )]
         });
     }
     if (option === "mvp") {
         return interaction.reply({
-            embeds: [new EmbedBuilder()
-                .setTitle(`Definir o mvp`)
-                .setDescription(`Somente os capitões poderão definir o MVP`)
-                .setColor(Colors.Grey)
-                .setTimestamp()
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle(`Definir o mvp`)
+                    .setDescription(`Somente os capitões poderão definir o MVP`)
+                    .setColor(Colors.Grey)
+                    .setTimestamp()
             ],
             components: [
                 new ActionRowBuilder().addComponents(
@@ -122,7 +124,6 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
                 )]
         });
     }
-
     if (option == "end_match") {
         return interaction.reply({
             embeds: [new EmbedBuilder()

@@ -27,9 +27,7 @@ module.exports = {
         ],
       });
     }
-
     let user = message.guild.members.cache.get(args[0])?.user ?? message.author;
-
     return returnUserRank(user, message, "send");
   },
 };

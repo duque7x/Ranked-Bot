@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, Message, EmbedBuilder} = require("discord.js");
+const { PermissionFlagsBits, Message, EmbedBuilder } = require("discord.js");
 const { returnUserRank } = require("../utils/utils");
 const Match = require("../structures/database/match");
 
@@ -28,7 +28,6 @@ module.exports = {
       });
     }
     let user = message.guild.members.cache.get(args[0])?.user ?? message.author;
-
     return returnUserRank(user, message, "send");
   },
 };

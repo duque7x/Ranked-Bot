@@ -22,7 +22,7 @@ module.exports = class ReadyEvent {
    */
   async execute(event, client) {
     client.user.setActivity({
-      name: "discord.gg/swagranked",
+      name: "discord.gg/rankedzone",
       type: ActivityType.Custom,
     });
     const guild = client.guilds.cache.get("1336809872884371587");
@@ -30,8 +30,8 @@ module.exports = class ReadyEvent {
     console.log(chalk.bgBlue(`O bot está on! Com o nome ${this.client.user.username} e com ${this.client.guilds.cache.size} guildas`));
     this.client.guilds.cache.forEach(g => console.log(chalk.bgBlack(`Nome da guilda: ${g.name}. Membros ${g.members.cache.size}`)));
 
-    scheduleDailyMessage(client, "1359980755639468094", "1361094577192308798",
-      { content: "", embeds: [(await allTimeRankReturned(guild)).generateEmbed()] },
-    )
+    scheduleDailyMessage(client, "1359980755639468094", "1361715926105591941", {
+      content: "", embeds: [(await allTimeRankReturned(guild)).generateEmbed()]
+    });
   }
 };

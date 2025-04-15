@@ -20,6 +20,7 @@ module.exports = async function enterBet_handler(interaction) {
             flags: 64
         });
     }
+    const userId = interaction.user.id;
     const [action, matchType, matchId] = interaction.customId.split("-");
     const [serverConfig, userProfile, activeMatches, match] = await Promise.all([
         Config.findOneAndUpdate(
@@ -34,7 +35,6 @@ module.exports = async function enterBet_handler(interaction) {
         }).sort({ createdAt: -1 }),
         Match.findOne({ _id: matchId })
     ]);
-    const userId = interaction.user.id;
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
     const maximumSize = teamSize * 2;
     
