@@ -1,32 +1,45 @@
 function scheduleDailyMessage(client, channelId, lastMessageId, messageContent) {
-  const sendAtHour = 0;
-  const sendAtMin = 43;
-  const now = new Date();
-  const sendAt = new Date();
+  const sendAtHour = 21;
+  const sendAtMin = 30;
 
-  sendAt.setHours(sendAtHour, sendAtMin, 0, 0); // today at 18:00
-  if (sendAt <= now) sendAt.setDate(sendAt.getDate() + 1); // move to next day if past 6PM
+  function calculateDelay() {
+    const now = new Date();
+    const sendAt = new Date();
 
-  const delay = sendAt.getTime() - now.getTime();
+    sendAt.setHours(sendAtHour, sendAtMin, 0, 0);
+    if (sendAt <= now) sendAt.setDate(sendAt.getDate() + 1);
 
-  setTimeout(
-    async function sendAndReschedule() {
-      console.log(`Enviando a mensagem agora: ${Date.now()}. Delay: ${delay}`);
-      const channel = await client.channels.fetch(channelId).catch(() => null);
-      if (!channel) return;
+    return sendAt.getTime() - now.getTime();
+  }
 
+  async function sendAndReschedule() {
+    console.log(`Enviando a mensagem agora: ${new Date().toLocaleString()}`);
+
+    const channel = await client.channels.fetch(channelId).catch(() => null);
+    if (!channel) return console.warn("Canal não encontrado");
+
+    try {
       if (lastMessageId) {
-        try {
-          const oldMsg = await channel.messages.fetch(lastMessageId);
-          await oldMsg.edit(messageContent);
-        } catch (err) {
-          console.warn("Failed to delete previous message:", err.message);
-        }
+        const oldMsg = await channel.messages.fetch(lastMessageId);
+        await oldMsg.edit(messageContent);
+        console.log("Mensagem editada com sucesso.");
+      } else {
+        const newMsg = await channel.send(messageContent);
+        console.log("Nova mensagem enviada.");
+        lastMessageId = newMsg.id; // optional: update the ID if needed
       }
-      setTimeout(sendAndReschedule, 24 * 60 * 60 * 1000);
-    }, delay);
+    } catch (err) {
+      console.warn("Falha ao editar a mensagem:", err.message);
+    }
+
+    // Reschedule for the next day
+    const nextDelay = calculateDelay();
+    setTimeout(sendAndReschedule, nextDelay);
+  }
+
+  // Initial delay
+  const initialDelay = calculateDelay();
+  setTimeout(sendAndReschedule, initialDelay);
 }
 
 module.exports = scheduleDailyMessage;
-
-
