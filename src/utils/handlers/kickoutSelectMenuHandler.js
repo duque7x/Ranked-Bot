@@ -12,7 +12,6 @@ module.exports = async (interaction) => {
     interaction.deferUpdate()
     const [_1, _id, messageId] = interaction.customId.split("-");
     const [_, userId] = interaction.values[0].split("-");
-    console.log({ _1, _id, messageId });
 
     const match = await Match.findOne({ _id });
     const { matchType } = match;
@@ -48,5 +47,9 @@ module.exports = async (interaction) => {
         ]);
 
     await message.edit({ embeds: [updatedEmbed] });
+    interaction.reply({
+        content: "Jogador expulso!",
+        flags: 64
+    });
     await match.save();
 }

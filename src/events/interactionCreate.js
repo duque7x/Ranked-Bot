@@ -65,8 +65,6 @@ module.exports = class InteractionEvent {
         match_selectmenu: () => match_menu_handler(interaction, client),
         match_confirm: () => match_confirm_handler(interaction, client),
         update_user_rank: async () => {
-          await interaction.deferUpdate();
-
           if (interaction.user.id !== matchType && (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator))) {
             return interaction.reply({
               embeds: [
@@ -81,37 +79,10 @@ module.exports = class InteractionEvent {
               flags: 64
             });
           }
-          const embed = (await returnUserRank(interaction.guild.members.cache.get(matchType).user, interaction))?.embed;
-
-          if (!embed) {
-            return interaction.reply({
-              embeds: [
-                new EmbedBuilder()
-                  .setTitle("Esse usuario não foi registrado!")
-                  .setTimestamp()
-                  .setDescription(
-                    "Nenhum usuário deste servidor com esse nome!"
-                  )
-                  .setFooter({
-                    text: "Chame um ADM para o ajudar!",
-                  })
-                  .setColor(0xff0000),
-              ],
-            });
-          }
-          await interaction.message.edit({ embeds: [embed] });
+          await returnUserRank(interaction.user, interaction, "update");
         },
         update_rank: async () => {
-          await interaction.deferUpdate();
-          const { embed, row } = await returnServerRank(interaction);
-          const page = 0;
-          console.log({ embed });
-
-          await interaction.message.edit({
-            embeds: [await embed(page)], // Await to resolve the async function
-            withResponse: true,
-            components: row ? [row(page)] : [],
-          });
+          await returnServerRank(interaction, "update");
         },
         setup_select_menu: () => setup_handler(interaction),
         activate_protections: async () => {
@@ -133,18 +104,18 @@ module.exports = class InteractionEvent {
           const protections = foundUser.protections;
           const message = protections.length !== 0 ? `Você tem ${protections?.length} proteções, qual você quer ativar?` : "Você não tem proteções para ativar!";
           console.log({ protections });
-          
+
           const row = protections.length !== 0 ?
             [
               new ActionRowBuilder().addComponents(
-              new StringSelectMenuBuilder()
-                .setCustomId(`menu_activate_protections-${matchType}`)
-                .addOptions(
-                  ...protections.map(p => new StringSelectMenuOptionBuilder()
-                    .setLabel(`Proteção: ${resolveProtectionType(p.type)}`)
-                    .setDescription(`Ativar ${resolveProtectionType(p.type)} por 30 minutos.`)
-                    .setValue(`${p.type}`)
-                  )))] : [];
+                new StringSelectMenuBuilder()
+                  .setCustomId(`menu_activate_protections-${matchType}`)
+                  .addOptions(
+                    ...protections.map(p => new StringSelectMenuOptionBuilder()
+                      .setLabel(`Proteção: ${resolveProtectionType(p.type)}`)
+                      .setDescription(`Ativar ${resolveProtectionType(p.type)} por 30 minutos.`)
+                      .setValue(`${p.type}`)
+                    )))] : [];
 
           await interaction.reply({ content: message, components: row, flags: 64 });
         },
@@ -337,7 +308,7 @@ module.exports = class InteractionEvent {
   }
   getRemainingTime(protection) {
     if (protection.activatedWhen) {
-      
+
     }
     const [hours, minutes] = protection.longevity.split(":").map(Number);
 
@@ -351,7 +322,7 @@ module.exports = class InteractionEvent {
 
     const unixTimestamp = Math.floor(expiration.getTime() / 1000);
     console.log({ hours, minutes, activatedWhen: protection.activatedWhen });
-    
+
     return `Valida ate: <t:${unixTimestamp}:f>`; // Ex: "em 45 minutos"
   }
   updatePage = async (interaction, pageChange = 1) => {

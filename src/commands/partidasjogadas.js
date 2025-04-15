@@ -60,7 +60,6 @@ module.exports = {
     } else if (subcommand === "remover") {
       gamesPlayed = (await removeGamePlayed(user.id, id)).gamesPlayed;
     }
-    console.log({ gamesPlayed });
 
     const embed = new EmbedBuilder()
       .setColor(subcommand === "adicionar" ? Colors.LightGrey : 0xff0000)

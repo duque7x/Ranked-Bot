@@ -37,10 +37,11 @@ module.exports = {
     await interaction.reply({
       embeds: [
         new EmbedBuilder()
-          .setDescription(`Fechando esta partida...`)
+          .setTitle("Finalizando fila...")
+          .setDescription(`Parabéns a todos os jogadores, joguem sempre!`)
           .setTimestamp()
           .setFooter({ text: "Bom jogo!" })
-          .setColor(0xff0000),
+          .setColor(0xff0000)
       ],
       components: [],
       flags: 64
@@ -60,7 +61,7 @@ module.exports = {
             )?.channelId;
             const channelToReturn =
               interaction.guild.channels.cache.get(userOriginalChannelId) ??
-              interaction.guild.channels.cache.get("1338123702633627688");
+              interaction.guild.channels.cache.get("1360296464445866056");
 
             if (member.voice.channel)
               await moveToChannel(member, channelToReturn);

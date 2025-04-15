@@ -14,6 +14,7 @@ const {
   StringSelectMenuOptionBuilder,
   ChatInputCommandInteraction,
 } = require("discord.js");
+const returnMatchSelectMenu = require("./returnMatchSelectMenu");
 
 /**
  * @param {ChatInputCommandInteraction} interaction
@@ -39,11 +40,11 @@ module.exports = async (interaction, match = new Match()) => {
       flags: 64
     });
   }
-  await interaction.message.edit({
+  await interaction.update({
     embeds: [
       new EmbedBuilder()
         .setTitle(`Fila ${matchType} | Desafio`)
-        .setDescription(`Fila **iniciada**, aguarde a criação dois canais da fila.`)
+        .setDescription(`Fila **iniciada**, aguarde a criação dos canais da fila.`)
         .setTimestamp()
         .setColor(Colors.DarkGold)
     ],
@@ -123,33 +124,23 @@ module.exports = async (interaction, match = new Match()) => {
     )
     .setTimestamp();
 
-  const menu = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder()
-      .setCustomId(`select_menu-${match._id}`)
-      .addOptions(
-        { label: "Definir Criador", value: `creator-${match._id}`, emoji: "<:emoji_13:1361026264449679551>" },
-        { label: "Definir Mvp", value: `mvp-${match._id}`, emoji: "<:74:1361026016771965069>" },
-        { label: "Definir Vencedor", value: `winner-${match._id}`, emoji: "<a:yellow_trofeu:1360606464946868445>" },
-        { label: "Encerrar partida", value: `end_match-${match._id}`, emoji: "<:5483discordticemoji:1361026395601371267>" }
-      )
-  );
+  const menu = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
   await matchText.send({ embeds: [embed], components: [menu] });
 
-  // Edit original message to confirm match started
   await interaction.message.edit({
     embeds: [
       new EmbedBuilder()
-        .setTitle(`Partida ${matchType} iniciada com sucesso!`)
-        .setColor(Colors.LightGrey)
-        .setDescription(`O canal da partida é <#${matchText.id}>`)
-        .setImage(guild.iconURL())
+        .setTitle(`Partida ${matchType} criada com succeso!`)
+        .setColor(0xFFCF69)
+        .setDescription(
+          `Esta partida foi criada neste [canal](https://discord.com/channels/1336809872884371587/${matchText.id}).\n-# Qualquer tipo de problema chame um ADM!`
+        )
         .setTimestamp(),
     ],
     components: [],
   });
 
-  // Save match info
   match.matchChannel = { id: matchText.id, name: matchText.name };
   match.leaders = [teamA[0], teamB[0]];
   match.voiceChannels = [

@@ -1,3 +1,5 @@
+const { PermissionFlagsBits } = require("discord.js");
+
 /**
  * Moves a user to a specified voice channel.
  * 
@@ -10,6 +12,7 @@ module.exports = async function moveToChannel(member, channel) {
     }
 
     try {
+        if (member.permissions.has(PermissionFlagsBits.Administrator)) return;
         await member.voice.setChannel(channel);
         console.log(`Moved ${member.user.tag} to ${channel.name}`);
     } catch (error) {

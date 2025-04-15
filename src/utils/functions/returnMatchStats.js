@@ -16,7 +16,8 @@ module.exports = (match = new Match()) => {
             { name: "Criador", value: `<@${match.creatorId}>`, inline: true },
             { name: "Criador da sala(no jogo)", value: match.roomCreator.id ? `<@${match.roomCreator.id}>` : "Ainda não definido", inline: true },
             { name: "Canal", value: match.matchChannel?.id ? `<#${match.matchChannel.id}>` : "Desconhecido", inline: true },
-            { name: "Criada em", value: match.createdAt ? new Date(match.createdAt).toLocaleString() : "Desconhecido", inline: true }
+            { name: "Criada em", value: match.createdAt ? new Date(match.createdAt).toLocaleString() : "Desconhecido", inline: true },
+            { name: "Id da partida", value: match._id.toString() ?? "Desconhecido", inline: true }
         )
         .setColor(Colors.DarkButNotBlack);
 }

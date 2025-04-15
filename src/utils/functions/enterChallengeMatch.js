@@ -13,8 +13,6 @@ const updateRankUsersRank = require("./updateRankUsersRank");
  * @returns 
  */
 module.exports = async (interaction, match) => {
-    await interaction.deferUpdate();
-    
     const { customId, guild, user } = interaction;
     const [_, _2, matchId, teamChosen] = interaction.values[0].split("-");
     const userId = user.id;
@@ -28,14 +26,14 @@ module.exports = async (interaction, match) => {
         Match.find({
             "players": { $elemMatch: { id: userId } },
             status: { $nin: ["off", "shutted"] }
-          }).sort({ createdAt: -1 })
+        }).sort({ createdAt: -1 })
     ]);
-    
+
     const { matchType } = match;
     const [teamSize] = matchType.split(/[xv]/).map(Number);
 
     if (!match) {
-        return interaction.followUp({
+        return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Partida offline")
@@ -47,7 +45,7 @@ module.exports = async (interaction, match) => {
         });
     }
     if (serverConfig.state.matches.status === "off") {
-        return interaction.followUp({
+        return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Partidas offline")
@@ -59,7 +57,7 @@ module.exports = async (interaction, match) => {
         });
     }
     if (userProfile.blacklisted === true) {
-        return interaction.followUp({
+        return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você está na blacklist")
@@ -72,7 +70,7 @@ module.exports = async (interaction, match) => {
         });
     }
     if (match.kickedOut.some(i => i.id === userId)) {
-        return interaction.followUp({
+        return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você foi expulso desta partida")
@@ -84,7 +82,7 @@ module.exports = async (interaction, match) => {
         });
     }
     if (match.players.some(i => i.id === userId)) {
-        return interaction.followUp({
+        return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está nessa partida")
@@ -97,7 +95,7 @@ module.exports = async (interaction, match) => {
     }
     let ongoingMatchs = activeMatches.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
     if (ongoingMatchs.length > 0) {
-        return interaction.followUp({
+        return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está em outra partida")
@@ -109,7 +107,7 @@ module.exports = async (interaction, match) => {
         });
     }
     if (match[teamChosen].length == teamSize) {
-        return interaction.followUp({
+        return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Equipa cheia")
@@ -120,19 +118,20 @@ module.exports = async (interaction, match) => {
             flags: 64
         });
     }
+
     console.log(`${interaction.member.displayName} escolheu o time: ${teamChosen} = `, { teamChosen: match[teamChosen] });
     match[teamChosen].push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
     match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
     userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });
-    
-    const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-        .setFields([
-            { name: "Time 1", value: formatTeamChallenged(match.teamA, teamSize), inline: true },
-            { name: "Time 2", value: formatTeamChallenged(match.teamB, teamSize), inline: true }
-        ]);
 
-    await interaction.message.edit({ embeds: [updatedEmbed] });
-
-
-    await Promise.allSettled([match.save(), userProfile.save()]);
+    await interaction.update({
+        embeds: [
+            EmbedBuilder.from(interaction.message.embeds[0])
+                .setFields([
+                    { name: "Time 1", value: formatTeamChallenged(match.teamA, teamSize), inline: true },
+                    { name: "Time 2", value: formatTeamChallenged(match.teamB, teamSize), inline: true }
+                ])
+        ]
+    });
+    await Promise.all([match.save(), userProfile.save()]);
 }

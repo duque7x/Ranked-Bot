@@ -16,11 +16,12 @@ module.exports = {
         await interaction.reply({ content: "# Registrando...", flags: 64 });
         try {
             await interaction.guild.members.fetch();
-
             const members = interaction.guild.members.cache;
 
             for (const member of members.values()) {
                 if (member.user.bot) continue;
+                if (member.user.bot) continue;
+                if (!member.roles.cache.has("1350144276834680912")) continue;
                 if (!member.roles.cache.has("1338983241759064228")) await member.roles.add("1338983241759064228");
 
                 await User.findOneAndUpdate(

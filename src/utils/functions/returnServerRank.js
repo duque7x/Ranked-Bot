@@ -16,6 +16,7 @@ module.exports = async (interaction, option) => {
             })
             .setColor(0xff0000);
         if (option == "send") return interaction.reply({ embeds: [embed()] });
+        if (option == "update") return interaction.reply({ embeds: [embed()] });
         return { embed };
     }
 
@@ -68,6 +69,13 @@ module.exports = async (interaction, option) => {
             embeds: [await generateEmbed(0)],
             components: [row(0)],
         });
+    }
+    if (option == "update") {
+        await interaction.update({
+            embeds: [await generateEmbed(0)],
+            components: [row(0)],
+        });
+
     }
 
     return { embed: generateEmbed, row };

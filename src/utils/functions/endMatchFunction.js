@@ -14,7 +14,7 @@ const moveToChannel = require("./moveToChannel");
  */
 module.exports = async (match, interaction) => {
   const channel = interaction.guild.channels.cache.get(match.matchChannel.id);
-  if (!channel) {
+  /* if (!channel) {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
@@ -36,31 +36,24 @@ module.exports = async (match, interaction) => {
       ],
       flags: 64,
     });
-  }
+  } */
+  const embed = new EmbedBuilder()
+    .setTitle("Finalizando fila...")
+    .setDescription(`Parabéns a todos os jogadores, joguem sempre!`)
+    .setTimestamp()
+    .setFooter({ text: "Bom jogo!" })
+    .setColor(0xff0000);
 
   interaction.message
     ? await interaction.message.edit({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Fim da fila")
-            .setDescription(`Fechando esta partida...`)
-            .setTimestamp()
-            .setFooter({ text: "Bom jogo!" })
-            .setColor(0xff0000),
-        ],
-        components: [],
-      })
-    : interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Fim da fila")
-            .setDescription(`Fechando esta partida...`)
-            .setTimestamp()
-            .setFooter({ text: "Bom jogo!" })
-            .setColor(0xff0000),
-        ],
-        components: [],
-      });
+      embeds: [embed],
+      components: [],
+    })
+    : interaction.update({
+      embeds: [embed],
+      components: [],
+      content: ""
+    });
 
   for (const c of match.voiceChannels) {
     const vcChannel = interaction.guild.channels.cache.get(c.id);
@@ -76,21 +69,22 @@ module.exports = async (match, interaction) => {
         )?.channelId;
         const channelToReturn =
           interaction.guild.channels.cache.get(userOriginalChannelId) ??
-          interaction.guild.channels.cache.get("1338123702633627688");
+          interaction.guild.channels.cache.get("1360296464445866056");
 
         if (member.voice.channel) await moveToChannel(member, channelToReturn);
       })
     );
 
-    // Delete the voice channel after the operations are completed
     await vcChannel.delete();
   }
-
+  console.log(match);
+  
   match.status = "off";
   await match.save();
 
   setTimeout(() => {
-    channel.delete();
+    if (channel)
+      channel.delete();
   }, 4000);
   return match;
 };

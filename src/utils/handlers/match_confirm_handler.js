@@ -19,6 +19,7 @@ const endMatchFunction = require("../functions/endMatchFunction");
 const User = require("../../structures/database/User");
 const Config = require("../../structures/database/configs");
 const updateRankUsersRank = require("../functions/updateRankUsersRank");
+const returnMatchSelectMenu = require("../functions/returnMatchSelectMenu");
 
 /**
  *
@@ -81,15 +82,19 @@ module.exports = async function match_confirm_handler(interaction) {
 
       if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
+        const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
-
-        await updateMessage(
-          interaction,
-          msg_btn,
-          `<@${supposedUserId}> foi definido como criador da sala`,
-          "Criador definido",
-          true
-        );
+        await interaction.update({
+          components: [row],
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Criador definido")
+              .setDescription(`${supposedUser.displayName} foi definido como criador da sala!`)
+              .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
+              .setTimestamp()
+              .setColor(0x0097AE),
+          ],
+        });
 
         const userProfile = await User.findOrCreate(supposedUserId);
         const hasValidProtection = userProfile.protections.some(
@@ -150,15 +155,19 @@ module.exports = async function match_confirm_handler(interaction) {
       }
       if (confirmedCount >= countLimit) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
+        const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
-
-        await updateMessage(
-          interaction,
-          msg_btn,
-          `<@${supposedUserId}> foi definido como criador da sala`,
-          "Criador definido",
-          true
-        );
+        await interaction.update({
+          components: [row],
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Criador definido")
+              .setDescription(`${supposedUser.displayName} foi definido como criador da sala!`)
+              .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
+              .setTimestamp()
+              .setColor(0x0097AE),
+          ],
+        });
 
         const userProfile = await User.findOrCreate(supposedUserId);
         const hasValidProtection = userProfile.protections.some(
@@ -198,13 +207,18 @@ module.exports = async function match_confirm_handler(interaction) {
       if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
 
-        await updateMessage(
-          interaction,
-          msg_btn,
-          `<@${supposedUserId}> foi definido como MVP da sala`,
-          "MVP definido!",
-          true
-        );
+        const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
+        await interaction.update({
+          components: [row],
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("MVP definido")
+              .setDescription(`${supposedUser.displayName} foi definido como MVP da partida!`)
+              .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
+              .setTimestamp()
+              .setColor(0x0097AE),
+          ],
+        });
 
         const userProfile = await User.findOrCreate(supposedUserId);
         const hasValidProtection = userProfile.protections.some(
@@ -264,14 +278,19 @@ module.exports = async function match_confirm_handler(interaction) {
       }
       if (confirmedCount >= countLimit) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
+        const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
-        await updateMessage(
-          interaction,
-          msg_btn,
-          `<@${supposedUserId}> foi definido como MVP da sala`,
-          "MVP definido!",
-          true
-        );
+        await interaction.update({
+          components: [row],
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("MVP definido")
+              .setDescription(`${supposedUser.displayName} foi definido como MVP da partida!`)
+              .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
+              .setTimestamp()
+              .setColor(0x0097AE),
+          ],
+        });
 
         const userProfile = await User.findOrCreate(supposedUserId);
         const hasValidProtection = userProfile.protections.some(
@@ -309,24 +328,25 @@ module.exports = async function match_confirm_handler(interaction) {
 
         await setMatchWinner(match, match[winningTeam], interaction.guildId);
         await setMatchLosers(match, match[losingTeam], interaction.guildId);
+        const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
         const embed = new EmbedBuilder()
-          .setTitle("Ganhador(es) da partida")
+          .setTitle("Vencedores definidos!")
           .setDescription(
-            `Vitória adicionada ao **time ${winningTeam.split("team")[1] == "A" ? 1 : 2
+            `Vitória adicionada a **equipa ${winningTeam.split("team")[1] == "A" ? 1 : 2
             }**!`
           )
-          .setColor(0x005F96)
+          .setColor(0xF5FF5A)
           .setTimestamp();
 
-        await msg.edit({ components: [], embeds: [embed] });
+        await interaction.update({ components: [row], embeds: [embed] });
         return;
       }
       if (match.winnerTeam.length !== 0) {
         return interaction.reply({
           embeds: [
             new EmbedBuilder()
-              .setTitle("Esta partida ja tem vencedores!")
+              .setTitle("Esta partida já tem vencedores!")
               .setColor(0xff0000)
               .setDescription("Tente novamente ou chame um dos nossos ADMs")
               .setTimestamp(),
@@ -386,17 +406,20 @@ module.exports = async function match_confirm_handler(interaction) {
         const winningTeam = supposedUserId;
         const losingTeam = winningTeam === "teamA" ? "teamB" : "teamA";
         const msg = interaction.message;
+        const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
-        await msg.edit({
-          components: [], embeds: [
+        await interaction.update({
+          components: [row],
+          embeds: [
             new EmbedBuilder()
-              .setTitle("Ganhador(es) da partida")
+              .setTitle("Vencedores definidos!")
               .setDescription(
                 `Vitória adicionada ao **time ${winningTeam.split("team")[1] == "A" ? 1 : 2
                 }**!`
               )
-              .setColor(0x005F96)
-              .setTimestamp()]
+              .setColor(0xF5FF5A)
+              .setTimestamp()
+          ]
         });
         await setMatchWinner(match, match[winningTeam], interaction.guildId);
         await setMatchLosers(match, match[losingTeam], interaction.guildId);
@@ -409,7 +432,9 @@ module.exports = async function match_confirm_handler(interaction) {
   if (keys[option]) return await keys[option](interaction);
 
   if (option == "end_match") {
-    if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) return endMatchFunction(match, interaction);
+    if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      return await endMatchFunction(match, interaction);
+    }
     const msg_btn = ButtonBuilder.from(
       interaction.message.components[0].components[0].data
     );
@@ -478,7 +503,7 @@ async function updateMessage(interaction, data, forName, title, reachedLimit) {
   const updatedButton = data;
 
   if (reachedLimit) {
-    return msg.edit({
+    return interaction.update({
       components: [],
       embeds: [
         new EmbedBuilder()
@@ -486,12 +511,12 @@ async function updateMessage(interaction, data, forName, title, reachedLimit) {
           .setDescription(forName)
           .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
           .setTimestamp()
-          .setColor(0x005F96),
+          .setColor(0x0097AE),
       ],
     });
   }
 
-  await msg.edit({
+  await interaction.update({
     components: [new ActionRowBuilder().setComponents(updatedButton)],
   });
   await interaction.deferUpdate();

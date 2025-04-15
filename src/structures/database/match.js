@@ -11,7 +11,7 @@ const matchSchema = new mongoose.Schema({
   matchType: {
     type: String,
     default: "1x1",
-    enum: ["1x1", "2x2", "3x3", "4x4", "5x5", "6x6"],
+    enum: ["1x1", "2x2", "3x3", "4x4", "5x5", "6x6", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6"],
   }, // Single string, not an array
   status: {
     type: String,

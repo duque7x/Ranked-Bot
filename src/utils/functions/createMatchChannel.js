@@ -15,6 +15,7 @@ const {
 } = require("discord.js");
 const moveToChannel = require("./moveToChannel");
 const User = require("../../structures/database/User");
+const returnMatchSelectMenu = require("./returnMatchSelectMenu");
 
 /**
  *
@@ -40,7 +41,7 @@ module.exports = async (interaction, match = new Match()) => {
       {
         id: guild.roles.everyone.id,
         deny: [
-           PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.ViewChannel,
           PermissionFlagsBits.SendMessages,
         ],
       },
@@ -161,40 +162,20 @@ module.exports = async (interaction, match = new Match()) => {
     .setTimestamp();
 
   // Buttons
-  const row = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder()
-      .setCustomId(`select_menu-${match._id}`)
-      .addOptions(
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Definir Criador")
-          .setValue(`creator-${match._id}`)
-          .setEmoji("<:emoji_13:1361026264449679551>"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Definir Mvp")
-          .setValue(`mvp-${match._id}`)
-          .setEmoji("<:74:1361026016771965069>"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Definir Vencedor")
-          .setValue(`winner-${match._id}`)
-          .setEmoji("<a:yellow_trofeu:1360606464946868445>"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Encerrar partida")
-          .setEmoji("<:5483discordticemoji:1361026395601371267>")
-          .setValue(`end_match-${match._id}`)
-      )
-  );
+  const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
   await matchChannel.send({
     embeds: [embedForChannel],
     components: [row],
   });
+
   await interaction.message.edit({
     embeds: [
       new EmbedBuilder()
-        .setTitle(`Partida ${matchType} criada com sucesso!`)
-        .setColor(Colors.LightGrey)
+        .setTitle(`Partida ${matchType} criada com succeso!`)
+        .setColor(0xFFCF69)
         .setDescription(
-          `Vai para o [canal](https://discord.com/channels/1336809872884371587/${matchChannel.id}) da partida e divirta-se!`
+          `Esta partida foi criada neste [canal](https://discord.com/channels/1336809872884371587/${matchChannel.id})!\nn-# Qualquer tipo de problema chame um ADM!`
         )
         .setTimestamp(),
     ],
@@ -238,7 +219,7 @@ function randomizeTeams(players) {
 function formatTeam(team, size) {
   return Array.from({ length: size }, (_, i) =>
     team[i]
-      ? `${i == 0 || i == (size - 1) ? "**Capitão**" : "**Jogador:** "} <@${team[i].id
+      ? `${i == 0 || i == size ? "**Capitão**" : "**Jogador:** "} <@${team[i].id
       }>`
       : "Slot vazio"
   ).join("\n");

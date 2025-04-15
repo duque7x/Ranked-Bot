@@ -10,7 +10,6 @@ module.exports = async (members) => {
     try {
         for (const [, member] of members) {
             if (member.user.bot) continue;
-            
             const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
             const hasRole = member.roles.cache.has("1350144276834680912");
             const nameBefore = member.displayName.includes("|")
@@ -23,8 +22,10 @@ module.exports = async (members) => {
                 if (isBlacklisted) continue;
 
                 const userRankPosition = users.findIndex(u => u.player.id === member.id) + 1;
-
+                
                 let finalName = `RANK ${userRankPosition} | ${nameBefore}`;
+                console.log({ finalName });
+
                 if (finalName.length > 32) {
                     const sliced = nameBefore.slice(0, 32 - `RANK ${userRankPosition} | `.length);
                     finalName = `RANK ${userRankPosition} | ${sliced}`;

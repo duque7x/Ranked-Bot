@@ -22,7 +22,6 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
     }
 
     const userId = user.id;
-
     const userProfile = await User.findOne({
       "player.id": userId,
     });
@@ -52,19 +51,19 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
 
     // Prevent user from joining another match if already in one
     if (ongoingMatchs.length > 0) {
-      let msg = ongoingMatchs.map((match) => match._id);
-
-      return await sendReply(
-        interaction,
-        `# Você já está jogando <#${ongoingMatchs[0].matchChannel?.id || ""
-        }>\n-# Id da partida(s): ${msg.join(
-          ", "
-        )}\n-# Chame um ADM se esta tendo problemas.`
-      );
+      return interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Você já está em outra partida")
+            .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
+            .setTimestamp()
+            .setColor(0xff0000)
+        ],
+        flags: 64
+      });
     }
-
     // Determine max team size
-    const maximumSize = 2 * Number(matchType.split("x")[0]);
+    const maximumSize = 2 * Number(matchType.replace(/[a-zA-Z]/g, "").at(0));
 
     // Create the match
     const match = new Match({
@@ -73,6 +72,7 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
       matchType,
       status: "created",
       players: [{ id: userId, name: user.username, joinedAt: Date.now() }],
+      teamA: [{ id: userId, name: user.username, joinedAt: Date.now() }],
       creatorId: userId,
     });
 

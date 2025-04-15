@@ -20,8 +20,7 @@ module.exports = {
       const isInVoice = !!member.voice.channel;
       const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
       const matchType = args[0];
-      console.log({ userProfile , serverConfig });
-
+      
       if (serverConfig.state.matches.status === "off") {
         return message.reply({
           embeds: [
@@ -79,12 +78,14 @@ module.exports = {
           ],
         });
       }
-      if (!["1x1", "2x2", "3x3", "4x4", "5x5", "6x6"].includes(matchType)) {
+      const acceptableOptions = ["1x1", "2x2", "3x3", "4x4", "5x5", "6x6","1v1", "2v2", "3v3", "4v4", "5v5", "6v6"];
+
+      if (!acceptableOptions.includes(matchType)) {
         return await message.reply({
           embeds: [
             new EmbedBuilder()
               .setTitle("Tipo da aposta não compativel!")
-              .setDescription("Tipos disponiveis: `1x1, 2x2, 3x3, 4x4, 5x5. 6x6`")
+              .setDescription(`Tipos disponiveis: \`${acceptableOptions.join(", ")}\``)
               .setTimestamp()
               .setColor(0xff0000),
           ],

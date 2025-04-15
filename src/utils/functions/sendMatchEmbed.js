@@ -13,8 +13,8 @@ module.exports = async (interaction, match, channelToSend) => {
         .setTitle(`Partida ${matchType} | Normal`)
         .setDescription(`Entre na fila e aguarde preencher para apartida começar!`)
         .addFields([
-            { name: "Equipe 1", value: formatTeam(players.slice(0, teamSize), teamSize), inline: true },
-            { name: "Equipe 2", value: formatTeam(players.slice(teamSize), teamSize), inline: true }
+            { name: "Equipe 1", value: formatTeam(teamA, teamSize), inline: true },
+            { name: "Equipe 2", value: formatTeam(teamB, teamSize), inline: true }
         ])
         .setColor(0xCEFEFF);
 

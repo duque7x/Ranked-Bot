@@ -49,8 +49,6 @@ module.exports = async function challengeMatch_handler(interaction) {
             flags: 64,
         });
     }
-
-    console.log({userAction});
     
     const options = {
         enter_match: () => enterChallengeMatch(interaction, match),

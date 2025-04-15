@@ -13,7 +13,7 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
     ]);
 
     let ongoingMatchs = activeMatchs.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
-    
+
     if (ongoingMatchs.length > 0) {
       return interaction.reply({
         embeds: [
@@ -26,9 +26,8 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
         flags: 64
       });
     }
-
-    const maximumSize = 2 * Number(matchType.split("x")[0]);
-
+    const maximumSize = 2 * Number(matchType.replace(/[a-zA-Z]/g, "").at(0));
+    
     const match = new Match({
       maximumSize,
       matchChannel: { id: channel.id, name: channel.name },

@@ -31,7 +31,6 @@ module.exports = async function outMatch_handler(interaction, match) {
             flags: 64
         });
     }
-    await interaction.deferUpdate();
     const teamAIncludes = match.teamA.some(player => player.id == userId);
     const teamBIncludes = match.teamB.some(player => player.id == userId);
 
@@ -45,9 +44,8 @@ module.exports = async function outMatch_handler(interaction, match) {
             { name: "Time 1", value: formatTeamChallenged(match.teamA, teamSize), inline: true },
             { name: "Time 2", value: formatTeamChallenged(match.teamB, teamSize), inline: true }
         ]);
-    console.log({ team: teamAIncludes ?? teamB, teamA: match.teamA, teamB: match.teamB });
     
-    await interaction.message.edit({ embeds: [updatedEmbed] });
-    await match.save();
+    await interaction.update({ embeds: [updatedEmbed] });
+    await Promise.all([match.save()]);
 };
 
