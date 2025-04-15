@@ -1,6 +1,6 @@
 function scheduleDailyMessage(client, channelId, lastMessageId, messageContent) {
-  const sendAtHour = 20;
-  const sendAtMin = 30;
+  const sendAtHour = 0;
+  const sendAtMin = 43;
   const now = new Date();
   const sendAt = new Date();
 
