@@ -6,6 +6,7 @@ module.exports = async (match, winners, guildId) => {
     const config = await Config.findOne({ "guild.id": guildId });
     match.winnerTeam = winners;
     await match.save();
+    
     const promises = winners.map(async (user) => {
         const userProfile = await User.findOrCreate(user.id);
 
