@@ -7,7 +7,8 @@ module.exports = async (interaction, match, channelToSend) => {
     const outmatchId = `out_match-${matchType}-${_id}`;
     const shutMatchId = `shut_match-${matchType}-${_id}`;
     const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
-
+    const { teamA, teamB } = match;
+    
     const embed = new EmbedBuilder()
         .setTitle(`Partida ${matchType} | Normal`)
         .setDescription(`Entre na fila e aguarde preencher para apartida começar!`)

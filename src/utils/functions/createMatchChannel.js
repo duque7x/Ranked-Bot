@@ -40,7 +40,7 @@ module.exports = async (interaction, match = new Match()) => {
       {
         id: guild.roles.everyone.id,
         deny: [
-          PermissionFlagsBits.ViewChannel,
+           PermissionFlagsBits.ViewChannel,
           PermissionFlagsBits.SendMessages,
         ],
       },
@@ -238,7 +238,7 @@ function randomizeTeams(players) {
 function formatTeam(team, size) {
   return Array.from({ length: size }, (_, i) =>
     team[i]
-      ? `${i == 0 || i == (size / 2) - 1 ? "**Capitão**" : "**Jogador:** "} <@${team[i].id
+      ? `${i == 0 || i == (size - 1) ? "**Capitão**" : "**Jogador:** "} <@${team[i].id
       }>`
       : "Slot vazio"
   ).join("\n");
