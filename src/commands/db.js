@@ -238,7 +238,7 @@ module.exports = {
                 ], flags: 64
             });
 
-            await User.deleteMany({}); 
+            await User.deleteMany({})
 
             await interaction.editReply({
                 embeds: [

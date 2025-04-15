@@ -33,7 +33,6 @@ module.exports = {
         ],
       });
     }
-    
     return returnServerRank(interaction, "send");
   },
 };

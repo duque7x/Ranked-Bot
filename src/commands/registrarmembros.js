@@ -13,23 +13,27 @@ module.exports = {
      * @param {BotClient} client
      */
     async execute(interaction, client) {
-        interaction.guild.members.fetch();
         await interaction.reply({ content: "# Registrando...", flags: 64 });
-        const members = interaction.guild.members.cache;
+        try {
+            await interaction.guild.members.fetch();
 
-        for (const member of members.values()) {
-            if (member.user.bot) continue; 
+            const members = interaction.guild.members.cache;
 
-            if (!member.roles.cache.has("1338983241759064228")) {
-                await member.roles.add("1338983241759064228").catch(console.error);
+            for (const member of members.values()) {
+                if (member.user.bot) continue;
+                if (!member.roles.cache.has("1338983241759064228")) await member.roles.add("1338983241759064228");
+
+                await User.findOneAndUpdate(
+                    { "player.id": member.user.id },
+                    { $set: { player: { name: member.displayName, id: member.user.id } } }, // Ensures update
+                    { upsert: true, new: true }
+                );
             }
-
-            await User.findOneAndUpdate(
-                { "player.id": member.user.id },
-                { $set: { player: { name: member.user.username, id: member.user.id } } }, // Ensures update
-                { upsert: true, new: true }
-            );
+            return interaction.editReply({ content: "# Registrei todos os membros!" });
+        } catch (error) {
+            await interaction.editReply({ content: "# Ouve um erro ao registrar os membros!" });
+            console.log(error);
+            return;
         }
-        return interaction.editReply({ content: "# Registrei todos os membros!" });
     }
 };

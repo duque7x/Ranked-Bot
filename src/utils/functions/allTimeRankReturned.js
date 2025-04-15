@@ -2,7 +2,7 @@ const User = require("../../structures/database/User");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
 
 module.exports = async (guild) => {
-    const users = (await User.find({})).filter(u => u.points > 0).sort((a, b) => b.points - a.points).slice(0, 10);
+    const users = (await User.find({}).sort({ "points": -1 })).slice(0, 10);
 
     if (users.length == 0) {
         const generateEmbed = () => new EmbedBuilder()
@@ -18,7 +18,8 @@ module.exports = async (guild) => {
     }
 
     const firstRankedId = users[0].player.id;
-    const firstRanked = guild.members.cache.has(firstRankedId) ? guild.members.cache.get(firstRankedId) : guild.members.cache.get("1355544935662883100");
+    const firstRanked = guild.members.cache.has(firstRankedId) ? guild.members.cache.get(firstRankedId) : guild.members.cache.get("1258777695609815060");
+
     const generateEmbed = () => {
         return new EmbedBuilder()
             .setThumbnail(firstRanked?.user?.displayAvatarURL())

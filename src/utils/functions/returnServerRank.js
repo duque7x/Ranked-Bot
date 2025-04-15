@@ -2,8 +2,6 @@ const User = require("../../structures/database/User");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
 
 module.exports = async (interaction, option) => {
-    await interaction.guild.members.fetch();
-
     const users = await User.find().sort({ points: -1 });
     const perPage = 10;
     //let page = 0;

@@ -74,8 +74,8 @@ module.exports = {
     await match.save();
     const channel = interaction.guild.channels.cache.get(match.matchChannel.id);
 
-    /* setTimeout(() => {
+    setTimeout(() => {
       if (channel) channel.delete();
-    }, 4000); */
+    }, 4000);
   },
 };
