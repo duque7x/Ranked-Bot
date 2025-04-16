@@ -1,19 +1,8 @@
 const Match = require("../../structures/database/match");
 const User = require("../../structures/database/User");
-const myColours = require("../../structures/colours");
 const moveToChannel = require("./moveToChannel");
 const formatTeamChallenged = require("./formatTeamChallenged");
-
-const {
-  PermissionFlagsBits,
-  EmbedBuilder,
-  ChannelType,
-  Colors,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
-  ChatInputCommandInteraction,
-} = require("discord.js");
+const { PermissionFlagsBits, EmbedBuilder, ChannelType, Colors, ActionRowBuilder, ChatInputCommandInteraction, } = require("discord.js");
 const returnMatchSelectMenu = require("./returnMatchSelectMenu");
 
 /**

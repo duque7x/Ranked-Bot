@@ -20,9 +20,9 @@ function color(rgb) {
  * @param {string} option
  * @returns
  */
-module.exports = async (user, interaction, option) => {
+module.exports = async (user, interaction, option, userId) => {
   if (!user) return "Usuario não encontrado";
-  const userId = user.id;
+  userId = userId ?? user.id;
   const foundUser = await User.findOrCreate(userId);
 
   const generateEmbed = async () => {
@@ -104,6 +104,7 @@ module.exports = async (user, interaction, option) => {
     });
   }
   if (option === "update") {
+    
     await interaction.update({
       embeds: [await generateEmbed()],
       components: [row()],

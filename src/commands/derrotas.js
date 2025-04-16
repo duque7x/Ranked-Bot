@@ -94,15 +94,14 @@ module.exports = {
 
     if (subcommand === "adicionar") {
       losses = (await addLoss(user.id, quantity)).losses;
-
       await removePoints(user.id, quantity * config.points.loss);
     } else if (subcommand === "remover") {
       losses = (await removeLoss(user.id, quantity)).losses;
       console.log({ loss: losses, quantity });
       await addPoints(user.id, quantity * config.points.loss);
     }
-
-
+    console.log({ points: config.points });
+    
     const embed = new EmbedBuilder()
       .setColor(subcommand === "adicionar" ? Colors.LightGrey : 0xff0000)
       .setDescription(

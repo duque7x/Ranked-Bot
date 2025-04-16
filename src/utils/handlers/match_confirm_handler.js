@@ -28,7 +28,7 @@ const setMatchCreator = require("../functions/setMatchCreator");
  * @param {ButtonInteraction} interaction
  */
 module.exports = async function match_confirm_handler(interaction) {
-  const config = await Config.findOrCreate({ "guild.id": interaction.guildId });
+  const config = await Config.findOrCreate(interaction.guildId);
   const { user, customId } = interaction;
   const [action, option, supposedUserId, matchId] = customId.split("-");
   const supposedUser = interaction.guild.members.cache.get(supposedUserId);
@@ -99,7 +99,7 @@ module.exports = async function match_confirm_handler(interaction) {
           ],
         });
 
-        setMatchCreator(match, interaction.guildId, supposedUserId);
+        return setMatchCreator(match, interaction.guildId, supposedUserId);
         return;
       }
 
@@ -231,7 +231,7 @@ module.exports = async function match_confirm_handler(interaction) {
         });
 
         await match.save();
-        await updateMessage(interaction, msg_btn, "", "", false);
+        return  await updateMessage(interaction, msg_btn, "", "", false);
       }
       if (confirmedCount >= countLimit) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
@@ -248,8 +248,7 @@ module.exports = async function match_confirm_handler(interaction) {
               .setColor(0x0097AE),
           ],
         });
-        setMatchMvp(match, interaction.guildId, supposedUserId);
-        return;
+        return setMatchMvp(match, interaction.guildId, supposedUserId);
       }
     },
     winner: async (int) => {
@@ -279,8 +278,7 @@ module.exports = async function match_confirm_handler(interaction) {
           .setColor(0xF5FF5A)
           .setTimestamp();
 
-        await interaction.update({ components: [row], embeds: [embed] });
-        return;
+        return await interaction.update({ components: [row], embeds: [embed] });
       }
       if (match.winnerTeam.length !== 0) {
         return interaction.reply({
@@ -297,6 +295,7 @@ module.exports = async function match_confirm_handler(interaction) {
       const userAlreadyConfirmed = match.confirmed
         .filter((c) => c.typeConfirm === "winner")
         .some((p) => p.id == userId);
+
       const matchAlreadyConfirmed =
         match.confirmed.filter((c) => c.typeConfirm === "winner").length ==
         countLimit;
@@ -338,7 +337,7 @@ module.exports = async function match_confirm_handler(interaction) {
 
         await match.save();
 
-        await updateMessage(interaction, msg_btn, "Vencedor da fila");
+        return await updateMessage(interaction, msg_btn, "Vencedor da fila");
       }
       if (confirmedCount >= countLimit) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
@@ -373,7 +372,7 @@ module.exports = async function match_confirm_handler(interaction) {
 
   if (option == "end_match") {
     if (isAdmin) {
-      await endMatchFunction(match, interaction);
+      return await endMatchFunction(match, interaction);
     }
     const msg_btn = ButtonBuilder.from(
       interaction.message.components[0].components[0].data
@@ -430,10 +429,10 @@ module.exports = async function match_confirm_handler(interaction) {
       await updateMessage(interaction, msg_btn, "Encerrar");
     }
     if (confirmedCount >= countLimit) {
-      endMatchFunction(match, interaction);
+      return endMatchFunction(match, interaction);
     }
   }
-  await updateRankUsersRank(await interaction.guild.members.fetch());
+  return await updateRankUsersRank(await interaction.guild.members.fetch());
 };
 /**
  *
@@ -444,7 +443,7 @@ async function updateMessage(interaction, data, forName, title, reachedLimit) {
   const updatedButton = data;
 
   if (reachedLimit) {
-    return interaction.update({
+    return interaction.message.edit({
       components: [],
       embeds: [
         new EmbedBuilder()
@@ -457,7 +456,7 @@ async function updateMessage(interaction, data, forName, title, reachedLimit) {
     });
   }
 
-  await interaction.update({
+  await interaction.message.edit({
     components: [new ActionRowBuilder().setComponents(updatedButton)],
   });
   await interaction.deferUpdate();

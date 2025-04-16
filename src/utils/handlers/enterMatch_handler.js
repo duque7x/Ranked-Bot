@@ -26,11 +26,7 @@ module.exports = async function enterBet_handler(interaction) {
     const userId = interaction.user.id;
     const [action, matchType, matchId] = interaction.customId.split("-");
     const [serverConfig, userProfile, activeMatches, match] = await Promise.all([
-        Config.findOneAndUpdate(
-            { "guild.id": interaction.guild.id },
-            { $setOnInsert: { guild: { name: interaction.guild.name, id: interaction.guild.id } } },
-            { new: true, upsert: true }
-        ),
+        Config.findOrCreate(interaction.guildId),
         User.findOrCreate(userId),
         Match.find({
             "players": { $elemMatch: { id: userId } },
@@ -103,7 +99,6 @@ module.exports = async function enterBet_handler(interaction) {
             flags: 64
         });
     }
-    console.log({ teamA, teamB });
 
     match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
     userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });

@@ -17,7 +17,7 @@ module.exports = async (match, guildId, userId) => {
     }
 
     await addMvp(userId);
-    match.mvp = { id: userId, name: supposedUser.user.username };
+    match.mvp = { id: userId };
 
     await Promise.all([match.save()]);
 }

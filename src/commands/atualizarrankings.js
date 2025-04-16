@@ -14,12 +14,12 @@ module.exports = {
         try {
             interaction.reply({ content: "Atualizando...", flags: 64 });
 
-            await updateRankUsersRank(interaction.guild.members);
+            await updateRankUsersRank(await interaction.guild.members.fetch());
 
             await interaction.editReply({ content: "Ranking dos usuarios atualizado.", flags: 64 });
             return;
         } catch (error) {
-            await interaction.reply({ content: "Ouve um erro ao atualizar os usuarios.", flags: 64 });
+            await interaction.editReply({ content: "Ouve um erro ao atualizar os usuarios.", flags: 64 });
             console.error(error);
         }
     },

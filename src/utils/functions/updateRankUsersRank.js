@@ -24,7 +24,6 @@ module.exports = async (members) => {
                 const userRankPosition = users.findIndex(u => u.player.id === member.id) + 1;
                 
                 let finalName = `RANK ${userRankPosition} | ${nameBefore}`;
-                console.log({ finalName });
 
                 if (finalName.length > 32) {
                     const sliced = nameBefore.slice(0, 32 - `RANK ${userRankPosition} | `.length);

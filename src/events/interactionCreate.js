@@ -79,7 +79,8 @@ module.exports = class InteractionEvent {
               flags: 64
             });
           }
-          await returnUserRank(interaction.user, interaction, "update");
+          const user = interaction.guild.members.cache.get(matchType).user;
+          await returnUserRank(user, interaction, "update", matchType);
         },
         update_rank: async () => {
           await returnServerRank(interaction, "update");

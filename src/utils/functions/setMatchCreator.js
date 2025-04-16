@@ -16,8 +16,7 @@ module.exports = async (match, guildId, userId) => {
     }
 
     match.roomCreator = {
-        id: supposedUserId,
-        name: supposedUser.user.username,
+        id: userId,
     };
 
     await Promise.all([match.save()]);

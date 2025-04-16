@@ -44,7 +44,7 @@ module.exports = {
    */
   async execute(interaction) {
     const { member, guildId, user, channelId } = interaction;
-    const serverConfig = await Config.findOrCreate({ "guild.id": guildId });
+    const serverConfig = await Config.findOrCreate(guildId);
     const userProfile = await User.findOrCreate(user.id);
 
     try {

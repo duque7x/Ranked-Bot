@@ -44,16 +44,8 @@ module.exports = async (match, interaction) => {
     .setFooter({ text: "Bom jogo!" })
     .setColor(0xff0000);
 
-  interaction.message
-    ? await interaction.message.edit({
-      embeds: [embed],
-      components: [],
-    })
-    : interaction.update({
-      embeds: [embed],
-      components: [],
-      content: ""
-    });
+  if (interaction.isChatInputCommand()) await interaction.reply({ embeds: [embed], components: [] });
+  if (interaction.isButton()) await interaction.update({ embeds: [embed], components: [], content: "" });
 
   for (const c of match.voiceChannels) {
     const vcChannel = interaction.guild.channels.cache.get(c.id);
@@ -78,7 +70,7 @@ module.exports = async (match, interaction) => {
     await vcChannel.delete();
   }
   console.log(match);
-  
+
   match.status = "off";
   await match.save();
 
