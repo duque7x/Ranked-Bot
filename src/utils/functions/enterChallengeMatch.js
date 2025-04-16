@@ -1,4 +1,4 @@
-const { EmbedBuilder, StringSelectMenuInteraction } = require("discord.js");
+const { EmbedBuilder, StringSelectMenuInteraction, PermissionFlagsBits } = require("discord.js");
 const Config = require("../../structures/database/configs");
 const Match = require("../../structures/database/match");
 const User = require("../../structures/database/User");
@@ -37,8 +37,6 @@ module.exports = async (interaction, match) => {
             status: { $nin: ["off", "shutted"] }
         }).sort({ createdAt: -1 })
     ]);
-    const { matchType } = match;
-    const [teamSize] = matchType.split(/[xv]/).map(Number);
 
     if (!match) {
         return interaction.reply({
@@ -52,6 +50,9 @@ module.exports = async (interaction, match) => {
             flags: 64,
         });
     }
+    const { matchType } = match;
+    const [teamSize] = matchType.split(/[xv]/).map(Number);
+
     if (serverConfig.state.matches.status === "off") {
         return interaction.reply({
             embeds: [
@@ -101,13 +102,13 @@ module.exports = async (interaction, match) => {
             flags: 64
         });
     }
-    let ongoingMatchs = activeMatches.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
-    if (ongoingMatchs.length > 0) {
+    let ongoingMatches = activeMatches.filter(b => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
+    if (ongoingMatches.length > 0) {
         return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está em outra partida")
-                    .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
+                    .setDescription(`Canal: <#${ongoingMatches[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
                     .setTimestamp()
                     .setColor(0xff0000)
             ],
@@ -126,10 +127,12 @@ module.exports = async (interaction, match) => {
             flags: 64
         });
     }
+    const voiceChannelId = interaction.member.voice?.channelId;
+
     console.log(`${interaction.member.displayName} escolheu o time: ${teamChosen} = `, { teamChosen: match[teamChosen] });
     match[teamChosen].push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
     match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
-    userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });
+    userProfile.originalChannels.push({ channelId: voiceChannelId, matchId: match._id });
 
     await interaction.update({
         embeds: [
