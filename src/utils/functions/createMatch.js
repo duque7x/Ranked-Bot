@@ -20,36 +20,12 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
         flags: 64,
       });
     }
-
     const userId = user.id;
-    const userProfile = await User.findOne({
-      "player.id": userId,
-    });
-    if (userProfile.blacklisted === true)
-      return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setDescription(
-              `Você está na **blacklist**!\n\n-# Abra um ticket em: <#1339284682902339594>`
-            )
-            .setTimestamp()
-            .setColor(Colors.DarkerGrey)
-            .setFooter({
-              text: "Nota: para sair da blacklist você precisa pagar 1,50€",
-            }),
-        ],
-      });
-
-    // Find matches where the user is a player
     let activeMatchs = await Match.find({
       players: { $elemMatch: { id: userId } },
     });
-    // Filter ongoing matches (not "off" or "shutted")
-    let ongoingMatchs = await activeMatchs
-      .filter((b) => b.status !== "off" && b.status !== "shutted")
-      .sort((a, b) => b.createdAt - a.createdAt);
+    let ongoingMatchs = activeMatchs.filter((b) => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
 
-    // Prevent user from joining another match if already in one
     if (ongoingMatchs.length > 0) {
       return interaction.reply({
         embeds: [

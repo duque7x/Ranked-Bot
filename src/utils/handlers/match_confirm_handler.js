@@ -20,6 +20,8 @@ const User = require("../../structures/database/User");
 const Config = require("../../structures/database/configs");
 const updateRankUsersRank = require("../functions/updateRankUsersRank");
 const returnMatchSelectMenu = require("../functions/returnMatchSelectMenu");
+const setMatchMvp = require("../functions/setMatchMvp");
+const setMatchCreator = require("../functions/setMatchCreator");
 
 /**
  *
@@ -46,8 +48,8 @@ module.exports = async function match_confirm_handler(interaction) {
     });
   }
   const leadersId = match.leaders.map((p) => p.id);
-
-  if (!leadersId.some((id) => id === userId) && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator))
+  const isAdmin = interaction.memberPermissions.has(PermissionFlagsBits.Administrator);
+  if (!leadersId.some((id) => id === userId) && !isAdmin) {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
@@ -58,6 +60,7 @@ module.exports = async function match_confirm_handler(interaction) {
       ],
       flags: 64,
     });
+  }
 
   const keys = {
     /**
@@ -80,7 +83,7 @@ module.exports = async function match_confirm_handler(interaction) {
         match.confirmed.filter((c) => c.typeConfirm === "creator").length ==
         countLimit;
 
-      if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      if (isAdmin) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
@@ -96,22 +99,7 @@ module.exports = async function match_confirm_handler(interaction) {
           ],
         });
 
-        const userProfile = await User.findOrCreate(supposedUserId);
-        const hasValidProtection = userProfile.protections.some(
-          (p) => p.type === "double_points" && p.longevity !== 0
-        );
-
-        if (hasValidProtection) {
-          await addPoints(supposedUserId, config.points.creator * 2);
-        } else {
-          await addPoints(supposedUserId, config.points.creator);
-        }
-        match.roomCreator = {
-          id: supposedUserId,
-          name: supposedUser.user.username,
-        };
-        await match.save();
-        await updateRankUsersRank(await interaction.guild.members.fetch());
+        setMatchCreator(match, interaction.guildId, supposedUserId);
         return;
       }
 
@@ -169,23 +157,7 @@ module.exports = async function match_confirm_handler(interaction) {
           ],
         });
 
-        const userProfile = await User.findOrCreate(supposedUserId);
-        const hasValidProtection = userProfile.protections.some(
-          (p) => p.type === "double_points" && p.longevity !== 0
-        );
-
-        if (hasValidProtection) {
-          await addPoints(supposedUserId, config.points.creator * 2);
-        } else {
-          await addPoints(supposedUserId, config.points.creator);
-        }
-        match.roomCreator = {
-          id: supposedUserId,
-          name: supposedUser.user.username,
-        };
-
-        await match.save();
-        await updateRankUsersRank(await interaction.guild.members.fetch());
+        setMatchCreator(match, interaction.guildId, supposedUserId);
         return;
       }
     },
@@ -204,7 +176,8 @@ module.exports = async function match_confirm_handler(interaction) {
       const matchAlreadyConfirmed =
         match.confirmed.filter((c) => c.typeConfirm === "mvp").length ==
         countLimit;
-      if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+
+      if (isAdmin) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
 
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
@@ -219,23 +192,7 @@ module.exports = async function match_confirm_handler(interaction) {
               .setColor(0x0097AE),
           ],
         });
-
-        const userProfile = await User.findOrCreate(supposedUserId);
-        const hasValidProtection = userProfile.protections.some(
-          (p) => p.type === "double_points" && p.longevity !== 0
-        );
-
-        if (hasValidProtection) {
-          await addPoints(supposedUserId, config.points.mvp * 2);
-        } else {
-          await addPoints(supposedUserId, config.points.mvp);
-        }
-
-        await addMvp(supposedUserId);
-        match.mvp = { id: supposedUserId, name: supposedUser.user.username };
-        await match.save();
-        await userProfile.save();
-        await updateRankUsersRank(await interaction.guild.members.fetch());
+        setMatchMvp(match, interaction.guildId, supposedUserId);
         return;
       }
       if (matchAlreadyConfirmed) {
@@ -291,22 +248,7 @@ module.exports = async function match_confirm_handler(interaction) {
               .setColor(0x0097AE),
           ],
         });
-
-        const userProfile = await User.findOrCreate(supposedUserId);
-        const hasValidProtection = userProfile.protections.some(
-          (p) => p.type === "double_points" && p.longevity !== 0
-        );
-
-        if (hasValidProtection) {
-          await addPoints(supposedUserId, config.points.mvp * 2);
-        } else {
-          await addPoints(supposedUserId, config.points.mvp);
-        }
-        await addMvp(supposedUserId);
-
-        match.mvp = { id: supposedUserId, name: supposedUser.user.username };
-        await match.save();
-        await userProfile.save();
+        setMatchMvp(match, interaction.guildId, supposedUserId);
         return;
       }
     },
@@ -319,23 +261,21 @@ module.exports = async function match_confirm_handler(interaction) {
         .replace(/\D/g, "")
         .split("")
         .map((p) => parseInt(p));
-      if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      if (isAdmin) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
 
         const winningTeam = supposedUserId;
         const losingTeam = winningTeam === "teamA" ? "teamB" : "teamA";
-        const msg = interaction.message;
 
         await setMatchWinner(match, match[winningTeam], interaction.guildId);
         await setMatchLosers(match, match[losingTeam], interaction.guildId);
+
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
+        const winningTeamTag = `equipa ${winningTeam.split("team")[1] == "A" ? 1 : 2}`;
 
         const embed = new EmbedBuilder()
           .setTitle("Vencedores definidos!")
-          .setDescription(
-            `Vitória adicionada a **equipa ${winningTeam.split("team")[1] == "A" ? 1 : 2
-            }**!`
-          )
+          .setDescription(`Vitória adicionada a **${winningTeamTag}**!`)
           .setColor(0xF5FF5A)
           .setTimestamp();
 
@@ -429,11 +369,11 @@ module.exports = async function match_confirm_handler(interaction) {
     },
   };
 
-  if (keys[option]) return await keys[option](interaction);
+  if (keys[option]) await keys[option](interaction);
 
   if (option == "end_match") {
-    if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
-      return await endMatchFunction(match, interaction);
+    if (isAdmin) {
+      await endMatchFunction(match, interaction);
     }
     const msg_btn = ButtonBuilder.from(
       interaction.message.components[0].components[0].data
@@ -490,9 +430,10 @@ module.exports = async function match_confirm_handler(interaction) {
       await updateMessage(interaction, msg_btn, "Encerrar");
     }
     if (confirmedCount >= countLimit) {
-      return endMatchFunction(match, interaction);
+      endMatchFunction(match, interaction);
     }
   }
+  await updateRankUsersRank(await interaction.guild.members.fetch());
 };
 /**
  *
