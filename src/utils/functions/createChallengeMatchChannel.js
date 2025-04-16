@@ -21,7 +21,7 @@ module.exports = async (interaction, match = new Match()) => {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
-          .setTitle("Você não pode encerrar esta partida.")
+          .setTitle("Você não pode iniciar esta partida.")
           .setDescription(`<@${userId}> você não tem permissões.`)
           .setTimestamp()
           .setColor(0xff0000)
