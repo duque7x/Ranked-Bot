@@ -1,24 +1,9 @@
 const Match = require("../../structures/database/match");
-const addPoints = require("../functions/addPoints");
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  Colors,
-  ButtonBuilder,
-  ButtonStyle,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-  PermissionFlagsBits,
-  StringSelectMenuInteraction,
-  ButtonInteraction,
-} = require("discord.js");
-const addMvp = require("../functions/addMvp");
+const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, PermissionFlagsBits, ButtonInteraction, } = require("discord.js");
 const setMatchWinner = require("../functions/setMatchWinner");
 const setMatchLosers = require("../functions/setMatchLosers");
 const endMatchFunction = require("../functions/endMatchFunction");
-const User = require("../../structures/database/User");
 const Config = require("../../structures/database/configs");
-const updateRankUsersRank = require("../functions/updateRankUsersRank");
 const returnMatchSelectMenu = require("../functions/returnMatchSelectMenu");
 const setMatchMvp = require("../functions/setMatchMvp");
 const setMatchCreator = require("../functions/setMatchCreator");
@@ -231,7 +216,7 @@ module.exports = async function match_confirm_handler(interaction) {
         });
 
         await match.save();
-        return  await updateMessage(interaction, msg_btn, "", "", false);
+        return await updateMessage(interaction, msg_btn, "", "", false);
       }
       if (confirmedCount >= countLimit) {
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
@@ -432,7 +417,6 @@ module.exports = async function match_confirm_handler(interaction) {
       return endMatchFunction(match, interaction);
     }
   }
-  return await updateRankUsersRank(await interaction.guild.members.fetch());
 };
 /**
  *
@@ -457,7 +441,10 @@ async function updateMessage(interaction, data, forName, title, reachedLimit) {
   }
 
   await interaction.message.edit({
-    components: [new ActionRowBuilder().setComponents(updatedButton)],
+    components: [
+      new ActionRowBuilder()
+        .setComponents(updatedButton)
+    ],
   });
   await interaction.deferUpdate();
   return;

@@ -3,7 +3,6 @@ const Config = require('../../structures/database/configs');
 const { EmbedBuilder, PermissionFlagsBits, Colors, ButtonInteraction } = require("discord.js");
 const formatTeam = require("../functions/formatTeam");
 const User = require("../../structures/database/User");
-const updateRankUsersRank = require("../functions/updateRankUsersRank");
 
 /**
  * 
@@ -24,7 +23,7 @@ module.exports = async function enterBet_handler(interaction) {
         });
     }
     const userId = interaction.user.id;
-    const [action, matchType, matchId] = interaction.customId.split("-");
+    const [_, matchType, matchId] = interaction.customId.split("-");
     const [serverConfig, userProfile, activeMatches, match] = await Promise.all([
         Config.findOrCreate(interaction.guildId),
         User.findOrCreate(userId),

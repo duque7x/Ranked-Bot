@@ -1,11 +1,8 @@
-const {
-  EmbedBuilder,
-  Colors,
-  ChannelManager,
-  ChatInputCommandInteraction,
-} = require("discord.js");
+const { EmbedBuilder, ChatInputCommandInteraction } = require("discord.js");
 const User = require("../../structures/database/User");
 const moveToChannel = require("./moveToChannel");
+const updateRankUsersRank = require("./updateRankUsersRank");
+
 /**
  *
  * @param {*} match
@@ -14,12 +11,12 @@ const moveToChannel = require("./moveToChannel");
  */
 module.exports = async (match, interaction) => {
   const channel = interaction.guild.channels.cache.get(match.matchChannel.id);
-  /* if (!channel) {
+  if (!channel) {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
           .setTitle("Canal da partida")
-          .setDescription("Canal da partida não foi encontrado no servidor!")
+          .setDescription("Canal da partida não foi encontrado no servidor!\n-# Chame um dos developers")
           .setColor(0xff0000)
           .setTimestamp(),
       ],
@@ -30,13 +27,13 @@ module.exports = async (match, interaction) => {
       embeds: [
         new EmbedBuilder()
           .setTitle("Partida offline")
-          .setDescription("Esta partida não se encontra na base de dados")
+          .setDescription("Esta partida não se encontra na base de dados\n-# Chame um dos developers")
           .setColor(0xff0000)
           .setTimestamp(),
       ],
       flags: 64,
     });
-  } */
+  }
   const embed = new EmbedBuilder()
     .setTitle("Finalizando fila...")
     .setDescription(`Parabéns a todos os jogadores, joguem sempre!`)
@@ -69,14 +66,11 @@ module.exports = async (match, interaction) => {
 
     await vcChannel.delete();
   }
-  console.log(match);
 
   match.status = "off";
   await match.save();
 
-  setTimeout(() => {
-    if (channel)
-      channel.delete();
-  }, 4000);
+  setTimeout(() => channel ? channel.delete() : "Sem canal", 4000);
+  await updateRankUsersRank(await interaction.guild.members.fetch());
   return match;
 };

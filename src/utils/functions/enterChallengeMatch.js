@@ -3,8 +3,6 @@ const Config = require("../../structures/database/configs");
 const Match = require("../../structures/database/match");
 const User = require("../../structures/database/User");
 const formatTeamChallenged = require("./formatTeamChallenged");
-const createChallengeMatchChannel = require("./createChallengeMatchChannel");
-const updateRankUsersRank = require("./updateRankUsersRank");
 
 /**
  * 
