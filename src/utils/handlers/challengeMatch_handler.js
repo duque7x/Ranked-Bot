@@ -1,12 +1,8 @@
 const Match = require("../../structures/database/match");
 const sendReply = require("../functions/sendReply");
-const Config = require('../../structures/database/configs');
-const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits, ButtonInteraction, StringSelectMenuInteraction } = require("discord.js");
-const { errorMessages, returnUserRank } = require("../utils");
+const { EmbedBuilder, PermissionFlagsBits, StringSelectMenuInteraction } = require("discord.js");
 const formatTeam = require("../functions/formatTeam");
-const { isValidObjectId } = require("../../structures/database/connection");
 const enterChallengeMatch = require("../functions/enterChallengeMatch");
-const enterMatch_handler = require("./enterMatch_handler");
 const outChallengeMatch = require("../functions/outChallengeMatch");
 const shutChallengeMatch = require("../functions/shutChallengeMatch");
 const kickOutChallengeMatch = require("../functions/kickOutChallengeMatch");

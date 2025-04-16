@@ -36,7 +36,7 @@ const configSchema = new mongoose.Schema({
                 },
             },
         },
-    seasonRoleId: String,
+        seasonRoleId: String,
 
     },
     points: {
@@ -47,6 +47,13 @@ const configSchema = new mongoose.Schema({
     }
 });
 
+configSchema.statics.findOrCreate = async function (guildId) {
+    let guild = await this.findOne({ "guild.id": guildId });
+    if (!guild) {
+        guild = await this.create({ guild: { id: guildId } });
+    }
+    return guild;
+};
 const Config = mongoose.model("config", configSchema);
 
-module.exports = Config;
+module.exports = Config

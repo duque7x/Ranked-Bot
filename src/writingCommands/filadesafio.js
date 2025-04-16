@@ -13,7 +13,7 @@ module.exports = {
    */
   async execute(message, args, client) {
     const { member, guildId, author: user, channelId } = message;
-    const serverConfig = await Config.findOne({ "guild.id": guildId });
+    const serverConfig = await Config.findOrCreate({ "guild.id": guildId });
     const userProfile = await User.findOrCreate(user.id);
     try {
       const isInVoice = !!member.voice.channel;

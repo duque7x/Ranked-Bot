@@ -6,7 +6,7 @@ module.exports = async (options) => {
 
   try {
     const [serverConfig, userProfile] = await Promise.all([
-      Config.findOne({ "guild.id": guildId }),
+      Config.findOrCreate({ "guild.id": guildId }),
       User.findOrCreate(user.id),
     ]);
 

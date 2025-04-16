@@ -28,7 +28,7 @@ const setMatchCreator = require("../functions/setMatchCreator");
  * @param {ButtonInteraction} interaction
  */
 module.exports = async function match_confirm_handler(interaction) {
-  const config = await Config.findOne({ "guild.id": interaction.guildId });
+  const config = await Config.findOrCreate({ "guild.id": interaction.guildId });
   const { user, customId } = interaction;
   const [action, option, supposedUserId, matchId] = customId.split("-");
   const supposedUser = interaction.guild.members.cache.get(supposedUserId);
