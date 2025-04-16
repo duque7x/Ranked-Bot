@@ -55,7 +55,9 @@ module.exports = {
         }
         if (!pointsUpdated) {
             embed.setTitle("Pontos utiliazados:");
-            for (let key of config.points) {
+            for (let key of Object.keys(config.points)) {
+                console.log({ key });
+
                 embed.addFields({
                     name: key,
                     value: `**${config.points[key]}** pontos`
