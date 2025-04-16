@@ -1,7 +1,5 @@
 const { EmbedBuilder, Colors, PermissionFlagsBits } = require("discord.js");
 const Match = require("../../structures/database/match");
-const sendReply = require("./sendReply");
-const User = require("../../structures/database/User");
 
 module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
   try {

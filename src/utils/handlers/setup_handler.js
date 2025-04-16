@@ -85,7 +85,7 @@ module.exports = async function setup_handler(interaction) {
             config.setupServerConfig.rankingConfigs.channels.allowedIds.defaultId = (rankingChannel).id;
 
             config.setupServerConfig.seasonRoleId = seasonRole.id;
-            await interaction.editReply({ content: "Servidor e bot configurados com succeso!", flags: 64 });
+            await interaction.editReply({ content: "Servidor e bot configurados com sucesso!", flags: 64 });
             await interaction.member.roles.add(seasonRole);
 
             await config.save();

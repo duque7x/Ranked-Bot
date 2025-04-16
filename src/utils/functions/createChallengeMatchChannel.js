@@ -39,8 +39,6 @@ module.exports = async (interaction, match = new Match()) => {
     ],
     components: []
   });
-  await interaction.guild.members.fetch();
-
   const createVoiceChannel = async (name, allow = [], deny = []) =>
     guild.channels.create({
       name: `⭐ ${name}・${formattedNumber}`,
@@ -120,7 +118,7 @@ module.exports = async (interaction, match = new Match()) => {
   await interaction.message.edit({
     embeds: [
       new EmbedBuilder()
-        .setTitle(`Partida ${matchType} criada com succeso!`)
+        .setTitle(`Partida ${matchType} criada com sucesso!`)
         .setColor(0xFFCF69)
         .setDescription(
           `Esta partida foi criada neste [canal](https://discord.com/channels/1336809872884371587/${matchText.id})\n-# Qualquer tipo de problema chame um ADM!`

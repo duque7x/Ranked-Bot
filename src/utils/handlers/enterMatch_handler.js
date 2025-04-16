@@ -3,7 +3,6 @@ const Config = require('../../structures/database/configs');
 const { EmbedBuilder, PermissionFlagsBits, Colors, ButtonInteraction } = require("discord.js");
 const formatTeam = require("../functions/formatTeam");
 const User = require("../../structures/database/User");
-
 /**
  * 
  * @param {ButtonInteraction} interaction 
@@ -136,13 +135,6 @@ module.exports = async function enterBet_handler(interaction) {
         }
         return require("../functions/createMatchChannel")(interaction, match);
     }
-    await User.updateOne(
-        { userId },
-        { $push: { originalChannels: { channelId: interaction.member.voice.channelId, matchId: match._id } } }
-    );
-    await Match.updateOne(
-        { _id: match._id },
-        { $push: { players: { id: userId, joinedAt: Date.now(), name: interaction.user.username } } }
-    );
+    await Promise.all([match.save(), userProfile.save()]);
     return;
 }

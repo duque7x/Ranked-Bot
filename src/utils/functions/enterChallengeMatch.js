@@ -3,7 +3,6 @@ const Config = require("../../structures/database/configs");
 const Match = require("../../structures/database/match");
 const User = require("../../structures/database/User");
 const formatTeamChallenged = require("./formatTeamChallenged");
-
 /**
  * 
  * @param {StringSelectMenuInteraction} interaction 
@@ -11,6 +10,18 @@ const formatTeamChallenged = require("./formatTeamChallenged");
  * @returns 
  */
 module.exports = async (interaction, match) => {
+    if (!interaction.member.voice.channel && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+        return await interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle("Canal de voz")
+                    .setDescription("Você tem que estar conectado a um canal de voz para entrar uma fila!")
+                    .setColor(0xff0000)
+                    .setTimestamp()
+            ],
+            flags: 64
+        });
+    }
     const { customId, guild, user } = interaction;
     const [_, _2, matchId, teamChosen] = interaction.values[0].split("-");
     const userId = user.id;
@@ -26,7 +37,6 @@ module.exports = async (interaction, match) => {
             status: { $nin: ["off", "shutted"] }
         }).sort({ createdAt: -1 })
     ]);
-
     const { matchType } = match;
     const [teamSize] = matchType.split(/[xv]/).map(Number);
 
@@ -116,7 +126,6 @@ module.exports = async (interaction, match) => {
             flags: 64
         });
     }
-
     console.log(`${interaction.member.displayName} escolheu o time: ${teamChosen} = `, { teamChosen: match[teamChosen] });
     match[teamChosen].push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
     match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
@@ -131,5 +140,6 @@ module.exports = async (interaction, match) => {
                 ])
         ]
     });
+
     await Promise.all([match.save(), userProfile.save()]);
 }
