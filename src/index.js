@@ -10,7 +10,6 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 const chalk = require("chalk");
-const {  RestAPI } = require("@duque.edits/rest");
 
 class BotClient extends Client {
   constructor(options) {
@@ -23,10 +22,6 @@ class BotClient extends Client {
     this.loadEvents();
     this.loadCommands();
     this.handleProcessErrors();
-    this.api = new RestAPI({
-      token: "/mYcFkTs@hQll-a",
-      baseURL: "https://duque-bot-api.up.railway.app/api/v1",
-    });
   }
 
   loadEvents() {
