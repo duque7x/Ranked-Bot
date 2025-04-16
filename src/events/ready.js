@@ -25,7 +25,7 @@ module.exports = class ReadyEvent {
       name: "discord.gg/rankedzone",
       type: ActivityType.Custom,
     });
-    const guild = client.guilds.cache.get("1336809872884371587");
+    const guild = client.guilds.cache.get(process.env.GUILD_ID);
 
     console.log(chalk.bgBlue(`O bot está on! Com o nome ${this.client.user.username} e com ${this.client.guilds.cache.size} guildas`));
     this.client.guilds.cache.forEach(g => console.log(chalk.bgBlack(`Nome da guilda: ${g.name}. Membros ${g.members.cache.size}`)));

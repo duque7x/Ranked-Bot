@@ -125,9 +125,9 @@ module.exports = class InteractionEvent {
           const protection = userProfile.protections.find(p => p.type == option);
 
           protection.activatedWhen = new Date();
-          const time = this.getRemainingTime(protection)
+          const time = this.getRemainingTime(protection);
 
-          await interaction.reply(time);
+          await interaction.reply({ content: time, flags: 64 });
           await userProfile.save();
         },
         challenge_match: () => challengeMatch_handler(interaction),

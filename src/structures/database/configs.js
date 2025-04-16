@@ -19,7 +19,7 @@ const configSchema = new mongoose.Schema({
     },
     setupServerConfig: {
         matchesConfigs: {
-            channel: {
+            channels: {
                 categoryId: String,
                 allowedIds: {
                     defaultId: String,
@@ -28,7 +28,7 @@ const configSchema = new mongoose.Schema({
             },
         },
         rankingConfigs: {
-            channel: {
+            channels: {
                 categoryId: String,
                 allowedIds: {
                     defaultId: String,
@@ -36,13 +36,9 @@ const configSchema = new mongoose.Schema({
                 },
             },
         },
-    },
-    logsChannels: {
-        ticketChannelId: String,
-        generalLogsChannelId: String,
-        matchesChannel: String
-    },
     seasonRoleId: String,
+
+    },
     points: {
         win: Number,
         loss: Number,

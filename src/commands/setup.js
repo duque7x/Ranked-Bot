@@ -24,10 +24,6 @@ EmbedBuilder.from
         const row = new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder().setCustomId(`setup_select_menu`).addOptions(
                 new StringSelectMenuOptionBuilder()
-                    .setLabel("Definir canais de log")
-                    .setValue(`logs`)
-                    .setDescription("Defina os canais para: logs geral, logs de ticket, logs das filas"),
-                new StringSelectMenuOptionBuilder()
                     .setLabel("Definir canais das filas")
                     .setValue(`matches`)
                     .setDescription("Defina os canais onde os usuários podem criar filas"),

@@ -2,6 +2,7 @@ const User = require("../../structures/database/User");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
 
 module.exports = async (guild) => {
+    
     const users = (await User.find({}).sort({ "points": -1 })).slice(0, 10);
 
     if (users.length == 0) {
