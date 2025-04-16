@@ -22,7 +22,7 @@ module.exports = {
                 .setDescription("Quantos pontos para o criador?")
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-    
+
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
@@ -34,7 +34,6 @@ module.exports = {
         if (!config) {
             return interaction.reply({ content: "Configuração não encontrada para este servidor.", ephemeral: true });
         }
-
         const keys = interaction.options.data;
         const embed = new EmbedBuilder()
             .setTitle("Pontos configurados!")
@@ -44,7 +43,6 @@ module.exports = {
             .setTimestamp();
 
         let pointsUpdated = false;
-
         for (let key of keys) {
             if (key.value !== null && config.points[key.name] !== key.value) {
                 config.points[key.name] = key.value;
@@ -55,12 +53,16 @@ module.exports = {
                 pointsUpdated = true;
             }
         }
-
         if (!pointsUpdated) {
-            return interaction.reply({ content: "Nenhuma alteração foi feita nos pontos.", ephemeral: true });
+            embed.setTitle("Pontos utiliazados:");
+            for (let key in config.points) {
+                embed.addFields({
+                    name: key,
+                    value: `**${config.points[key]}** pontos`
+                });
+            }
         }
-
-        await config.save();
         await interaction.reply({ embeds: [embed] });
+        await config.save();
     }
 };
