@@ -10,7 +10,7 @@ module.exports = {
             const hasRole = message.member.roles.cache.has("1350144276834680912");
             const isAdmin = message.member.permissions.has(PermissionFlagsBits.Administrator);
 
-            if (!isAdmin) return await message.reply("Não tenho permissões para alterar o seu nome.");
+            if (isAdmin) return await message.reply("Não tenho permissões para alterar o seu nome.");
 
             if (!hasRole && !isAdmin) {
                 return message.reply({ content: "Você precisa **adquirir** o cargo da season!" });
@@ -19,8 +19,7 @@ module.exports = {
                 return message.reply({ content: "Use o comando da seguinte forma: **!nick seu_novo_nick_aqui**" });
             }
             const _nN = args[0];
-            const _nameBefore = message.member.displayName.split("|")[1];
-            const _rank = message.member.displayName.split("|")[0];
+            const _rank = nN.includes("|") ? message.member.displayName.split("|")[0].trim() : "";
             const _newName = _nN.includes("|") ? _nN.split("|")[1].trim() : _nN;
             const newName = _nN.includes("|") ? _rank + " | " + _nN.split("|")[1].trim() : _rank + " | " + _nN;
 
@@ -28,8 +27,8 @@ module.exports = {
             await message.reply({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle(`Mudança de nick feita`)
-                        .setDescription(`Mude seu nick para **${_newName}**`)
+                        .setTitle(`Mudança de nick`)
+                        .setDescription(`Mudei seu nick para **${_newName}**`)
                         .setTimestamp()
                         .setFooter({ text: `Por: ${message.client.user.username}` })
                         .setColor(0xFF0000)
@@ -37,6 +36,7 @@ module.exports = {
             });
         } catch (error) {
             await message.reply("Não tenho permissões para alterar o seu nome.");
+            console.error(error);
         }
     }
 };

@@ -4,8 +4,7 @@ const myColours = require("../structures/colours");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("ping")
-        .setDescription("Manda o ping do bot")
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+        .setDescription("Manda o ping do bot"),
 
     /**
      * @param {import("discord.js").ChatInputCommandInteraction} interaction

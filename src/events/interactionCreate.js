@@ -114,7 +114,7 @@ module.exports = class InteractionEvent {
                   .addOptions(
                     ...protections.map(p => new StringSelectMenuOptionBuilder()
                       .setLabel(`Proteção: ${resolveProtectionType(p.type)}`)
-                      .setDescription(`Ativar ${resolveProtectionType(p.type)} por 30 minutos.`)
+                      .setDescription(`Ativar ${resolveProtectionType(p.type)} por 30 minutos. (Você tem ${p.longevity}h)`)
                       .setValue(`${p.type}`)
                     )))] : [];
 
@@ -124,7 +124,18 @@ module.exports = class InteractionEvent {
           const option = interaction.values[0];
           const userProfile = await User.findOrCreate(matchType);
           const protection = userProfile.protections.find(p => p.type == option);
+          
+          if (protection.activatedWhen !== undefined) {
+            const [hours, minutes] = protection.longevity.split(":").map(Number);
 
+            const expiration = new Date();
+            expiration.setHours(expiration.getHours());
+            expiration.setMinutes(expiration.getMinutes() + 30);
+
+            const now = new Date();
+            const diffMs = expiration - now;
+            return `Esta proteção já esta ativada! Resta: `
+          }
           protection.activatedWhen = new Date();
           const time = this.getRemainingTime(protection);
 
@@ -308,14 +319,12 @@ module.exports = class InteractionEvent {
     });
   }
   getRemainingTime(protection) {
-    if (protection.activatedWhen) {
 
-    }
     const [hours, minutes] = protection.longevity.split(":").map(Number);
 
     const expiration = new Date();
-    expiration.setHours(expiration.getHours() + hours);
-    expiration.setMinutes(expiration.getMinutes() + minutes);
+    expiration.setHours(expiration.getHours());
+    expiration.setMinutes(expiration.getMinutes() + 30);
 
     const now = new Date();
     const diffMs = expiration - now;

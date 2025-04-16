@@ -51,7 +51,7 @@ module.exports = class MessageEvent {
         message.reply({ embeds: [embed] })
       } else {
         const embed = new EmbedBuilder()
-          .setDescription(`O id **${message.content}** não está blacklist.`)
+          .setDescription(`O id **${message.content}** não está na blacklist.`)
           .setTimestamp()
           .setColor(Colors.Red)
 

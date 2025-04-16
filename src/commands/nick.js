@@ -20,8 +20,7 @@ module.exports = {
             return interaction.reply({ content: "Você precisa **adquirir** o cargo da season!", flags: 64 });
         }
         const _nN = interaction.options.getString("nome");
-        const _nameBefore = interaction.member.displayName.split("|")[1];
-        const _rank = interaction.member.displayName.split("|")[0];
+        const _rank = interaction.member.displayName.split("|")[0].trim();
         const _newName = _nN.includes("|") ? _nN.split("|")[1].trim() : _nN;
         const newName = _nN.includes("|") ? _rank + " | " + _nN.split("|")[1].trim() : _rank + " | " + _nN;
 
@@ -30,7 +29,7 @@ module.exports = {
             embeds: [
                 new EmbedBuilder()
                     .setTitle(`Mudança de nick`)
-                    .setDescription(`Mude seu nick para **${_newName}**`)
+                    .setDescription(`Mudei seu nick para **${_newName}**`)
                     .setTimestamp()
                     .setFooter({ text: `Por: ${interaction.client.user.username}` })
                     .setColor(0xFF0000)
