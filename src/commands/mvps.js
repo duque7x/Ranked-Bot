@@ -111,7 +111,7 @@ module.exports = {
       )
       .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
       .setTimestamp();
-
+      
     await interaction.reply({ embeds: [embed] });
     return await updateRankUsersRank(await interaction.guild.members.fetch());
   },
