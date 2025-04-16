@@ -22,7 +22,7 @@ module.exports = async (members) => {
                 if (isBlacklisted) continue;
 
                 const userRankPosition = users.findIndex(u => u.player.id === member.id) + 1;
-                
+
                 let finalName = `RANK ${userRankPosition} | ${nameBefore}`;
 
                 if (finalName.length > 32) {
@@ -31,14 +31,7 @@ module.exports = async (members) => {
                 }
                 await member.setNickname(finalName);
             }
-            if (!hasRole && !isAdmin) {
-                const name = member.displayName.includes("|")
-                    ? member.displayName.split("|")[1].trim()
-                    : member.displayName;
-
-                if (member.displayName !== nameBefore) await member.setNickname(name);
-                await User.deleteOne({ "player.id": member.id });
-            }
+            if (!hasRole && !isAdmin) User.deleteOne({ "player.id": member.id });
         }
     } catch (err) {
         console.error(`❌ Failed to set nickname.`, err.message);
