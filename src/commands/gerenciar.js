@@ -45,7 +45,7 @@ module.exports = {
                         .setDescription("Opção a ser alterada")
                         .setRequired(true)
                         .addChoices(
-                            { name: "Apostas", value: "matches" }
+                            { name: "Filas", value: "matches" }
                         )
                 )
         ),
