@@ -18,7 +18,7 @@ module.exports = {
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: "# Você não tem permissões.", flags: 64 });
 
 
-        const link = "https://discord.gg/swagranked";
+        const link = "https://discord.gg/rankedzone";
         const channel = interaction.options.getChannel("aonde") ?? interaction.channel;
 
         const embed = new EmbedBuilder()
