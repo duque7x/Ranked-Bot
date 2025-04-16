@@ -50,7 +50,7 @@ const configSchema = new mongoose.Schema({
 configSchema.statics.findOrCreate = async function (guildId) {
     let guild = await this.findOne({ "guild.id": guildId });
     if (!guild) {
-        guild = await this.create({ guild: { id: guildId } });
+        guild = await new Config({ guild: { id: guildId } });
     }
     return guild;
 };
