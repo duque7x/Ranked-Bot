@@ -12,7 +12,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@duque.edits/rest": "^1.0.0",
     "chalk": "^4.1.2",
     "colorthief": "^2.6.0",
     "discord.js": "^14.17.2",
