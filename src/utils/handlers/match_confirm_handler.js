@@ -69,15 +69,14 @@ module.exports = async function match_confirm_handler(interaction) {
         countLimit;
 
       if (isAdmin) {
-        msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
-        await interaction.update({
+        interaction.update({
           components: [row],
           embeds: [
             new EmbedBuilder()
               .setTitle("Criador definido")
-              .setDescription(`${supposedUser.displayName} foi definido como criador da sala!`)
+              .setDescription(`<@${supposedUser.id}> foi definido como criador da sala!`)
               .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
               .setTimestamp()
               .setColor(0x0097AE),
@@ -85,7 +84,6 @@ module.exports = async function match_confirm_handler(interaction) {
         });
 
         return setMatchCreator(match, interaction.guildId, supposedUserId);
-        return;
       }
 
       if (matchAlreadyConfirmed) {
@@ -127,23 +125,21 @@ module.exports = async function match_confirm_handler(interaction) {
         await updateMessage(interaction, msg_btn, "", "", false);
       }
       if (confirmedCount >= countLimit) {
-        msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
-        await interaction.update({
+        interaction.update({
           components: [row],
           embeds: [
             new EmbedBuilder()
               .setTitle("Criador definido")
-              .setDescription(`${supposedUser.displayName} foi definido como criador da sala!`)
+              .setDescription(`<@${supposedUser.id}> foi definido como criador da sala!`)
               .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
               .setTimestamp()
               .setColor(0x0097AE),
           ],
         });
 
-        setMatchCreator(match, interaction.guildId, supposedUserId);
-        return;
+        return setMatchCreator(match, interaction.guildId, supposedUserId);
       }
     },
     mvp: async (int) => {
@@ -163,22 +159,20 @@ module.exports = async function match_confirm_handler(interaction) {
         countLimit;
 
       if (isAdmin) {
-        msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
-
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
+
         await interaction.update({
           components: [row],
           embeds: [
             new EmbedBuilder()
               .setTitle("MVP definido")
-              .setDescription(`${supposedUser.displayName} foi definido como MVP da partida!`)
+              .setDescription(`<@${supposedUser.id}> foi definido como MVP da partida!`)
               .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
               .setTimestamp()
               .setColor(0x0097AE),
           ],
         });
-        setMatchMvp(match, interaction.guildId, supposedUserId);
-        return;
+        return setMatchMvp(match, interaction.guildId, supposedUserId);
       }
       if (matchAlreadyConfirmed) {
         interaction.reply({
@@ -219,7 +213,6 @@ module.exports = async function match_confirm_handler(interaction) {
         return await updateMessage(interaction, msg_btn, "", "", false);
       }
       if (confirmedCount >= countLimit) {
-        msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
         await interaction.update({
@@ -227,7 +220,7 @@ module.exports = async function match_confirm_handler(interaction) {
           embeds: [
             new EmbedBuilder()
               .setTitle("MVP definido")
-              .setDescription(`${supposedUser.displayName} foi definido como MVP da partida!`)
+              .setDescription(`<@${supposedUser.id}> foi definido como MVP da partida!`)
               .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
               .setTimestamp()
               .setColor(0x0097AE),
@@ -246,13 +239,8 @@ module.exports = async function match_confirm_handler(interaction) {
         .split("")
         .map((p) => parseInt(p));
       if (isAdmin) {
-        msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
-
         const winningTeam = supposedUserId;
         const losingTeam = winningTeam === "teamA" ? "teamB" : "teamA";
-
-        await setMatchWinner(match, match[winningTeam], interaction.guildId);
-        await setMatchLosers(match, match[losingTeam], interaction.guildId);
 
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
         const winningTeamTag = `equipa ${winningTeam.split("team")[1] == "A" ? 1 : 2}`;
@@ -263,8 +251,13 @@ module.exports = async function match_confirm_handler(interaction) {
           .setColor(0xF5FF5A)
           .setTimestamp();
 
-        return await interaction.update({ components: [row], embeds: [embed] });
+        interaction.update({ components: [row], embeds: [embed] });
+
+        setMatchWinner(match, match[winningTeam], interaction.guildId);
+        setMatchLosers(match, match[losingTeam], interaction.guildId);
+        return;
       }
+      
       if (match.winnerTeam.length !== 0) {
         return interaction.reply({
           embeds: [
@@ -325,29 +318,22 @@ module.exports = async function match_confirm_handler(interaction) {
         return await updateMessage(interaction, msg_btn, "Vencedor da fila");
       }
       if (confirmedCount >= countLimit) {
-        msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
-
         const winningTeam = supposedUserId;
         const losingTeam = winningTeam === "teamA" ? "teamB" : "teamA";
-        const msg = interaction.message;
+
         const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
+        const winningTeamTag = `equipa ${winningTeam.split("team")[1] == "A" ? 1 : 2}`;
 
-        await interaction.update({
-          components: [row],
-          embeds: [
-            new EmbedBuilder()
-              .setTitle("Vencedores definidos!")
-              .setDescription(
-                `Vitória adicionada ao **time ${winningTeam.split("team")[1] == "A" ? 1 : 2
-                }**!`
-              )
-              .setColor(0xF5FF5A)
-              .setTimestamp()
-          ]
-        });
-        await setMatchWinner(match, match[winningTeam], interaction.guildId);
-        await setMatchLosers(match, match[losingTeam], interaction.guildId);
+        const embed = new EmbedBuilder()
+          .setTitle("Vencedores definidos!")
+          .setDescription(`Vitória adicionada a **${winningTeamTag}**!`)
+          .setColor(0xF5FF5A)
+          .setTimestamp();
 
+        interaction.update({ components: [row], embeds: [embed] });
+
+        setMatchWinner(match, match[winningTeam], interaction.guildId);
+        setMatchLosers(match, match[losingTeam], interaction.guildId);
         return;
       }
     },

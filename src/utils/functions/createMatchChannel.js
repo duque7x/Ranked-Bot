@@ -40,31 +40,6 @@ module.exports = async (interaction, match) => {
           })),
         ],
       });
-    const [globalVoiceChannel, teamAVoiceChannel, teamBVoiceChannel] = await Promise.all([
-      createVoiceChannel("Global", match.players),
-      createVoiceChannel("Equipa 1", teamA, teamB),
-      createVoiceChannel("Equipa 2", teamB, teamA),
-    ]);
-
-    for (let player of match.players) {
-      const member = guild.members.cache.get(player.id);
-      const userProfile = await User.findOrCreate(member.id);
-      if (!member || !member.voice.channel) continue;
-
-      userProfile.originalChannels.push({
-        channelId: member.voice.channelId,
-        matchId: match._id,
-      });
-      await userProfile.save();
-    }
-    for (let playerMatch of teamA) {
-      const member = guild.members.cache.get(playerMatch.id);
-      if (member.voice.channel) await moveToChannel(member, teamAVoiceChannel);
-    }
-    for (let playerMatch of teamB) {
-      const member = guild.members.cache.get(playerMatch.id);
-      if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
-    }
     const matchChannel = await guild.channels.create({
       name: `partida・${formattedTotalMatches}`,
       type: ChannelType.GuildText,
@@ -87,9 +62,6 @@ module.exports = async (interaction, match) => {
         })),
       ],
     });
-    const embedTeamA = formatTeam(teamA, teamA.length);
-    const embedTeamB = formatTeam(teamB, teamB.length);
-
     const embedForChannel = new EmbedBuilder()
       .setColor(Colors.Grey)
       .setDescription(
@@ -100,16 +72,47 @@ module.exports = async (interaction, match) => {
         { name: "Time 2", value: embedTeamB, inline: true },
       ])
       .setTimestamp();
+    matchChannel.send({
+      embeds: [embedForChannel],
+      components: [row],
+    });
+    const [globalVoiceChannel, teamAVoiceChannel, teamBVoiceChannel] = await Promise.all([
+      createVoiceChannel("Global", match.players),
+      createVoiceChannel("Equipa 1", teamA, teamB),
+      createVoiceChannel("Equipa 2", teamB, teamA),
+    ]);
+
+    for (let player of match.players) {
+      const member = guild.members.cache.get(player.id);
+      const userProfile = await User.findOrCreate(member.id);
+      if (!member || !member.voice.channel) continue;
+
+      userProfile.originalChannels.push({
+        channelId: member.voice.channelId,
+        matchId: match._id,
+      });
+      userProfile.save();
+    }
+    for (let playerMatch of teamA) {
+      const member = guild.members.cache.get(playerMatch.id);
+      if (member.voice.channel) await moveToChannel(member, teamAVoiceChannel);
+    }
+    for (let playerMatch of teamB) {
+      const member = guild.members.cache.get(playerMatch.id);
+      if (member.voice.channel) await moveToChannel(member, teamBVoiceChannel);
+    }
+
+    const embedTeamA = formatTeam(teamA, teamA.length);
+    const embedTeamB = formatTeam(teamB, teamB.length);
+
+
 
     // Buttons
     const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
-    await matchChannel.send({
-      embeds: [embedForChannel],
-      components: [row],
-    });
 
-    await interaction.message.edit({
+
+    interaction.message.edit({
       embeds: [
         new EmbedBuilder()
           .setTitle(`Partida ${matchType} criada com sucesso!`)
@@ -133,12 +136,12 @@ module.exports = async (interaction, match) => {
     ];
     match.status = "on";
 
-    await match.save();
+    match.save();
     return matchChannel;
   } catch (error) {
     console.error(error);
 
-    await interaction.message.edit({
+    interaction.message.edit({
       embeds: [
         new EmbedBuilder()
           .setTitle("Occourreu um erro")

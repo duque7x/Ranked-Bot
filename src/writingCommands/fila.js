@@ -44,17 +44,17 @@ module.exports = {
           ],
         });
       }
-      if (channelId !== "1353098806123827211" && !isAdmin) {
+      /* if (channelId !== "1362107031242146113" && !isAdmin) {
         return message.reply({
           embeds: [
             new EmbedBuilder()
               .setTitle("Você não pode criar filas aqui!")
-              .setDescription(`Vá pro canal <#1353098806123827211> e crie uma fila!`)
+              .setDescription(`Vá pro canal <#1362107031242146113> e crie uma fila!`)
               .setTimestamp()
               .setColor(0xff0000)
           ]
         });
-      }
+      } */
       if (!isInVoice && !isAdmin) {
         return await message.reply({
           embeds: [

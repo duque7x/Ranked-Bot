@@ -11,7 +11,7 @@ const updateRankUsersRank = require("./updateRankUsersRank");
  */
 module.exports = async (match, interaction) => {
   const channel = interaction.guild.channels.cache.get(match.matchChannel.id);
-  if (!channel) {
+  /* if (!channel) {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
@@ -21,8 +21,8 @@ module.exports = async (match, interaction) => {
           .setTimestamp(),
       ],
     });
-  }
-  if (!match || match.status == "off") {
+  } */
+  /* if (!match || match.status == "off") {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
@@ -33,7 +33,7 @@ module.exports = async (match, interaction) => {
       ],
       flags: 64,
     });
-  }
+  } */
   const embed = new EmbedBuilder()
     .setTitle("Finalizando fila...")
     .setDescription(`Parabéns a todos os jogadores, joguem sempre!`)
@@ -41,36 +41,38 @@ module.exports = async (match, interaction) => {
     .setFooter({ text: "Bom jogo!" })
     .setColor(0xff0000);
 
-  if (interaction.isChatInputCommand()) await interaction.reply({ embeds: [embed], components: [] });
-  if (interaction.isButton()) await interaction.update({ embeds: [embed], components: [], content: "" });
+  if (interaction.isChatInputCommand()) interaction.reply({ embeds: [embed], components: [] });
+  if (interaction.isButton()) interaction.update({ embeds: [embed], components: [], content: "" });
 
   for (const c of match.voiceChannels) {
     const vcChannel = interaction.guild.channels.cache.get(c.id);
 
     // Use Promise.all to wait for all async operations inside the loop
-    await Promise.all(
-      vcChannel.members.map(async (member) => {
-        const userProfile = await User.findOrCreate(member.id);
 
-        // Use find instead of map to find the correct userOriginalChannelId
-        const userOriginalChannelId = userProfile.originalChannels.find(
-          (c) => c.matchId == match._id
-        )?.channelId;
-        const channelToReturn =
-          interaction.guild.channels.cache.get(userOriginalChannelId) ??
-          interaction.guild.channels.cache.get("1360296464445866056");
+    vcChannel ? vcChannel.members.map(async (member) => {
+      const userProfile = await User.findOrCreate(member.id);
 
-        if (member.voice.channel) await moveToChannel(member, channelToReturn);
-      })
-    );
+      // Use find instead of map to find the correct userOriginalChannelId
+      const userOriginalChannelId = userProfile.originalChannels.find(
+        (c) => c.matchId == match._id
+      )?.channelId;
+      const channelToReturn =
+        interaction.guild.channels.cache.get(userOriginalChannelId) ??
+        interaction.guild.channels.cache.get("1360296464445866056");
 
-    await vcChannel.delete();
+      if (member.voice.channel) moveToChannel(member, channelToReturn);
+    }) : ""
+
+    if (vcChannel)
+      vcChannel.delete();
   }
 
   match.status = "off";
-  await match.save();
+  match.save();
 
-  setTimeout(() => channel ? channel.delete() : "Sem canal", 4000);
-  await updateRankUsersRank(await interaction.guild.members.fetch());
+  setTimeout(() => {
+    if (channel) channel.delete();
+  }, 4000);
+  updateRankUsersRank(await interaction.guild.members.fetch());
   return match;
 };

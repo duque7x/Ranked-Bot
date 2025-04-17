@@ -23,7 +23,11 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
       players: { $elemMatch: { id: userId } },
     });
     let ongoingMatchs = activeMatchs.filter((b) => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
-
+    (async() => {
+      (await Match.find({
+        players: { $elemMatch: { id: userId } },
+      })).filter((b) => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt)
+    })()
     if (ongoingMatchs.length > 0) {
       return interaction.reply({
         embeds: [

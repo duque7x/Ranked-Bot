@@ -60,12 +60,12 @@ class BotClient extends Client {
           `Command ${file} is missing "data" or "execute" property.`
         );
       }
-      for (const file of writingCommandFiles) {
-        const command = require(path.join(__dirname, "writingCommands", file));
+    }
+    for (const file of writingCommandFiles) {
+      const command = require(path.join(__dirname, "writingCommands", file));
 
-        if (command.name && command.execute) {
-          this.prefixCommands.set(command.name, command);
-        }
+      if (command.name && command.execute) {
+        this.prefixCommands.set(command.name, command);
       }
     }
   }

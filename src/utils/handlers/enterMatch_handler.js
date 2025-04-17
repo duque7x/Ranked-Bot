@@ -3,14 +3,13 @@ const Config = require('../../structures/database/configs');
 const { EmbedBuilder, PermissionFlagsBits, Colors, ButtonInteraction } = require("discord.js");
 const formatTeam = require("../functions/formatTeam");
 const User = require("../../structures/database/User");
+
 /**
- * 
  * @param {ButtonInteraction} interaction 
- * @returns 
  */
 module.exports = async function enterBet_handler(interaction) {
     if (!interaction.member.voice.channel && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
-        return await interaction.reply({
+        return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Canal de voz")
@@ -21,20 +20,16 @@ module.exports = async function enterBet_handler(interaction) {
             flags: 64
         });
     }
+
     const userId = interaction.user.id;
     const [_, matchType, matchId] = interaction.customId.split("-");
+
     const [serverConfig, userProfile, activeMatches, match] = await Promise.all([
         Config.findOrCreate(interaction.guildId),
         User.findOrCreate(userId),
-        Match.find({
-            "players": { $elemMatch: { id: userId } },
-            status: { $nin: ["off", "shutted"] }
-        }).sort({ createdAt: -1 }),
-        Match.findOne({ _id: matchId })
+        Match.find({ "players.id": userId, status: { $nin: ["off", "shutted"] } }).sort({ createdAt: -1 }),
+        Match.findById(matchId)
     ]);
-    const teamSize = Number(matchType.replace(/[a-zA-Z]/g, "").at(0));
-    const maximumSize = teamSize * 2;
-    const [teamA, teamB] = [match.players.slice(0, teamSize), match.players.slice(teamSize, maximumSize)];
 
     if (!match) {
         return interaction.reply({
@@ -48,6 +43,7 @@ module.exports = async function enterBet_handler(interaction) {
             flags: 64,
         });
     }
+
     if (serverConfig.state.matches.status === "off") {
         return interaction.reply({
             embeds: [
@@ -60,7 +56,8 @@ module.exports = async function enterBet_handler(interaction) {
             flags: 64,
         });
     }
-    if (userProfile.blacklisted === true) {
+
+    if (userProfile.blacklisted) {
         return interaction.reply({
             embeds: [
                 new EmbedBuilder()
@@ -72,69 +69,74 @@ module.exports = async function enterBet_handler(interaction) {
             flags: 64,
         });
     }
-    if (match.players.some(i => i.id === userId)) {
+
+    if (match.players.some(p => p.id === userId)) {
         return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está nessa partida")
                     .setDescription("-# Se não aparece que você esta na partida, não se preocupe!")
-                    .setTimestamp()
                     .setColor(0xff0000)
+                    .setTimestamp()
             ],
             flags: 64
         });
     }
-    let ongoingMatches = activeMatches.filter(b => (b.status !== "off" && b.status !== "shutted") && b._id !== match._id).sort((a, b) => b.createdAt - a.createdAt);
-    if (ongoingMatches.length > 0) {
+
+    const ongoing = activeMatches.find(m => m._id.toString() !== match._id.toString());
+    if (ongoing) {
         return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está em outra partida")
-                    .setDescription(`Canal: <#${ongoingMatches[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
-                    .setTimestamp()
+                    .setDescription(`Canal: <#${ongoing.matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
                     .setColor(0xff0000)
+                    .setTimestamp()
             ],
             flags: 64
         });
     }
 
-    match.players.push({ id: userId, joinedAt: Date.now(), name: interaction.user.username });
-    userProfile.originalChannels.push({ channelId: interaction.member.voice.channelId, matchId: match._id });
+    match.players.push({
+        id: userId,
+        joinedAt: Date.now(),
+        name: interaction.user.username
+    });
 
-    const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-        .setFields([
-            { name: "Time 1", value: formatTeam(teamA, teamSize), inline: true },
-            { name: "Time 2", value: formatTeam(teamB, teamSize), inline: true }
-        ]);
+    userProfile.originalChannels.push({
+        channelId: interaction.member.voice.channelId,
+        matchId: match._id
+    });
+
+    const teamSize = Number(matchType.replace(/[a-zA-Z]/g, "").at(0));
+    const maxSize = teamSize * 2;
+
+    const teamA = match.players.slice(0, teamSize);
+    const teamB = match.players.slice(teamSize, maxSize);
+
+    const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0]).setFields([
+        { name: "Time 1", value: formatTeam(teamA, teamSize), inline: true },
+        { name: "Time 2", value: formatTeam(teamB, teamSize), inline: true }
+    ]);
 
     await interaction.update({ embeds: [updatedEmbed] });
 
-    if (match.players.length === maximumSize) {
+    if (match.players.length === maxSize) {
+        const startEmbed = new EmbedBuilder()
+            .setTitle(`Fila ${matchType} | Normal`)
+            .setDescription("Fila **iniciada**, aguarde a criação dos canais da fila.")
+            .setColor(Colors.DarkerGrey)
+            .setTimestamp();
+
         if (interaction.replied || interaction.deferred) {
-            await interaction.message.edit({
-                embeds: [
-                    new EmbedBuilder()
-                        .setTitle(`Fila ${matchType} | Normal`)
-                        .setDescription(`Fila **iniciada**, aguarde a criação dos canais da fila.`)
-                        .setTimestamp()
-                        .setColor(Colors.DarkerGrey)
-                ],
-                components: []
-            });
+            interaction.message.edit({ embeds: [startEmbed], components: [] }).catch(() => {});
         } else {
-            await interaction.update({
-                embeds: [
-                    new EmbedBuilder()
-                        .setTitle(`Fila ${matchType} | Normal`)
-                        .setDescription(`Fila **iniciada**, aguarde a criação dos canais da fila.`)
-                        .setTimestamp()
-                        .setColor(Colors.DarkerGrey)
-                ],
-                components: []
-            });
+            await interaction.update({ embeds: [startEmbed], components: [] });
         }
+
         return require("../functions/createMatchChannel")(interaction, match);
     }
-    await Promise.all([match.save(), userProfile.save()]);
-    return;
-}
+
+    await match.save();
+    await userProfile.save();
+};
