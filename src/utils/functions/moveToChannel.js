@@ -7,9 +7,8 @@ const { PermissionFlagsBits } = require("discord.js");
  * @param {VoiceChannel} channel - The voice channel to move the member to.
  */
 module.exports = async function moveToChannel(member, channel) {
-    if (!member || !channel) {
-        throw new Error("Both member and channel are required to move the user.");
-    }
+    if (!member || !channel) return;
+    
     try {
         await member.voice.setChannel(channel);
         console.log(`Moved ${member.user.tag} to ${channel.name}`);

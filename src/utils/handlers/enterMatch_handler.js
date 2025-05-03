@@ -1,6 +1,6 @@
 const Match = require("../../structures/database/match");
 const Config = require('../../structures/database/configs');
-const { EmbedBuilder, PermissionFlagsBits, Colors, ButtonInteraction } = require("discord.js");
+const { EmbedBuilder, PermissionFlagsBits, Colors, ButtonInteraction, ActionRowBuilder, ButtonBuilder } = require("discord.js");
 const formatTeam = require("../functions/formatTeam");
 const User = require("../../structures/database/User");
 
@@ -83,30 +83,26 @@ module.exports = async function enterBet_handler(interaction) {
         });
     }
 
-    const ongoing = activeMatches.find(m => m._id.toString() !== match._id.toString());
+    /* const ongoing = activeMatches.find(m => m._id.toString() !== match._id.toString());
     if (ongoing) {
         return interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Você já está em outra partida")
-                    .setDescription(`Canal: <#${ongoing.matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
+                    .setDescription(`Canal: <#${ongoing.matchChannel.id}>\n-# Id: ${ongoing._id}`)
                     .setColor(0xff0000)
                     .setTimestamp()
             ],
             flags: 64
         });
-    }
+    } */
 
     match.players.push({
         id: userId,
-        joinedAt: Date.now(),
-        name: interaction.user.username
+        name: interaction.user.username,
+        joinedAt: Date.now()
     });
 
-    userProfile.originalChannels.push({
-        channelId: interaction.member.voice.channelId,
-        matchId: match._id
-    });
 
     const teamSize = Number(matchType.replace(/[a-zA-Z]/g, "").at(0));
     const maxSize = teamSize * 2;
@@ -119,24 +115,37 @@ module.exports = async function enterBet_handler(interaction) {
         { name: "Time 2", value: formatTeam(teamB, teamSize), inline: true }
     ]);
 
-    await interaction.update({ embeds: [updatedEmbed] });
 
     if (match.players.length === maxSize) {
+        await interaction.message.edit({ embeds: [updatedEmbed] });
+        const disabledComponents = interaction.message.components.map(row => {
+            return new ActionRowBuilder().addComponents(
+                row.components.map(component =>
+                    ButtonBuilder.from(component).setDisabled(true)
+                )
+            );
+        });
+        const newEmbed = EmbedBuilder.from(interaction.message.embeds[0]).setTitle(`Fila ${matchType} | Normal iniciada`);
+
+        interaction.message.edit({ embeds: [newEmbed], components: disabledComponents });
+
         const startEmbed = new EmbedBuilder()
-            .setTitle(`Fila ${matchType} | Normal`)
+            .setTitle(`Fila ${matchType} | Normal iniciada`)
             .setDescription("Fila **iniciada**, aguarde a criação dos canais da fila.")
             .setColor(Colors.DarkerGrey)
             .setTimestamp();
 
-        if (interaction.replied || interaction.deferred) {
-            interaction.message.edit({ embeds: [startEmbed], components: [] }).catch(() => {});
-        } else {
-            await interaction.update({ embeds: [startEmbed], components: [] });
-        }
+        interaction.reply({ embeds: [startEmbed], components: [] }).catch(console.error);
+        await require("../functions/createMatchChannel")(interaction, match);
 
-        return require("../functions/createMatchChannel")(interaction, match);
+        await save([match]);
+        return;
     }
-
-    await match.save();
-    await userProfile.save();
+    await interaction.update({ embeds: [updatedEmbed] });
+    await save([match]);
+    return;
 };
+
+async function save(op) {
+    return await Promise.all(op.map(async o => await o.save()));
+}

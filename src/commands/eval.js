@@ -36,12 +36,7 @@ module.exports = {
       const output = `\`\`\`js\n${evaled}\n\`\`\``;
       await interaction.reply(output);
 
-      /* (async _ => {
-
-        interaction.reply({ content: interaction.guild.roles.cache.get("1350144276834680912").members.map(m => `<@${m.user.id}>`).join(", ") });
-
-
-      })(); */
+      
     } catch (error) {
       // Send any errors back (only once)
       await interaction.reply(`Error: ${error}`);

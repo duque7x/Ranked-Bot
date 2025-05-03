@@ -10,7 +10,6 @@ const User = require("../structures/database/User");
 const { returnUserRank } = require("../utils/utils");
 const mongoose = require('mongoose');
 const returnMatchStats = require("../utils/functions/returnMatchStats");
-const updateRankUsersRank = require("../utils/functions/updateRankUsersRank");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -44,7 +43,7 @@ module.exports = {
                 .addStringOption(option =>
                     option.setName("escolha")
                         .setDescription("Qual você ira apagar?")
-                        .addChoices({ name: "partidas", value: "match" }, { name: "ranking", value: "users" },)
+                        .addChoices({ name: "partidas", value: "match" }, { name: "usuários", value: "users" },)
                         .setRequired(true)
                 )
         ).addSubcommand(subcommand =>
@@ -53,7 +52,7 @@ module.exports = {
                 .addStringOption(option =>
                     option.setName("escolha")
                         .setDescription("Qual você ira apagar?")
-                        .addChoices({ name: "partidas", value: "match" }, { name: "ranking", value: "users" },)
+                        .addChoices({ name: "partidas", value: "match" }, { name: "usuários", value: "users" },)
                         .setRequired(true)
                 )
         )
@@ -121,8 +120,6 @@ module.exports = {
                         .setFooter({ text: "Por: " + interaction.user.username })
                 ]
             });
-
-            await updateRankUsersRank(await interaction.guild.members.fetch());
         } else if (choice == "users") {
             await interaction.reply({
                 embeds: [
@@ -165,7 +162,6 @@ module.exports = {
                 if (!player.player || !player.player.id || player.player.name == "undefined" || player.player.name == "null")
                     await player.deleteOne();
             });
-            await updateRankUsersRank(await interaction.guild.members.fetch());
         }
     },
     async matchHandler(interaction) {
@@ -229,7 +225,6 @@ module.exports = {
                         .setTimestamp()
                 ]
             });
-            await updateRankUsersRank(await interaction.guild.members.fetch());
         } else if (choice == "users") {
             await interaction.reply({
                 embeds: [
@@ -253,7 +248,6 @@ module.exports = {
                         .setTimestamp()
                 ]
             });
-            await updateRankUsersRank(await interaction.guild.members.fetch());
         }
     },
     /**

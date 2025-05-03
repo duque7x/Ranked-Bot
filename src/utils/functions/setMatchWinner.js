@@ -1,31 +1,34 @@
 const User = require("../../structures/database/User");
 const Config = require("../../structures/database/configs");
+const addPoints = require("./addPoints");
+const addWin = require("./addWin");
+const addGamePlayed = require("./addGamePlayed");
+const BotClient = require("../..");
 
+/**
+ * 
+ * @param {Match} match 
+ * @param {*} winners 
+ * @param {string} guildId 
+ * @param {BotClient} client 
+ * @returns 
+ */
+module.exports = async (match, winners, guildId, client) => {
+  const config = await Config.findOne({ "guild.id": guildId });
 
-module.exports = async (match, winners, guildId) => {
-    const config = await Config.findOne({ "guild.id": guildId });
-    match.winnerTeam = winners;
-    await match.save();
-    
-    const promises = winners.map(async (user) => {
-        const userProfile = await User.findOrCreate(user.id);
+  const userSavePromises = winners.map(async (user) => {
+    const userProfile = client.api.users.cache.get(user.id);
 
-        const hasValidProtection = userProfile.protections.some(p =>
-            (p.type === "double_points") && p.longevity !== 0
-        );
+    const hasValidProtection = userProfile.protections?.some(
+      (p) => p.type === "double_points" && p.longevity !== 0
+    );
 
-        if (hasValidProtection) {
-            await require("./addPoints")(user.id, config.points.win * 2);
-        } else {
-            await require("./addPoints")(user.id, config.points.win)
-        }
-        
-        await require("./addWin")(user.id);
-        await require("./addGamePlayed")(user.id, match._id);
+    await userProfile.increment("gamesPlayed", match._id);
+    await userProfile.increment("points", hasValidProtection ? config.points.win * 2 : config.points.win);
+    await userProfile.increment("wins", 1);
+  });
 
-        await userProfile.save();
-    });
-
-    await Promise.all(promises);
-    return { match, winners }
-}
+  match.winnerTeam = winners;
+  await Promise.all([...userSavePromises, match.save()]);
+  return { match, winners };
+};

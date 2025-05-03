@@ -1,7 +1,14 @@
 const User = require("../../structures/database/User");
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ChatInputCommandInteraction } = require("discord.js");
 
-module.exports = async (interaction, option) => {
+/**
+ * 
+ * @param {ChatInputCommandInteraction} interaction 
+ * @param {string} option 
+ * @param {BotClient} client 
+ * @returns 
+ */
+module.exports = async (interaction, option, client) => {
     const users = await User.find().sort({ points: -1 });
     const perPage = 10;
     //let page = 0;
@@ -21,18 +28,19 @@ module.exports = async (interaction, option) => {
     }
 
     const userRankPosition = users.findIndex(u => u.player.id === interaction.member.user.id) + 1;
-    const firstRankedId = users[0].player.id;
-    const firstRanked = interaction.guild.members.cache.has(firstRankedId) ? interaction.guild.members.cache.get(firstRankedId) : interaction.guild.members.cache.get("1355544935662883100");
 
     const generateEmbed = async (page = 0) => {
+        
         if (page <= -1) page = 0;
 
         const start = page * perPage;
         const paginatedUsers = users.slice(start, start + perPage);
-        const returnedUser = await require("./returnUserRank")(interaction.member.user, interaction);
+        const returnedUser = await User.findOrCreate(interaction.member.id);
+        const firstRankedId = paginatedUsers[0].player.id;
+        const firstRanked = interaction.guild.members.cache.has(firstRankedId) ? interaction.guild.members.cache.get(firstRankedId) : interaction.guild.members.cache.get("1355544935662883100");
 
         const userStats = {
-            "Pontos": returnedUser.foundUser.points ?? 0,
+            "Pontos": returnedUser.points ?? 0,
             "Position": userRankPosition > 0 ? `${userRankPosition}` : "Não classificado"
         };
 
@@ -40,8 +48,9 @@ module.exports = async (interaction, option) => {
             .setThumbnail(firstRanked?.user?.displayAvatarURL())
             .setTitle("Ranking de Pontos")
             .setDescription(
-                paginatedUsers.map((user, index) => `**${start + index + 1}° -** <@${user.player.id}>: ${user.points ?? 0} pontos`
-                ).join("\n") +
+                paginatedUsers
+                    .map((user, index) => `**${start + index + 1}° -** <@${user.player.id}>: ${user.points ?? 0} pontos`)
+                    .join("\n") +
                 `\n\n**Suas estatísticas:**\n**Pontos**: ${userStats.Pontos}\n**Posição**: ${userStats.Position}`
             )
             .setFooter({ text: `Página ${page + 1}` })

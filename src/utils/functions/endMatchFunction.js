@@ -1,4 +1,4 @@
-const { EmbedBuilder, ChatInputCommandInteraction } = require("discord.js");
+const { EmbedBuilder, ChatInputCommandInteraction, Collection } = require("discord.js");
 const User = require("../../structures/database/User");
 const moveToChannel = require("./moveToChannel");
 const updateRankUsersRank = require("./updateRankUsersRank");
@@ -22,7 +22,7 @@ module.exports = async (match, interaction) => {
       ],
     });
   } */
-  /* if (!match || match.status == "off") {
+  if (!match) {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
@@ -33,7 +33,7 @@ module.exports = async (match, interaction) => {
       ],
       flags: 64,
     });
-  } */
+  }
   const embed = new EmbedBuilder()
     .setTitle("Finalizando fila...")
     .setDescription(`Parabéns a todos os jogadores, joguem sempre!`)
@@ -43,28 +43,25 @@ module.exports = async (match, interaction) => {
 
   if (interaction.isChatInputCommand()) interaction.reply({ embeds: [embed], components: [] });
   if (interaction.isButton()) interaction.update({ embeds: [embed], components: [], content: "" });
+  const members = new Collection();
+  match.players.map(p => members.set(p.id, interaction.guild.members.cache.get(p.id)));
 
+  for (let [_, member] of members) {
+    const userProfile = await User.findOrCreate(member.id);
+    console.log({ originalChannels: userProfile.originalChannels });
+    const userOriginalChannelId = userProfile.originalChannels.find(
+      (c) => c.matchId == match._id
+    )?.channelId;
+
+    const channelToReturn =
+      interaction.guild.channels.cache.get(userOriginalChannelId) ??
+      interaction.guild.channels.cache.get("1360296464445866056");
+    
+    if (member.voice.channel) await moveToChannel(member, channelToReturn);
+  }
   for (const c of match.voiceChannels) {
     const vcChannel = interaction.guild.channels.cache.get(c.id);
-
-    // Use Promise.all to wait for all async operations inside the loop
-
-    vcChannel ? vcChannel.members.map(async (member) => {
-      const userProfile = await User.findOrCreate(member.id);
-
-      // Use find instead of map to find the correct userOriginalChannelId
-      const userOriginalChannelId = userProfile.originalChannels.find(
-        (c) => c.matchId == match._id
-      )?.channelId;
-      const channelToReturn =
-        interaction.guild.channels.cache.get(userOriginalChannelId) ??
-        interaction.guild.channels.cache.get("1360296464445866056");
-
-      if (member.voice.channel) moveToChannel(member, channelToReturn);
-    }) : ""
-
-    if (vcChannel)
-      vcChannel.delete();
+    if (vcChannel) await vcChannel.delete();
   }
 
   match.status = "off";
@@ -73,6 +70,7 @@ module.exports = async (match, interaction) => {
   setTimeout(() => {
     if (channel) channel.delete();
   }, 4000);
-  updateRankUsersRank(await interaction.guild.members.fetch());
+
+  await updateRankUsersRank(members);
   return match;
 };

@@ -31,7 +31,7 @@ module.exports = {
           ],
         });
       }
-      return returnServerRank(message, "send");
+      return returnServerRank(message, "send", client);
     } catch (error) {
       console.error(error);
     }

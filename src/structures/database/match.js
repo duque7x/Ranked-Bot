@@ -31,7 +31,7 @@ const matchSchema = new mongoose.Schema({
   leaders: { type: [{ id: String, name: String }], default: [] },
   roomCreator: { id: String, name: String },
   confirmed: {
-    type: [{ id: String, name: String, typeConfirm: String }],
+    type: [{ id: String, name: String, typeConfirm: String, set: Boolean }],
     default: [],
   },
   mvp: { type: [{ id: String, name: String }], default: [] },
@@ -43,10 +43,9 @@ const matchSchema = new mongoose.Schema({
 const Match = mongoose.model("Match", matchSchema);
 
 matchSchema.statics.toDefaults = async () => {
-  const matches = await Match.find(); // Get all matches
+  const matches = await Match.find();
 
   for (let match of matches) {
-    // Loop through the schema paths and set missing fields to default
     Object.keys(matchSchema.paths).forEach((path) => {
       if (match[path] === undefined || match[path] === null) {
         const defaultValue = matchSchema.paths[path].options.default;
@@ -56,8 +55,8 @@ matchSchema.statics.toDefaults = async () => {
       }
     });
 
-    // Save the document with the default values applied
     await match.save();
   }
 };
+
 module.exports = Match;

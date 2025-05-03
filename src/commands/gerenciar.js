@@ -1,12 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, Colors } = require("discord.js");
 const Config = require("../structures/database/configs");
-const Bet = require("../structures/database/match");
-const { setBetWinner, removeWin, removeWinBet, sendReply, errorMessages, setMatchWinner, removeWinMatch } = require("../utils/utils");
-const myColours = require("../structures/colours");
-const { ChatInputCommandInteraction } = require("discord.js");
-const removeItemOnce = require("../utils/functions/removeItemOnce");
+const Match = require("../structures/database/match");
+const {setMatchWinner, removeWinMatch } = require("../utils/utils");
 const setMatchLosers = require("../utils/functions/setMatchLosers");
-const updateRankUsersRank = require("../utils/functions/updateRankUsersRank");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -63,7 +59,7 @@ module.exports = {
         const action = interaction.options.getString("acão");
         const matchId = interaction.options.getString("match_id");
         const user = interaction.options.getUser("usuário") || interaction.user;
-        const match = await Bet.findOne({ "_id": matchId }); // Add 'await'
+        const match = await Match.findOne({ "_id": matchId }); // Add 'await'
         if (!match) return interaction.reply({ content: "# Aposta nao encontrada", flags: 64 });
 
         if (action.startsWith("addwin")) {
@@ -102,7 +98,7 @@ module.exports = {
 
             interaction.reply({ embeds: [embed] });
         }
-        return await updateRankUsersRank(await interaction.guild.members.fetch());
+        return;
     },
     async configHandler(interaction) {
         const option = interaction.options.getString("opção");

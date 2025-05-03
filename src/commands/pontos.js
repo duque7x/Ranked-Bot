@@ -7,7 +7,6 @@ const {
 } = require("discord.js");
 const addPoints = require("../utils/functions/addPoints");
 const removePoints = require("../utils/functions/removePoints");
-const updateRankUsersRank = require("../utils/functions/updateRankUsersRank");
 /**
  * @type {import('discord.js').SlashCommandBuilder}
  */
@@ -46,29 +45,29 @@ module.exports = {
   /**
    * @param {ChatInputCommandInteraction} interaction
    */
-  async execute(interaction) {
-    const user = interaction.options.getUser("usuario") ?? interaction.user;
+  async execute(interaction, client) {
+    const userSelected = interaction.options.getUser("usuario") ?? interaction.user;
     const quantity = interaction.options.getNumber("quantidade") ?? 1;
     const subcommand = interaction.options.getSubcommand();
 
     let points;
+    const user = client.api.users.cache.get(userSelected.id);
+    const { points: pointsBefore } = user;
 
-    if (subcommand === "adicionar") {
-      points = (await addPoints(user.id, quantity)).points;
-    } else if (subcommand === "remover") {
-      points = (await removePoints(user.id, quantity)).points;
-    }
+    if (subcommand === "adicionar") points = await user.increment("points", quantity);
+    else if (subcommand === "remover") points = await user.decrement("points", quantity);
 
     const embed = new EmbedBuilder()
       .setColor(subcommand === "adicionar" ? Colors.LightGrey : 0xff0000)
-      .setDescription(
-        `# Gerenciador de pontos\n <@${user.id}> agora tem **${points}** ${points >= 0 && points !== 1 ? `pontos` : `ponto`
-        }`
+      .setTitle(`Perfil de ${userSelected.username} atualizado`)
+      .setFields(
+        {
+          name: "Pontos",
+          value: `${pointsBefore} ▬ **${user.points}**`,
+        },
       )
-      .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
+      .setThumbnail(userSelected.displayAvatarURL({ dynamic: true, size: 256 }))
       .setTimestamp();
-
     await interaction.reply({ embeds: [embed] });
-    return await updateRankUsersRank(await interaction.guild.members.fetch());
   },
 };

@@ -9,7 +9,6 @@ const {
 const Config = require("../structures/database/configs");
 const User = require("../structures/database/User");
 const { bright_blue_ocean } = require("../structures/colours");
-const updateRankUsersRank = require("../utils/functions/updateRankUsersRank");
 
 const createSubcommand = (name, desc) =>
     new SlashCommandSubcommandBuilder()
@@ -113,6 +112,5 @@ module.exports = {
                 ]
             });
         }
-        return await updateRankUsersRank(await interaction.guild.members.fetch());
     }
 };

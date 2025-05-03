@@ -7,12 +7,14 @@ const Config = require("../../structures/database/configs");
 const returnMatchSelectMenu = require("../functions/returnMatchSelectMenu");
 const setMatchMvp = require("../functions/setMatchMvp");
 const setMatchCreator = require("../functions/setMatchCreator");
+const BotClient = require("../..");
 
 /**
  *
  * @param {ButtonInteraction} interaction
+ * @param {BotClient} client
  */
-module.exports = async function match_confirm_handler(interaction) {
+module.exports = async function match_confirm_handler(interaction, client) {
   const config = await Config.findOrCreate(interaction.guildId);
   const { user, customId } = interaction;
   const [action, option, supposedUserId, matchId] = customId.split("-");
@@ -68,24 +70,6 @@ module.exports = async function match_confirm_handler(interaction) {
         match.confirmed.filter((c) => c.typeConfirm === "creator").length ==
         countLimit;
 
-      if (isAdmin) {
-        const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
-
-        interaction.update({
-          components: [row],
-          embeds: [
-            new EmbedBuilder()
-              .setTitle("Criador definido")
-              .setDescription(`<@${supposedUser.id}> foi definido como criador da sala!`)
-              .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
-              .setTimestamp()
-              .setColor(0x0097AE),
-          ],
-        });
-
-        return setMatchCreator(match, interaction.guildId, supposedUserId);
-      }
-
       if (matchAlreadyConfirmed) {
         interaction.reply({
           embeds: [
@@ -110,7 +94,23 @@ module.exports = async function match_confirm_handler(interaction) {
         });
         return;
       }
+      if (isAdmin) {
+        const row = new ActionRowBuilder().addComponents(returnMatchSelectMenu(match));
 
+        interaction.update({
+          components: [row],
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Criador definido")
+              .setDescription(`<@${supposedUser.id}> foi definido como criador da sala!`)
+              .setFooter({ text: "Se isso foi um engano chame um dos ADMs" })
+              .setTimestamp()
+              .setColor(0x0097AE),
+          ],
+        });
+
+        return setMatchCreator(match, interaction.guildId, client.api.users.cache.get(supposedUserId));
+      }
       if (confirmedCount < countLimit) {
         ++confirmedCount;
         msg_btn.setLabel(`Confirmar [${confirmedCount}/${countLimit}]`);
@@ -139,7 +139,7 @@ module.exports = async function match_confirm_handler(interaction) {
           ],
         });
 
-        return setMatchCreator(match, interaction.guildId, supposedUserId);
+        return setMatchCreator(match, interaction.guildId, client.api.users.cache.get(supposedUserId));
       }
     },
     mvp: async (int) => {
@@ -172,7 +172,7 @@ module.exports = async function match_confirm_handler(interaction) {
               .setColor(0x0097AE),
           ],
         });
-        return setMatchMvp(match, interaction.guildId, supposedUserId);
+        return setMatchMvp(match, interaction.guildId, client.api.users.cache.get(supposedUserId));
       }
       if (matchAlreadyConfirmed) {
         interaction.reply({
@@ -226,7 +226,7 @@ module.exports = async function match_confirm_handler(interaction) {
               .setColor(0x0097AE),
           ],
         });
-        return setMatchMvp(match, interaction.guildId, supposedUserId);
+        return setMatchMvp(match, interaction.guildId, client.api.users.cache.get(supposedUserId));
       }
     },
     winner: async (int) => {
@@ -253,8 +253,8 @@ module.exports = async function match_confirm_handler(interaction) {
 
         interaction.update({ components: [row], embeds: [embed] });
 
-        setMatchWinner(match, match[winningTeam], interaction.guildId);
-        setMatchLosers(match, match[losingTeam], interaction.guildId);
+        setMatchWinner(match, match[winningTeam], interaction.guildId, client);
+        setMatchLosers(match, match[losingTeam], interaction.guildId, client);
         return;
       }
       

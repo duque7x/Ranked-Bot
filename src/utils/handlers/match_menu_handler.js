@@ -6,7 +6,7 @@ const { SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle, A
  * 
  * @param {StringSelectMenuInteraction} interaction 
  */
-module.exports = async function creator_handler(interaction) {
+module.exports = async function creator_handler(interaction, client) {
     const { user, customId } = interaction;
     const [action, option, matchId] = customId.split("-");
     const [option2, supposedCreatorId, matchId2] = interaction.values[0].split("-");

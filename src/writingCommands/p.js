@@ -29,7 +29,16 @@ module.exports = {
         });
       }
       let user = message.guild.members.cache.get(args[0])?.user ?? message.author;
-      return returnUserRank(user, message, "send");
+      const ew = await returnUserRank(user, message, "send", client);
+      
+      if (ew == "Usuario não encontrado") {
+        const embed = new EmbedBuilder()
+          .setTitle("Usuario não registrado")
+          .setDescription(`Tente entrar em uma fila ou criar uma`)
+          .setColor(0xff0000)
+          .setTimestamp();
+        return message.reply({ embeds: [embed] });
+      }
     } catch (error) {
       console.error(error);
     }

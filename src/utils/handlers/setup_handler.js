@@ -43,6 +43,8 @@ module.exports = async function setup_handler(interaction) {
                 content: `Criando canais...`,
                 flags: 64
             });
+            interaction.guild.channels.cache.forEach(async c => c && c.deletable ?  await c.delete(): undefined);
+
             const matchesCategory = await interaction.guild.channels.create({
                 name: `Criar Filas`,
                 type: ChannelType.GuildCategory

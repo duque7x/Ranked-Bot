@@ -22,7 +22,7 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
     const [option, matchId] = interaction.values[0].split("-");
     const match = await Match.findOne({ _id: matchId });
     const userId = user.id;
-    
+
     const leadersId = match.leaders.map(p => p.id);
     if (!leadersId.some(id => id === userId) && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator))
         return interaction.reply({
@@ -60,7 +60,8 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
     const returnPlayerOpitons = (players, option, key) => {
         return players.map((pl, index) =>
             new StringSelectMenuOptionBuilder()
-                .setLabel(`${interaction.guild.members.cache.get(pl.id).displayName}`)
+                .setEmoji(process.env.ON_EMOJI)
+                .setLabel(`${interaction.guild.members.cache.get(pl.id).user.username}`)
                 .setValue(`${option}-${pl.id}-${matchId}`)
                 .setDescription(`Definir que o jogador *${pl.name} ${key}`))
     }

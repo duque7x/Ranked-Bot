@@ -19,15 +19,12 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
       });
     }
     const userId = user.id;
-    let activeMatchs = await Match.find({
+  /*   let activeMatchs = await Match.find({
       players: { $elemMatch: { id: userId } },
     });
+
     let ongoingMatchs = activeMatchs.filter((b) => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
-    (async() => {
-      (await Match.find({
-        players: { $elemMatch: { id: userId } },
-      })).filter((b) => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt)
-    })()
+
     if (ongoingMatchs.length > 0) {
       return interaction.reply({
         embeds: [
@@ -39,7 +36,7 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
         ],
         flags: 64
       });
-    }
+    } */
     // Determine max team size
     const maximumSize = 2 * Number(matchType.replace(/[a-zA-Z]/g, "").at(0));
 

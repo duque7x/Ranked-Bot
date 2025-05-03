@@ -23,17 +23,17 @@ module.exports = class ReadyEvent {
   async execute(event, client) {
     client.user.setActivity({
       name: "discord.gg/rankedzone",
-      type: ActivityType.Custom,
+      type: ActivityType.Playing,
     });
     const guild = client.guilds.cache.get(process.env.GUILD_ID);
 
     console.log(chalk.bgBlue(`O bot está on! Com o nome ${this.client.user.username} e com ${this.client.guilds.cache.size} guildas`));
     this.client.guilds.cache.forEach(g => console.log(chalk.bgBlack(`Nome da guilda: ${g.name}. Membros ${g.members.cache.size}`)));
 
-    scheduleDailyMessage(client, "1359980755639468094", "1361715926105591941",
+    /* scheduleDailyMessage(client, "1359980755639468094", "1361715926105591941",
       {
         content: "", embeds: [(await allTimeRankReturned(guild)).generateEmbed()]
       }
-    );
+    ); */
   }
 };

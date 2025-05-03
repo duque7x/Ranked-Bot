@@ -6,21 +6,23 @@ const User = require("../../structures/database/User");
  */
 module.exports = async (members) => {
     const users = await User.find().sort({ points: -1 });
+    try {
 
-    for (const [, member] of members) {
-        if (member.user.bot) continue;
+        for (const [, member] of members) {
+            if (member.user.bot) continue;
+            if (member.id == member.guild.ownerId) continue;
 
-        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
-        const hasRole = member.roles.cache.has("1350144276834680912");
+            const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+            const hasRole = member.roles.cache.has("1350905290672963715");
 
-        const nameBefore = member.displayName.includes("|")
-            ? member.displayName.split("|")[1].trim()
-            : member.displayName;
+            const nameBefore = member.displayName.includes("|")
+                ? member.displayName.split("|")[1].trim()
+                : member.displayName;
 
-        if (hasRole && !isAdmin) {
+            //if (hasRole) {
             const userProfile = await User.findOrCreate(member.id);
-            const { points, blacklisted } = userProfile;
-            if (blacklisted) return;
+            const { blacklisted } = userProfile;
+            if (blacklisted) continue;
 
             const userRankPosition = users.findIndex(u => u.player.id === member.id) + 1;
             let finalName = `RANK ${userRankPosition} | ${nameBefore}`;
@@ -29,34 +31,10 @@ module.exports = async (members) => {
                 finalName = `RANK ${userRankPosition} | ${sliced}`;
             }
 
-            member.setNickname(finalName).catch(() => { });
-
-            const rankRoles = {
-                18500: "1362074164940505219",
-                28500: "1362073766942871643",
-                35000: "1362073548658577458",
-                45000: "1362073334170386715"
-            };
-
-            const thresholds = Object.keys(rankRoles).map(Number).sort((a, b) => b - a);
-            let roleToAdd = null;
-
-            for (const threshold of thresholds) {
-                if (points >= threshold) {
-                    roleToAdd = rankRoles[threshold];
-                    break;
-                }
-            }
-
-            if (roleToAdd) {
-                const allRankRoles = Object.values(rankRoles).filter(r => r !== roleToAdd);
-                member.roles.remove(allRankRoles).catch(() => { });
-                member.roles.add(roleToAdd).catch(() => { });
-            }
+            await member.setNickname(finalName);
+            //}
         }
-
-        if (!hasRole && !isAdmin) {
-            User.deleteOne({ "player.id": member.id }).catch(() => { });
-        }
+    } catch (error) {
+        console.error(error);
     }
 };

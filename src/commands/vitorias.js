@@ -44,7 +44,7 @@ const quantityChoices = [
 const addPoints = require("../utils/functions/addPoints");
 const removePoints = require("../utils/functions/removePoints");
 const Config = require("../structures/database/configs");
-const updateRankUsersRank = require("../utils/functions/updateRankUsersRank");
+const BotClient = require("..");
 
 /**
  * @type {import('discord.js').SlashCommandBuilder}
@@ -85,34 +85,42 @@ module.exports = {
 
   /**
    * @param {ChatInputCommandInteraction} interaction
+   * @param {BotClient} client
    */
-  async execute(interaction) {
-    const user = interaction.options.getUser("usuario") ?? interaction.user;
+  async execute(interaction, client) {
+    const userSelected = interaction.options.getUser("usuario") ?? interaction.user;
     const quantity = interaction.options.getNumber("quantidade") ?? 1;
     const subcommand = interaction.options.getSubcommand();
     const config = await Config.findOne({ "guild.id": interaction.guildId });
 
     let wins;
+    const user = client.api.users.cache.get(userSelected.id);
+    const { wins: winsBefore, points: pointsBefore } = user;
 
     if (subcommand === "adicionar") {
-      wins = (await addWin(user.id, quantity)).wins;
-      await addPoints(user.id, quantity * config.points.win);
+      wins = await user.increment("wins", quantity);
+      await user.increment("points", quantity * config.points.win);
     } else if (subcommand === "remover") {
-      wins = (await removeWin(user.id, quantity)).wins;
-      await removePoints(user.id, quantity * config.points.win);
+      wins = await user.decrement("wins", quantity);
+      await user.decrement("points", quantity * config.points.win);
     }
-
+    
     const embed = new EmbedBuilder()
       .setColor(subcommand === "adicionar" ? Colors.LightGrey : 0xff0000)
-      .setDescription(
-        `# Gerenciador de vitórias\n <@${user.id}> agora tem **${wins}** ${wins >= 0 && wins !== 1 ? `vitórias` : `vitória`
-        }`
+      .setTitle(`Perfil de ${userSelected.username} atualizado`)
+      .setFields(
+        {
+          name: "Vitórias",
+          value: `${winsBefore} ▬ **${wins}**`,
+        },
+        {
+          name: "Pontos",
+          value: `${pointsBefore} ▬ **${user.points}**`,
+        },
       )
-      .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
+      .setThumbnail(userSelected.displayAvatarURL({ dynamic: true, size: 256 }))
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
-
-    return await updateRankUsersRank(await interaction.guild.members.fetch());
   },
 };

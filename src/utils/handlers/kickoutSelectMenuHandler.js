@@ -9,7 +9,7 @@ const formatTeamChallenged = require("../functions/formatTeamChallenged");
  * @returns 
  */
 module.exports = async (interaction) => {
-    interaction.deferUpdate()
+    await interaction.deferUpdate();
     const [_1, _id, messageId] = interaction.customId.split("-");
     const [_, userId] = interaction.values[0].split("-");
 

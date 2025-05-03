@@ -16,7 +16,7 @@ module.exports = {
    * @param {ChatInputCommandInteraction} interaction
    * @returns
    */
-  async execute(interaction) {
+  async execute(interaction, client) {
     const isAllowed = await Match.findById(interaction.channel.topic);
     const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
     const isCorrectChannel = interaction.channel.id === "1342561854777720845";
@@ -33,6 +33,6 @@ module.exports = {
         ],
       });
     }
-    return returnServerRank(interaction, "send");
+    return returnServerRank(interaction, "send", client);
   },
 };

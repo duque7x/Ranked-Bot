@@ -10,6 +10,7 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 const chalk = require("chalk");
+const { RestAPI } = require("@duque.edits/rest");
 
 class BotClient extends Client {
   constructor(options) {
@@ -19,11 +20,15 @@ class BotClient extends Client {
     this.commandArray = []; // Store commands for registration
     this.embedSessions = new Map();
     this.prefixCommands = new Collection();
+
     this.loadEvents();
     this.loadCommands();
     this.handleProcessErrors();
+    this.api = new RestAPI({
+      token: "/mYcFkTs@hQll-a",
+      baseURL: "http://localhost:3000/api/v1",
+    });
   }
-
   loadEvents() {
     const eventFiles = fs
       .readdirSync(path.join(__dirname, "events"))
@@ -114,9 +119,12 @@ const client = new BotClient({
     IntentsBitField.Flags.GuildExpressions,
     IntentsBitField.Flags.GuildVoiceStates,
   ],
-  partials: [Partials.Message, Partials.Channel],
+  partials: [Partials.Message, Partials.Channel]
 });
 
-client.login(process.env.DISCORD_TOKEN);
-client.registerSlashCommands();
+client.api.init().then(async _ => {
+  await client.login(process.env.DISCORD_TOKEN).catch(console.error);
+  await client.registerSlashCommands().catch(console.error);
+}).catch(console.error);
+
 module.exports = BotClient;

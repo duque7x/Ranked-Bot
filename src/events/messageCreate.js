@@ -33,7 +33,7 @@ module.exports = class MessageEvent {
     const prefix = "!";
     // Get the command and arguments  
     const args = message.content.slice(prefix.length).trim().split(/ +/);
-    const commandName = args.shift();
+    const commandName = args.shift().toLowerCase();
     const command = cl.prefixCommands.get(commandName);
 
     if (message.channel.id == "1338575355665186856") {

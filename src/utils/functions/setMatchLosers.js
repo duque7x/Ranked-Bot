@@ -3,36 +3,36 @@ const addLoss = require("./addLoss");
 const removePoints = require("./removePoints");
 const addGamePlayed = require("./addGamePlayed");
 const Config = require("../../structures/database/configs");
+const BotClient = require("../..");
 
+/**
+ * 
+ * @param {Match} match 
+ * @param {*} winners 
+ * @param {string} guildId 
+ * @param {BotClient} client 
+ * @returns 
+ */
 
-module.exports = async (match, losers, guildId) => {
+module.exports = async (match, losers, guildId, client) => {
     const config = await Config.findOne({ "guild.id": guildId });
     match.losers = losers;
-    await match.save();
-    
 
     // Create a list of promises for all users
     const promises = losers.map(async (user) => {
-        const userProfile = await User.findOrCreate(user.id);
+        const userProfile = client.api.users.cache.get(user.id);
 
         // Check if any protection exists and if it's still valid
         const hasValidPointProtection = userProfile.protections.some(p => p.type === "point_protect" && p.longevity !== 0);
-        const hasValidImunnityProtection = userProfile.protections.some(p => p.type === "immunity" && p.longevity !== 0);
+        if (hasValidPointProtection) return;
 
-        if (hasValidImunnityProtection) return;
-
-        if (!hasValidPointProtection) await removePoints(user.id, config.points.loss)
-
-        await addLoss(user.id);
-        // Add game played even if protections exist
-        await addGamePlayed(user.id, match._id);
-
-        // Save the user profile if any updates have occurred
-        await userProfile.save();
+        await userProfile.increment("gamesPlayed", match._id);
+        await userProfile.decrement("points",  config.points.loss);
+        await userProfile.increment("losses", 1);
     });
 
     // Wait for all promises to resolve
     await Promise.all(promises);
-
+    match.save();
     return { match, losers };
 }
