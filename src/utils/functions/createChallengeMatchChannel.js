@@ -17,33 +17,46 @@ module.exports = async (interaction, match = new Match()) => {
   const players = [...teamA, ...teamB];
   const userId = interaction.user.id;
 
-  if (match.creatorId !== userId && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+  if (match.creatorId !== userId) {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
-          .setTitle("Você não pode iniciar esta partida.")
-          .setDescription(`<@${userId}> você não tem permissões.`)
+          .setTitle("Você não pode iniciar esta fila")
+          .setDescription(`<@${userId}> você não tem permissões para iniciar esta fila`)
           .setTimestamp()
           .setColor(0xff0000)
       ],
       flags: 64
     });
   }
-  await interaction.update({
+  await interaction.reply({
     embeds: [
       new EmbedBuilder()
         .setTitle(`Fila ${matchType} | Desafio`)
         .setDescription(`Fila **iniciada**, aguarde a criação dos canais da fila.`)
         .setTimestamp()
-        .setColor(Colors.DarkGold)
+        .setColor(Colors.White)
     ],
     components: []
+  });
+  const matchText = await guild.channels.create({
+    name: `⭐・partida・${formattedNumber}`,
+    type: ChannelType.GuildText,
+    topic: match._id.toString(),
+    //parent: "1360710246930055208",
+    permissionOverwrites: [
+      { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+      ...players.map(p => ({
+        id: p.id,
+        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+      })),
+    ],
   });
   const createVoiceChannel = async (name, allow = [], deny = []) =>
     guild.channels.create({
       name: `⭐ ${name}・${formattedNumber}`,
       type: ChannelType.GuildVoice,
-      parent: "1360710246930055208",
+      //parent: "1360710246930055208",
       permissionOverwrites: [
         { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect] },
         ...allow.map(p => ({
@@ -66,44 +79,31 @@ module.exports = async (interaction, match = new Match()) => {
     createVoiceChannel("Equipa 2", teamB, teamA),
   ]);
 
-  // Move players and save original channels
-  await Promise.all(players.map(async (player) => {
-    const member = guild.members.cache.get(player.id);
-    const userProfile = await User.findOrCreate(member.id);
+  const saveAndMovePlayers = async (team, voiceChannel) => {
+    return Promise.all(
+      team.map(async (player) => {
+        const member = guild.members.cache.get(player.id);
+        if (!member?.voice.channel) return;
 
-    userProfile.originalChannels.push({
-      channelId: member.voice.channelId,
-      matchId: match._id,
-    });
+        const userProfile = await User.findOrCreate(player.id);
+        userProfile.originalChannels.push({
+          channelId: interaction.member.voice.channelId,
+          matchId: match._id,
+        });
 
-    const isTeamA = teamA.some(p => p.id === member.id);
-    const targetChannel = isTeamA ? teamAVoice : teamBVoice;
+        await userProfile.save();
+        await moveToChannel(member, voiceChannel);
+      })
+    );
+  };
 
-    if (member.voice.channel) {
-      await moveToChannel(member, targetChannel);
-    }
+  await saveAndMovePlayers(teamA, teamAVoice);
+  await saveAndMovePlayers(teamB, teamBVoice);
 
-    await userProfile.save();
-  }));
-
-  // Create match text channel
-  const matchText = await guild.channels.create({
-    name: `⭐・partida・${formattedNumber}`,
-    type: ChannelType.GuildText,
-    topic: match._id.toString(),
-    parent: "1360710246930055208",
-    permissionOverwrites: [
-      { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
-      ...players.map(p => ({
-        id: p.id,
-        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
-      })),
-    ],
-  });
 
   // Send embed with match info
   const embed = new EmbedBuilder()
-    .setColor(0x80D1FF)
+    .setColor(Colors.DarkGrey)
     .setDescription(`# Partida ${matchType} | Desafio\nCriem a sala e de seguida definam o criador!`)
     .addFields(
       { name: "Time 1", value: formatTeamChallenged(teamA, teamA.length), inline: true },
@@ -115,19 +115,6 @@ module.exports = async (interaction, match = new Match()) => {
 
   await matchText.send({ embeds: [embed], components: [menu] });
 
-  await interaction.message.edit({
-    embeds: [
-      new EmbedBuilder()
-        .setTitle(`Partida ${matchType} criada com sucesso!`)
-        .setColor(0xFFCF69)
-        .setDescription(
-          `Esta partida foi criada neste [canal](https://discord.com/channels/1336809872884371587/${matchText.id})\n-# Qualquer tipo de problema chame um ADM!`
-        )
-        .setTimestamp(),
-    ],
-    components: [],
-  });
-
   match.matchChannel = { id: matchText.id, name: matchText.name };
   match.leaders = [teamA[0], teamB[0]];
   match.voiceChannels = [
@@ -137,6 +124,17 @@ module.exports = async (interaction, match = new Match()) => {
   ];
   match.status = "on";
 
+  await interaction.editReply({
+    embeds: [
+      new EmbedBuilder()
+        .setTitle(`Fila ${matchType} | Desafio`)
+        .setDescription(`Fila **criada**, vá para o canal da fila e siga os procedimentos necessários`)
+        .setTimestamp()
+        .setColor(Colors.White)
+    ],
+    components: []
+  });
   await match.save();
+
   return matchText;
 };

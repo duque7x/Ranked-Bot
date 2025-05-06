@@ -1,27 +1,11 @@
-const { EmbedBuilder, ChatInputCommandInteraction, Collection } = require("discord.js");
+const { EmbedBuilder, Collection } = require("discord.js");
 const User = require("../../structures/database/User");
 const moveToChannel = require("./moveToChannel");
 const updateRankUsersRank = require("./updateRankUsersRank");
 
-/**
- *
- * @param {*} match
- * @param {ChatInputCommandInteraction} interaction
- * @returns
- */
+const FALLBACK_CHANNEL_ID = "1367214550281355264";
+
 module.exports = async (match, interaction) => {
-  const channel = interaction.guild.channels.cache.get(match.matchChannel.id);
-  /* if (!channel) {
-    return interaction.reply({
-      embeds: [
-        new EmbedBuilder()
-          .setTitle("Canal da partida")
-          .setDescription("Canal da partida não foi encontrado no servidor!\n-# Chame um dos developers")
-          .setColor(0xff0000)
-          .setTimestamp(),
-      ],
-    });
-  } */
   if (!match) {
     return interaction.reply({
       embeds: [
@@ -34,41 +18,51 @@ module.exports = async (match, interaction) => {
       flags: 64,
     });
   }
-  const embed = new EmbedBuilder()
+
+  const matchChannel = interaction.guild.channels.cache.get(match.matchChannel?.id);
+  const finishEmbed = new EmbedBuilder()
     .setTitle("Finalizando fila...")
-    .setDescription(`Parabéns a todos os jogadores, joguem sempre!`)
-    .setTimestamp()
+    .setDescription("Parabéns a todos os jogadores, joguem sempre!")
     .setFooter({ text: "Bom jogo!" })
-    .setColor(0xff0000);
+    .setColor(0xff0000)
+    .setTimestamp();
 
-  if (interaction.isChatInputCommand()) interaction.reply({ embeds: [embed], components: [] });
-  if (interaction.isButton()) interaction.update({ embeds: [embed], components: [], content: "" });
-  const members = new Collection();
-  match.players.map(p => members.set(p.id, interaction.guild.members.cache.get(p.id)));
-
-  for (let [_, member] of members) {
-    const userProfile = await User.findOrCreate(member.id);
-    console.log({ originalChannels: userProfile.originalChannels });
-    const userOriginalChannelId = userProfile.originalChannels.find(
-      (c) => c.matchId == match._id
-    )?.channelId;
-
-    const channelToReturn =
-      interaction.guild.channels.cache.get(userOriginalChannelId) ??
-      interaction.guild.channels.cache.get("1360296464445866056");
-    
-    if (member.voice.channel) await moveToChannel(member, channelToReturn);
+  if (interaction.isChatInputCommand()) {
+    await interaction.reply({ embeds: [finishEmbed], components: [] });
+  } else if (interaction.isButton()) {
+    await interaction.update({ embeds: [finishEmbed], components: [], content: "" });
   }
-  for (const c of match.voiceChannels) {
-    const vcChannel = interaction.guild.channels.cache.get(c.id);
-    if (vcChannel) await vcChannel.delete();
+
+  const members = new Collection();
+  for (const player of match.players) {
+    const member = interaction.guild.members.cache.get(player.id);
+    if (member) members.set(player.id, member);
+  }
+
+  for (const member of members.values()) {
+    try {
+      const user = await User.findOrCreate(member.id);
+      const originalChannelId = user.originalChannels.find(c => c.matchId === match._id)?.channelId;
+      const returnChannel = interaction.guild.channels.cache.get(originalChannelId) ||
+        interaction.guild.channels.cache.get(FALLBACK_CHANNEL_ID);
+      if (member.voice.channel && returnChannel) {
+        await moveToChannel(member, returnChannel);
+      }
+    } catch (err) {
+      console.error(`Erro ao mover ${member.user.tag}:`, err);
+    }
+  }
+
+  for (const { id } of match.voiceChannels || []) {
+    const voiceChannel = interaction.guild.channels.cache.get(id);
+    if (voiceChannel) await voiceChannel.delete().catch(console.error);
   }
 
   match.status = "off";
-  match.save();
+  await match.save().catch(console.error);
 
   setTimeout(() => {
-    if (channel) channel.delete();
+    if (matchChannel) matchChannel.delete().catch(console.error);
   }, 4000);
 
   await updateRankUsersRank(members);

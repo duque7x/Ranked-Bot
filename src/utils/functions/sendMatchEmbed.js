@@ -16,7 +16,7 @@ module.exports = async (interaction, match, channelToSend) => {
             { name: "Equipe 1", value: formatTeam(teamA, teamSize), inline: true },
             { name: "Equipe 2", value: formatTeam(teamB, teamSize), inline: true }
         ])
-        .setColor(0xCEFEFF);
+        .setColor(Colors.White);
 
     const enterMatch = new ButtonBuilder()
         .setCustomId(entermatchId)

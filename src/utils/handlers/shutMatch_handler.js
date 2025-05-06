@@ -1,5 +1,5 @@
 const Match = require("../../structures/database/match");
-const { EmbedBuilder, Colors, PermissionFlagsBits } = require("discord.js");
+const { EmbedBuilder, Colors, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder } = require("discord.js");
 
 module.exports = async function shutMatch_handler(interaction, matchId) {
     let match = await Match.findOne({ "_id": matchId });
@@ -13,7 +13,7 @@ module.exports = async function shutMatch_handler(interaction, matchId) {
                 .setColor(0xff00000)
                 .setTimestamp()
         ]
-    });
+    })
     if (match.creatorId !== userId && !interaction.member.permissions.has(PermissionFlagsBits.Administrator))
         return interaction.reply({
             embeds: [
@@ -25,22 +25,29 @@ module.exports = async function shutMatch_handler(interaction, matchId) {
             ],
             flags: 64
         });
-
-    match.status = "shutted";
-    match.save();
+    
+    const disabledComponents = interaction.message.components.map(row => {
+        return new ActionRowBuilder().addComponents(
+            row.components.map(component =>
+                ButtonBuilder.from(component).setDisabled(true)
+            )
+        );
+    });
+    const newEmbed = EmbedBuilder.from(interaction.message.embeds[0]).setTitle(`Fila ${match.matchType} | Encerrada`).setColor(Colors.NotQuiteBlack);
+    await interaction.message.edit({ embeds: [newEmbed], components: disabledComponents });
 
     const updatedEmbed = new EmbedBuilder()
-        .setTitle("Partida encerrada com successo!")
-        .setDescription(`Partida encerrada por <@${userId}>\n-# Esta partida sera apagada da base de dados.`)
+        .setTitle("Partida encerrada")
+        .setDescription(`Partida encerrada por <@${userId}>\n-# Esta partida será apagada da base de dados`)
         .setTimestamp()
-        .setColor(Colors.DarkButNotBlack);
+        .setColor(Colors.DarkGrey);
 
-    await interaction.message.edit({ embeds: [updatedEmbed], components: [] });
+    const msg = await interaction.reply({ embeds: [updatedEmbed], components: [] });
 
     setTimeout(async () => {
         await match.deleteOne();
-    }, 2000);
-
+        await msg.delete();
+    }, 5000);
     return;
 };
 

@@ -17,7 +17,7 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
         embeds: [
           new EmbedBuilder()
             .setTitle("Você já está em outra partida")
-            .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
+            .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Id da fila: ${ongoingMatchs[0]._id}`)
             .setTimestamp()
             .setColor(0xff0000)
         ],

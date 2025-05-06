@@ -14,23 +14,9 @@ const createChallengeMatchChannel = require("../functions/createChallengeMatchCh
  * @returns 
  */
 module.exports = async function challengeMatch_handler(interaction) {
-    if (!interaction.member.voice.channel && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
-        return await interaction.reply({
-            embeds: [
-                new EmbedBuilder()
-                    .setTitle("Canal de voz")
-                    .setDescription("Você tem que estar conectado a um canal de voz para entrar uma fila!")
-                    .setColor(0xff0000)
-                    .setTimestamp()
-            ],
-            flags: 64
-        });
-    }
     const { customId, guild, user } = interaction;
-
     const [_, _id] = customId.split("-");
     const [_1, userAction] = interaction.values[0].split("-");
-
     const match = await Match.findById(_id);
 
     if (!match) {

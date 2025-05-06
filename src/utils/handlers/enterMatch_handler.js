@@ -115,7 +115,6 @@ module.exports = async function enterBet_handler(interaction) {
         { name: "Time 2", value: formatTeam(teamB, teamSize), inline: true }
     ]);
 
-
     if (match.players.length === maxSize) {
         await interaction.message.edit({ embeds: [updatedEmbed] });
         const disabledComponents = interaction.message.components.map(row => {
@@ -126,7 +125,6 @@ module.exports = async function enterBet_handler(interaction) {
             );
         });
         const newEmbed = EmbedBuilder.from(interaction.message.embeds[0]).setTitle(`Fila ${matchType} | Normal iniciada`);
-
         interaction.message.edit({ embeds: [newEmbed], components: disabledComponents });
 
         const startEmbed = new EmbedBuilder()

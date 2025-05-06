@@ -8,23 +8,23 @@ function color(rgb) {
 const { request } = require('undici');
 
 async function getAvatarData(avatarUrl) {
-  const [response, dominantColor] = await Promise.all([
-    // Fetch the image buffer using Undici
-    (async () => {
-      const { body } = await request(avatarUrl);
-      const data = await body.arrayBuffer(); // Convert to ArrayBuffer
-      return data;
-    })(),
+    const [response, dominantColor] = await Promise.all([
+        // Fetch the image buffer using Undici
+        (async () => {
+            const { body } = await request(avatarUrl);
+            const data = await body.arrayBuffer(); // Convert to ArrayBuffer
+            return data;
+        })(),
 
-    // Get the dominant color using the same avatarUrl
-    (async () => {
-      const { body } = await request(avatarUrl);
-      const data = await body.arrayBuffer(); // Convert to ArrayBuffer
-      return ColorThief.getColor(Buffer.from(data)); // Buffer is required for ColorThief
-    })()
-  ]);
+        // Get the dominant color using the same avatarUrl
+        (async () => {
+            const { body } = await request(avatarUrl);
+            const data = await body.arrayBuffer(); // Convert to ArrayBuffer
+            return ColorThief.getColor(Buffer.from(data)); // Buffer is required for ColorThief
+        })()
+    ]);
 
-  return dominantColor;
+    return dominantColor;
 }
 
 module.exports = async (data, user) => {
@@ -59,7 +59,10 @@ module.exports = async (data, user) => {
             },
             {
                 name: "Vezes jogadas",
-                value: `${data.gamesPlayed.length}`,
+                value: `${data.gamesPlayed ?
+                        data.gamesPlayed.length :
+                        0
+                    }`,
                 inline: true,
             },
             {

@@ -22,7 +22,7 @@ module.exports = async (interaction, match, channelToSend) => {
             { name: "Equipe 1", value: teamA, inline: true },
             { name: "Equipe 2", value: teamB, inline: true }
         ])
-        .setColor(0x82E0FF);
+        .setColor(Colors.White);
 
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`challenge_match-${match.id}`)

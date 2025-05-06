@@ -30,7 +30,6 @@ module.exports = async (interaction, option, client) => {
     const userRankPosition = users.findIndex(u => u.player.id === interaction.member.user.id) + 1;
 
     const generateEmbed = async (page = 0) => {
-        
         if (page <= -1) page = 0;
 
         const start = page * perPage;

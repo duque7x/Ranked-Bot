@@ -1,75 +1,39 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  PermissionFlagsBits,
-  ChatInputCommandInteraction,
-} = require("discord.js");
+const { Message, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const Config = require("../structures/database/configs");
-const createChallengeMatch = require("../utils/functions/createChallengeMatch");
 const User = require("../structures/database/User");
+const createChallengeMatch = require("../utils/functions/createChallengeMatch");
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName("filadesafio")
-    .setDescription("Cria uma fila desafio")
-    .addSubcommand((sub) =>
-      sub
-        .setName("1x1")
-        .setDescription("Cria uma partida, onde jogadores podem escolher os seus times")
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("2x2")
-        .setDescription("Cria uma partida, onde jogadores podem escolher os seus times")
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("3x3")
-        .setDescription("Cria uma partida, onde jogadores podem escolher os seus times")
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("4x4")
-        .setDescription("Cria uma partida, onde jogadores podem escolher os seus times")
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("5x5")
-        .setDescription("Cria uma partida, onde jogadores podem escolher os seus times")
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("6x6")
-        .setDescription("Cria uma partida, onde jogadores podem escolher os seus times")
-    ),
+  name: "desafio", // Command name
+
   /**
-   *
-   * @param {ChatInputCommandInteraction} interaction
-   * @returns
+   * @param {Message} message
+   * @param {string[]} args
+   * @param {BotClient} client
    */
-  async execute(interaction) {
-    const { member, guildId, user, channelId } = interaction;
+  async execute(message, args, client) {
+    const { member, guildId, author: user, channelId } = message;
     const serverConfig = await Config.findOrCreate(guildId);
     const userProfile = await User.findOrCreate(user.id);
-
     try {
       const isInVoice = !!member.voice.channel;
       const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+      const matchType = args[0];
       const hasRole = member.roles.cache.has("1360603166835474529");
+
       if (serverConfig.state.matches.status === "off") {
-        return interaction.reply({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setTitle("Partidas offline")
               .setDescription("As filas estão fechadas de momento!")
               .setColor(0xff0000)
               .setTimestamp(),
-          ],
-          flags: 64
+          ]
         });
       }
       if (userProfile.blacklisted === true) {
-        return interaction.reply({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setTitle("Você está na blacklist")
@@ -78,23 +42,21 @@ module.exports = {
               .setTimestamp()
               .setFooter({ text: "Para sair abre um ticket!" }),
           ],
-          flags: 64,
         });
       }
-      if (channelId !== "1360611496731738242" && !isAdmin) {
-        return interaction.reply({
+      /* if (channelId !== "1360611496731738242" && !isAdmin) {
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setTitle("Você não pode criar filas aqui!")
               .setDescription(`Vá pro canal <#1360611496731738242> e crie uma fila!`)
               .setTimestamp()
               .setColor(0xff0000)
-          ],
-          flags: 64
+          ]
         });
-      }
+      } */
       if (!isInVoice && !isAdmin) {
-        return await interaction.reply({
+        return await message.reply({
           embeds: [
             new EmbedBuilder()
               .setTitle("Canal de voz")
@@ -102,38 +64,43 @@ module.exports = {
               .setColor(0xff0000)
               .setTimestamp(),
           ],
-          flags: 64,
         });
       }
       if (!hasRole && !isAdmin) {
-        return await interaction.reply({
+        return await message.reply({
           embeds: [
             new EmbedBuilder()
               .setTitle("Você não tem permissões para criar filas desafio")
               .setDescription(`Você precisa do cargo <@&1360603166835474529> para criar filas desafio!`)
               .setColor(0xff0000)
-              .setFooter({ text: `Para adquirir o cargo, basta abrir um ticket!` })
+              .setFooter({ text: `Para adquirir o cargo basta você abrir um ticket!` })
               .setTimestamp(),
           ],
-          flags: 64,
         });
       }
+      const acceptableOptions = ["1x1", "2x2", "3x3", "4x4", "5x5", "6x6","1v1", "2v2", "3v3", "4v4", "5v5", "6v6"];
 
-      const matchType = interaction.options.getSubcommand();
-      const channelToSend = interaction.channel;
-
+      if (!acceptableOptions.includes(matchType)) {
+        return await message.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Tipo da aposta não compativel!")
+              .setDescription(`Tipos disponiveis: \`${acceptableOptions.join(", ")}\``)
+              .setTimestamp()
+              .setColor(0xff0000),
+          ],
+        });
+      }
       return await createChallengeMatch(
-        interaction,
-        channelToSend,
+        message,
+        message.channel,
         matchType,
         true,
-        interaction.user
+        message.author
       );
-
     } catch (err) {
       console.error("Erro ao criar fila:", err);
-
-      await interaction.reply({
+      await message.reply({
         content: "-# Ocorreu um erro ao criar esta fila!",
         flags: 64,
       })

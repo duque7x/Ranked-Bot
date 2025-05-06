@@ -56,21 +56,26 @@ module.exports = async (interaction, match) => {
       createVoiceChannel(`${totalMatches} - Equipa 2`, teamB, teamA),
     ]);
 
-    for (const player of match.players) {
-      const member = guild.members.cache.get(player.id);
-      const userProfile = await User.findOrCreate(player.id);
+    const saveAndMovePlayers = async (team, voiceChannel) => {
+      return Promise.all(
+        team.map(async (player) => {
+          const member = guild.members.cache.get(player.id);
+          if (!member?.voice.channel) return;
 
-      if (member?.voice.channel) {
-        const isTeamA = teamA.some(p => p.id === player.id);
-        userProfile.originalChannels.push({
-          channelId: interaction.member.voice.channelId,
-          matchId: match._id
-        });
+          const userProfile = await User.findOrCreate(player.id);
+          userProfile.originalChannels.push({
+            channelId: interaction.member.voice.channelId,
+            matchId: match._id,
+          });
 
-        await moveToChannel(member, isTeamA ? teamAVoiceChannel : teamBVoiceChannel);
-        await Promise.all([userProfile.save()]);
-      }
-    }
+          await userProfile.save();
+          await moveToChannel(member, voiceChannel);
+        })
+      );
+    };
+
+    await saveAndMovePlayers(teamA, teamAVoiceChannel);
+    await saveAndMovePlayers(teamB, teamBVoiceChannel);
 
     const embedTeamA = formatTeam(teamA);
     const embedTeamB = formatTeam(teamB);
@@ -79,22 +84,25 @@ module.exports = async (interaction, match) => {
     await matchChannel.send({
       embeds: [
         new EmbedBuilder()
+        .setTitle(`Fila ${matchType} | Normal`)
           .setColor(Colors.Grey)
-          .setDescription(`# Fila ${matchType} | Normal\nCriem a sala e de seguida definam o criador!`)
+          .setDescription(`
+            Seja bem-vindo(a) a partida normal, abaixo encontra-se os capitães e seus jogadores. Para realizar qualquer ação desta partida é necessário o jogador ser um capitão de um dos dois times ou tenha permissão de gerenciar partidas.`)
           .addFields(
-            { name: "Time 1", value: embedTeamA, inline: true },
-            { name: "Time 2", value: embedTeamB, inline: true },
+            { name: "Equipa 1", value: embedTeamA, inline: true },
+            { name: "Equipa 2", value: embedTeamB, inline: true },
           )
           .setTimestamp()
       ],
       components: [row]
     });
+
     await interaction.editReply({
       embeds: [
-        EmbedBuilder.from(interaction.message.embeds[0])
+        new EmbedBuilder()
           .setTitle(`Fila ${matchType} iniciada`)
           .setFields([])
-          .setDescription(`Fila criada com sucesso, vá para o canal e siga os procedimentos necessários`)
+          .setDescription(`Fila criada com sucesso, vá para o canal da fila e siga os procedimentos necessários`)
           .setTimestamp(),
       ],
       components: [],

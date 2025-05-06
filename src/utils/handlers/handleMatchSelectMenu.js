@@ -10,6 +10,7 @@ const { StringSelectMenuInteraction,
     Options,
     PermissionFlagsBits
 } = require("discord.js");
+const endMatchFunction = require("../functions/endMatchFunction");
 
 /**
  * 
@@ -18,13 +19,14 @@ const { StringSelectMenuInteraction,
  * @returns 
  */
 module.exports = async function matchSelectMenu_handler(interaction, client) {
-    const { user, customId } = interaction;
+    const { user, customId, member } = interaction;
     const [option, matchId] = interaction.values[0].split("-");
     const match = await Match.findOne({ _id: matchId });
     const userId = user.id;
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
     const leadersId = match.leaders.map(p => p.id);
-    if (!leadersId.some(id => id === userId) && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator))
+    if (!leadersId.some(id => id === userId) && !interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
         return interaction.reply({
             embeds: [
                 new EmbedBuilder()
@@ -35,8 +37,8 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
             ],
             flags: 64
         });
+    }
     const matchAlreadyConfirmed = match.confirmed.filter(c => c.typeConfirm === option).length == 2;
-
     if (matchAlreadyConfirmed) {
         return interaction.reply({
             embeds: [
@@ -57,6 +59,7 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
                 .setTimestamp()
         ]
     });
+
     const returnPlayerOpitons = (players, option, key) => {
         return players.map((pl, index) =>
             new StringSelectMenuOptionBuilder()
@@ -127,6 +130,8 @@ module.exports = async function matchSelectMenu_handler(interaction, client) {
         });
     }
     if (option == "end_match") {
+        if (isAdmin) return await endMatchFunction(match, interaction);
+
         return interaction.reply({
             embeds: [new EmbedBuilder()
                 .setTitle(`Fechar partida`)
