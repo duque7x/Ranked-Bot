@@ -50,8 +50,8 @@ module.exports = async (interaction, match) => {
             flags: 64,
         });
     }
-    const { matchType } = match;
-    const [teamSize] = matchType.split(/[xv]/).map(Number);
+    const { type } = match;
+    const [teamSize] = type.split(/[xv]/).map(Number);
 
     if (serverConfig.state.matches.status === "off") {
         return interaction.reply({

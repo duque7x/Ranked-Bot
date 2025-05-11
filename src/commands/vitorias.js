@@ -5,8 +5,6 @@ const {
   SlashCommandBuilder,
   Colors,
 } = require("discord.js");
-const { addWin } = require("../utils/utils");
-const removeWin = require("../utils/functions/removeWin");
 const quantityChoices = [
   {
     name: "1",
@@ -41,8 +39,6 @@ const quantityChoices = [
     value: 100,
   },
 ];
-const addPoints = require("../utils/functions/addPoints");
-const removePoints = require("../utils/functions/removePoints");
 const Config = require("../structures/database/configs");
 const BotClient = require("..");
 

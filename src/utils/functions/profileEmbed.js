@@ -1,11 +1,10 @@
 const { EmbedBuilder } = require("discord.js");
 const ColorThief = require("colorthief");
-const axios = require("axios");
-
+const { request } = require('undici');
+    
 function color(rgb) {
     return `#${rgb.map((x) => x.toString(16).padStart(2, "0")).join("")}`;
 }
-const { request } = require('undici');
 
 async function getAvatarData(avatarUrl) {
     const [response, dominantColor] = await Promise.all([

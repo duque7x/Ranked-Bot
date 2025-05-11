@@ -1,12 +1,9 @@
 const { EmbedBuilder, Colors } = require("discord.js");
 
-class Embeds {
-    betsOff = new EmbedBuilder()
-        .setTitle("Apostas OFFLINE")
-        .setDescription("-# Aguarde um momento...")
+module.exports = {
+    matchOff: new EmbedBuilder()
+        .setTitle("Partida offline")
+        .setDescription("Esta partida não se encontra na base de dados")
+        .setColor(0xff0000)
         .setTimestamp()
-        .setColor(Colors.White);
-
 }
-
-module.exports = new Embeds;

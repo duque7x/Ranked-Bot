@@ -62,11 +62,7 @@ const userSchema = new mongoose.Schema({
             }
         ],
         default: []
-    },
-    dailyPoints: [{
-        date: String, // format: YYYY-MM-DD
-        points: Number,
-    }]
+    }
 });
 
 // Static method to find or create a user

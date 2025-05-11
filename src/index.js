@@ -26,7 +26,7 @@ class BotClient extends Client {
     this.handleProcessErrors();
     this.api = new RestAPI({
       token: "/mYcFkTs@hQll-a",
-      baseURL: "http://localhost:3000/api/v1",
+      baseURL: "https://duque-bot-api.up.railway.app",
     });
   }
   loadEvents() {

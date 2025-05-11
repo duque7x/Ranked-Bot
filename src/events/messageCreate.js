@@ -1,17 +1,11 @@
 const {
-  Collection,
   EmbedBuilder,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
-  EmbedType,
   Message,
   Colors,
   PermissionFlagsBits,
 } = require("discord.js");
 const BotClient = require("..");
 const Config = require("../structures/database/configs");
-const { returnServerRank, returnUserRank } = require("../utils/utils");
 
 module.exports = class MessageEvent {
   /**
@@ -30,7 +24,7 @@ module.exports = class MessageEvent {
   async execute(message, cl) {
     if (message.author.bot) return;
     const { member } = message;
-    const prefix = "!";
+    const prefix = "zone ";
     // Get the command and arguments  
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();

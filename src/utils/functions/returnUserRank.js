@@ -24,12 +24,13 @@ module.exports = async (user, interaction, option, client) => {
   const row = _ => {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`activate_protections-${user.id}`)
-        .setLabel("Ativar")
+        .setCustomId(`update_user_rank-${user.id}`)
+        .setLabel("Atualizar")
+        .setEmoji("<:refresh:1369381762530021408>")
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
-        .setCustomId(`update_user_rank-${user.id}`)
-        .setLabel("Atualizar ⟳")
+        .setCustomId(`activate_protections-${user.id}`)
+        .setLabel("Ativar")
         .setStyle(ButtonStyle.Secondary)
     );
     return row;
