@@ -24,7 +24,7 @@ module.exports = class MessageEvent {
   async execute(message, cl) {
     if (message.author.bot) return;
     const { member } = message;
-    const prefix = "zone ";
+    const prefix = "!";
     // Get the command and arguments  
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();

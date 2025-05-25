@@ -78,8 +78,9 @@ module.exports = {
           ],
         });
       }
-      const acceptableOptions = ["1x1", "2x2", "3x3", "4x4", "5x5", "6x6","1v1", "2v2", "3v3", "4v4", "5v5", "6v6"];
-
+      const acceptableOptions = ["1x1", "2x2", "3x3", "4x4", "5x5", "6x6", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6"];
+      console.log({ matchType});
+      
       if (!acceptableOptions.includes(matchType)) {
         return await message.reply({
           embeds: [

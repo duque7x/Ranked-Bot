@@ -17,7 +17,7 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
         embeds: [
           new EmbedBuilder()
             .setTitle("Você já está em outra partida")
-            .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Id da fila: ${ongoingMatchs[0]._id}`)
+            .setDescription(`Canal: <#${ongoingMatchs[0].textChannel.id}>\n-# Id da fila: ${ongoingMatchs[0]._id}`)
             .setTimestamp()
             .setColor(0xff0000)
         ],
@@ -28,7 +28,7 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
     
     const match = new Match({
       maximumSize,
-      matchChannel: { id: channel.id, name: channel.name },
+      textChannel: { id: channel.id, name: channel.name },
       matchType,
       status: "created",
       players: [{ id: userId, name: user.username, joinedAt: Date.now() }],

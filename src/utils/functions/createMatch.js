@@ -19,29 +19,29 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
       });
     }
     const userId = user.id;
-  /*   let activeMatchs = await Match.find({
-      players: { $elemMatch: { id: userId } },
-    });
-
-    let ongoingMatchs = activeMatchs.filter((b) => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
-
-    if (ongoingMatchs.length > 0) {
-      return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Você já está em outra partida")
-            .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
-            .setTimestamp()
-            .setColor(0xff0000)
-        ],
-        flags: 64
+    /*   let activeMatchs = await Match.find({
+        players: { $elemMatch: { id: userId } },
       });
-    } */
+  
+      let ongoingMatchs = activeMatchs.filter((b) => b.status !== "off" && b.status !== "shutted").sort((a, b) => b.createdAt - a.createdAt);
+  
+      if (ongoingMatchs.length > 0) {
+        return interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle("Você já está em outra partida")
+              .setDescription(`Canal: <#${ongoingMatchs[0].matchChannel.id}>\n-# Chame um ADM se esta tendo problemas.`)
+              .setTimestamp()
+              .setColor(0xff0000)
+          ],
+          flags: 64
+        });
+      } */
     // Determine max team size
     const maximumSize = 2 * Number(matchType.replace(/[a-zA-Z]/g, "").at(0));
 
     // Create the match
-    const match = new Match({
+    const match = await Match.create({
       maximumSize,
       matchChannel: { id: channel.id, name: channel.name },
       matchType,
@@ -51,8 +51,10 @@ module.exports = async (interaction, channel, matchType, sendOrNot, user) => {
       creatorId: userId,
     });
 
-    await match.save();
-
+    console.log({
+      match
+    });
+    
     // Send embed if required
     if (sendOrNot === true) {
       await require("./sendMatchEmbed")(interaction, match);

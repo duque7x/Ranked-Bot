@@ -131,3 +131,5 @@ dist
 
 
 DETAILS.txt
+
+src/structures/connection.js

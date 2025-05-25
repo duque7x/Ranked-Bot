@@ -18,7 +18,8 @@ const profileEmbed = require("./profileEmbed");
  * @returns
  */
 module.exports = async (user, interaction, option, client) => {
-  const foundUser = await client.api.users.fetch(user.id);
+  const foundUser = await User.findOrCreate(user.id);
+  
   if (!foundUser) return "Usuario não encontrado";
 
   const row = _ => {

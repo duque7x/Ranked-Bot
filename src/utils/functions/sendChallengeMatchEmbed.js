@@ -2,21 +2,21 @@ const { EmbedBuilder, ButtonBuilder, Colors, ButtonStyle, StringSelectMenuBuilde
 const formatTeamChallenged = require("./formatTeamChallenged");
 
 module.exports = async (interaction, match, channelToSend) => {
-    const { matchType, _id, players } = match;
+    const { type, _id, players } = match;
     const entermatchId = `challenge_match-enter_match-${_id}`;
     const outmatchId = `challenge_match-out_match-${_id}`;
     const shutMatchId = `challenge_match-shut_match-${_id}`;
     const kick_outId = `challenge_match-kick_out-${_id}`;
     const startId = `challenge_match-start-${_id}`;
 
-    const [teamSize] = matchType.includes("x") ? matchType.split("x").map(Number) : matchType.split("v").map(Number);
+    const [teamSize] = type.includes("x") ? type.split("x").map(Number) : type.split("v").map(Number);
     const maxSize = teamSize * 2;
 
     const teamA = formatTeamChallenged(players.slice(0, teamSize), teamSize);
     const teamB = formatTeamChallenged(players.slice(teamSize), teamSize);
 
     const embed = new EmbedBuilder()
-        .setTitle(`Partida ${matchType} | Desafio`)
+        .setTitle(`Partida ${type} | Desafio`)
         .setDescription(`Decida qual time irá jogar e, logo após, inicie a partida e se divirta-se.`)
         .addFields([
             { name: "Equipe 1", value: teamA, inline: true },
