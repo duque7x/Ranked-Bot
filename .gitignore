@@ -130,6 +130,6 @@ dist
 .pnp.*
 
 
-DETAILS.txt
+/DETAILS.txt
 
-src/structures/connection.js
+/src/structures/connection.js
