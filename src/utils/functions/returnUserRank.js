@@ -18,7 +18,7 @@ const profileEmbed = require("./profileEmbed");
  * @returns
  */
 module.exports = async (user, interaction, option, client) => {
-  const foundUser = await User.findOrCreate(user.id);
+  const foundUser = await User.findOrCreate(user, interaction.guildId, client);
   
   if (!foundUser) return "Usuario não encontrado";
 

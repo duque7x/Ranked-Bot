@@ -17,7 +17,7 @@ module.exports = {
       const isCorrectChannel = message.channel.id === "1342561854777720845";
       const isMatchChannel = Boolean(isAllowed);
 
-      /* if (!isAdmin && !isCorrectChannel && !isMatchChannel) {
+      if (!isAdmin && !isCorrectChannel && !isMatchChannel) {
         return message.reply({
           embeds: [
             new EmbedBuilder()
@@ -27,7 +27,7 @@ module.exports = {
               .setColor(0xff0000),
           ],
         });
-      } */
+      }
       let user = message.guild.members.cache.get(args[0])?.user ?? message.author;
       const ew = await returnUserRank(user, message, "send", client);
       
