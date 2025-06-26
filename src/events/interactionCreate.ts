@@ -5,6 +5,7 @@ import rest from "@duque.edits/rest";
 import setupHandler from "../utils/handlers/setup/setupHandler";
 import { leaderboardHandler } from "../utils/handlers/leaderboard/leaderboardHandler";
 import { embedsHandler } from "../utils/handlers/embeds/embedsHandler";
+import { matchesHandler } from "../utils/handlers/matches/matchesHandler";
 
 const Reset = "\x1b[0m";
 const FgCyan = "\x1b[36m";
@@ -89,8 +90,11 @@ export default {
 
             console.log(FgBlue + `${interaction.user.tag} - ${interaction.user.id} usou o bot as ${new Date().toISOString()}\n CustomId: ${customId}` + Reset);
 
-            const rankingCustomId = ["ld", "ld_cts"];
-            if (rankingCustomId.includes(action)) return leaderboardHandler(client, interaction, guildApi);
+            const rankingCustomIds = ["ld", "ld_cts"];
+            if (rankingCustomIds.includes(action)) return leaderboardHandler(client, interaction, guildApi);
+
+            const mathesCustomIds = ["enter_match", "leave_match", "shut_match"];
+            if (mathesCustomIds.includes(action)) matchesHandler(client, interaction, guildApi);
         }
         if (interaction.isModalSubmit()) {
             const { customId } = interaction;

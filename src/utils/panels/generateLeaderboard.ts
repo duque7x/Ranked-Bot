@@ -26,14 +26,11 @@ export function generateLeaderboard(data: rest.Collection<string, User>, guild: 
                 `**${(index + page * 10) + 1}.** <@${user.id}>: ${user[field]}${field == "mvps" ? keys[field] : ` ${keys[field]}`}`
             ).join(`\n`);
 
-        console.log({ rankings });
-        console.log(rankings !== undefined ? rankings : "Sem jogadores nesta pagina!");
-
         return new EmbedBuilder()
             .setTitle(`Top ${translatedField[field]} — ${guild.name}`)
             .setColor(Colors.LightGrey)
             .setThumbnail(firstRankedInPage?.user?.displayAvatarURL() ?? guild.iconURL())
-            .setDescription(rankings !== "" ? rankings : "Sem jogadores nesta pagina!")
+            .setDescription(rankings || "Sem jogadores nesta pagina!")
             .setFooter({ text: `Pag. ${page + 1}/${Math.ceil(arrayChunks.length)}` });
     }
     let generateRows = (page: number, field: "wins" | "losses" | "mvps") => {
