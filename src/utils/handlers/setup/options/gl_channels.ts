@@ -91,126 +91,136 @@ export async function gl_channels(guildApi: rest.Guild, interaction: StringSelec
                         .setLabel("Voltar ao menu principal")
                 )
         );
+        await interaction.message.edit({
+            embeds: [
 
-        const msg = await interaction.message.edit({ embeds: [menuEmbed(guildApi.channels)], components: [menuRow] });
-
-        const collector = msg?.createMessageComponentCollector({
-            filter: c => c.customId == "channelsdb_change" && c.user.id === member?.user.id,
-            max: 50,
-            time: 540_000,
-            componentType: ComponentType.StringSelect
+                new EmbedBuilder()
+                    .setTitle("Em Manutenção")
+                    .setDescription(`Esta opção está em manutenção, aguarde um momento.`)
+                    .setColor(Colors.LightGrey)
+                    .setTimestamp()
+            ]/* , components: [menuRow] */
         });
-
-        collector?.on('collect', async (int: StringSelectMenuInteraction) => {
-            const value = int.values[0];
-            if (value.startsWith("separator")) return int.deferUpdate();
-
-            if (value == 'db_menu') {
-                const { embed, row } = generateDashboard();
-                collector.stop();
-                return int.update({ embeds: [embed], components: [row] });
-            }
-
-            await int.deferReply({ flags: MessageFlags.Ephemeral });
-
-            const translateField: Record<string, string> = {
-                "dailyRank": "ranking diário",
-                "support": "supote",
-                "blacklist": "blacklist",
-                "commands": "comandos",
-            }
-
-            const baseEmbed = new EmbedBuilder()
-                .setColor(Colors.Yellow)
-                .setTimestamp()
-                .setTitle('Adicionar/Remover Canal')
-                .setDescription([
-                    `Use a seleção para adicionar ou remover um dos canais ${translateField[value]}`,
-                    "-# <:seta:1373287605852176424> Você tem **120 segundos**!"
-                ].join("\n"));
-
-            const addOrRemoveSelection = new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(
-                new StringSelectMenuBuilder()
-                    .setCustomId("add_remove_chan_slc")
-                    .addOptions(
-                        new StringSelectMenuOptionBuilder()
-                            .setValue(`add-${value}`)
-                            .setEmoji("<:add:1386365511536873604>")
-                            .setLabel("Adicionar um canal")
-                            .setDescription(`Clique para adicionar um canal específico`),
-                        new StringSelectMenuOptionBuilder()
-                            .setValue(`remove-${value}`)
-                            .setEmoji("<:remove:1386412852130353317>")
-                            .setLabel("Remover um canal")
-                            .setDescription(`Clique para remover um canal específico`),
-                    )
-            );
-
-            const selectEditedMsg = await int.editReply({ embeds: [baseEmbed], components: [addOrRemoveSelection] });
-
-            const collector2 = selectEditedMsg.createMessageComponentCollector({
-                filter: c => c.customId == "add_remove_chan_slc" && c.user.id == int.user.id,
-                time: 120_000,
-                max: 1,
-                componentType: ComponentType.StringSelect,
-            });
-
-            collector2.on('collect', async i => {
-                await i.deferUpdate();
-
-                const [vl, channelType] = i.values[0].split("-");
-                const channelSelect = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-                    new ChannelSelectMenuBuilder().setCustomId(`ch_channelselect-${vl}`).setMaxValues(5).addChannelTypes(ChannelType.GuildText)
-                );
-
-                if (vl == "add") {
-                    baseEmbed.setTitle(`Canal ${translateField[channelType]}`).setColor(0xFF8A00)
+        /* 
+                const msg = await interaction.message.edit({ embeds: [menuEmbed(guildApi.channels)], components: [menuRow] });
+        
+                const collector = msg?.createMessageComponentCollector({
+                    filter: c => c.customId == "channelsdb_change" && c.user.id === member?.user.id,
+                    max: 50,
+                    time: 540_000,
+                    componentType: ComponentType.StringSelect
+                });
+        
+                collector?.on('collect', async (int: StringSelectMenuInteraction) => {
+                    const value = int.values[0];
+                    if (value.startsWith("separator")) return int.deferUpdate();
+        
+                    if (value == 'db_menu') {
+                        const { embed, row } = generateDashboard();
+                        collector.stop();
+                        return int.update({ embeds: [embed], components: [row] });
+                    }
+        
+                    await int.deferReply({ flags: MessageFlags.Ephemeral });
+        
+                    const translateField: Record<string, string> = {
+                        "dailyRank": "ranking diário",
+                        "support": "supote",
+                        "blacklist": "blacklist",
+                        "commands": "comandos",
+                    }
+        
+                    const baseEmbed = new EmbedBuilder()
+                        .setColor(Colors.Yellow)
+                        .setTimestamp()
+                        .setTitle('Adicionar/Remover Canal')
                         .setDescription([
-                            "Use a seleção para adicionar um canal:",
+                            `Use a seleção para adicionar ou remover um dos canais ${translateField[value]}`,
                             "-# <:seta:1373287605852176424> Você tem **120 segundos**!"
                         ].join("\n"));
-
-                    const editedReply = await i.editReply({ embeds: [baseEmbed], components: [channelSelect] });
-
-                    const collector3 = editedReply.createMessageComponentCollector({
-                        componentType: ComponentType.ChannelSelect,
-                        filter: c => c.customId == `ch_channelselect-${vl}` && c.user.id == int.user.id,
+        
+                    const addOrRemoveSelection = new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(
+                        new StringSelectMenuBuilder()
+                            .setCustomId("add_remove_chan_slc")
+                            .addOptions(
+                                new StringSelectMenuOptionBuilder()
+                                    .setValue(`add-${value}`)
+                                    .setEmoji("<:add:1386365511536873604>")
+                                    .setLabel("Adicionar um canal")
+                                    .setDescription(`Clique para adicionar um canal específico`),
+                                new StringSelectMenuOptionBuilder()
+                                    .setValue(`remove-${value}`)
+                                    .setEmoji("<:remove:1386412852130353317>")
+                                    .setLabel("Remover um canal")
+                                    .setDescription(`Clique para remover um canal específico`),
+                            )
+                    );
+        
+                    const selectEditedMsg = await int.editReply({ embeds: [baseEmbed], components: [addOrRemoveSelection] });
+        
+                    const collector2 = selectEditedMsg.createMessageComponentCollector({
+                        filter: c => c.customId == "add_remove_chan_slc" && c.user.id == int.user.id,
                         time: 120_000,
-                        max: 1
+                        max: 1,
+                        componentType: ComponentType.StringSelect,
                     });
-
-                    collector3.on('collect', async interact => {
-                        await Promise.all([interact.deferUpdate(), i.deleteReply()]);
-
-                        for (let roleId of interact.values) await guildApi.addChannel(channelType, roleId);
-                        return interaction.message.edit({ embeds: [menuEmbed(guildApi.channels)], components: [menuRow] });
-                    });
-                }
-                if (vl == "remove") {
-                    baseEmbed.setTitle(`Canal ${translateField[channelType]}`).setColor(0x713D00)
-                        .setDescription([
-                            "Use a seleção para remover um canal:",
-                            "-# <:seta:1373287605852176424> Você tem **120 segundos**!"
-                        ].join("\n"));
-
-                    const editedReply = await i.editReply({ embeds: [baseEmbed], components: [channelSelect] });
-
-                    const collector3 = editedReply.createMessageComponentCollector({
-                        componentType: ComponentType.ChannelSelect,
-                        filter: c => c.customId == `ch_channelselect-${vl}` && c.user.id == int.user.id,
-                        time: 120_000,
-                        max: 1
-                    });
-
-                    collector3.on('collect', async interact => {
-                        await Promise.all([interact.deferUpdate(), i.deleteReply()]);
-
-                        for (let roleId of interact.values) await guildApi.removeChannel(channelType, roleId);
-                        return interaction.message.edit({ embeds: [menuEmbed(guildApi.channels)], components: [menuRow] });
-                    });
-                }
-            });
-        });
+        
+                    collector2.on('collect', async i => {
+                        await i.deferUpdate();
+        
+                        const [vl, channelType] = i.values[0].split("-");
+                        const channelSelect = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
+                            new ChannelSelectMenuBuilder().setCustomId(`ch_channelselect-${vl}`).setMaxValues(5).addChannelTypes(ChannelType.GuildText)
+                        );
+        
+                        if (vl == "add") {
+                            baseEmbed.setTitle(`Canal ${translateField[channelType]}`).setColor(0xFF8A00)
+                                .setDescription([
+                                    "Use a seleção para adicionar um canal:",
+                                    "-# <:seta:1373287605852176424> Você tem **120 segundos**!"
+                                ].join("\n"));
+        
+                            const editedReply = await i.editReply({ embeds: [baseEmbed], components: [channelSelect] });
+        
+                            const collector3 = editedReply.createMessageComponentCollector({
+                                componentType: ComponentType.ChannelSelect,
+                                filter: c => c.customId == `ch_channelselect-${vl}` && c.user.id == int.user.id,
+                                time: 120_000,
+                                max: 1
+                            });
+        
+                            collector3.on('collect', async interact => {
+                                await Promise.all([interact.deferUpdate(), i.deleteReply()]);
+        
+                                for (let roleId of interact.values) await guildApi.addChannel(channelType, roleId);
+                                return interaction.message.edit({ embeds: [menuEmbed(guildApi.channels)], components: [menuRow] });
+                            });
+                        }
+                        if (vl == "remove") {
+                            baseEmbed.setTitle(`Canal ${translateField[channelType]}`).setColor(0x713D00)
+                                .setDescription([
+                                    "Use a seleção para remover um canal:",
+                                    "-# <:seta:1373287605852176424> Você tem **120 segundos**!"
+                                ].join("\n"));
+        
+                            const editedReply = await i.editReply({ embeds: [baseEmbed], components: [channelSelect] });
+        
+                            const collector3 = editedReply.createMessageComponentCollector({
+                                componentType: ComponentType.ChannelSelect,
+                                filter: c => c.customId == `ch_channelselect-${vl}` && c.user.id == int.user.id,
+                                time: 120_000,
+                                max: 1
+                            });
+        
+                            collector3.on('collect', async interact => {
+                                await Promise.all([interact.deferUpdate(), i.deleteReply()]);
+        
+                                for (let roleId of interact.values) await guildApi.removeChannel(channelType, roleId);
+                                return interaction.message.edit({ embeds: [menuEmbed(guildApi.channels)], components: [menuRow] });
+                            });
+                        }
+                    }); 
+                }); */
     } catch (error) {
         return console.error(error);
     }

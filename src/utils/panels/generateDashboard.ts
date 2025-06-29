@@ -23,6 +23,11 @@ export default function generateDashboard() {
                         .setEmoji("<:shield:1386365524921028630>")
                         .setDescription(`Ativar/Desativar um sistema usado pelo bot`),
                     new StringSelectMenuOptionBuilder()
+                        .setLabel(`Loja`)
+                        .setDescription(`Configure a loja do bot`)
+                        .setValue(`shop`)
+                        .setEmoji("<:shop:1388519997592047757>"),
+                    new StringSelectMenuOptionBuilder()
                         .setLabel('\u200b')
                         .setValue('separator1'),
                     new StringSelectMenuOptionBuilder()
@@ -56,11 +61,11 @@ export default function generateDashboard() {
                         .setValue('roles')
                         .setDescription('Defina os cargos importantes')
                         .setEmoji('<:stem:1386363782191906856>'),
-                 /*    new StringSelectMenuOptionBuilder()
-                        .setLabel('Emojis')
-                        .setValue('emojis')
-                        .setDescription('Defina os emojis importantes')
-                        .setEmoji('<:emojis:1386363773090271252>'), */
+                    /*    new StringSelectMenuOptionBuilder()
+                           .setLabel('Emojis')
+                           .setValue('emojis')
+                           .setDescription('Defina os emojis importantes')
+                           .setEmoji('<:emojis:1386363773090271252>'), */
                     new StringSelectMenuOptionBuilder()
                         .setLabel('Mensagens')
                         .setValue('messages')

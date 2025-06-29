@@ -9,6 +9,7 @@ import { gl_channels } from "./options/gl_channels";
 import { gl_categories } from "./options/gl_categories";
 import Embeds from "../../../structures/Embeds";
 import { messages } from "./options/messages";
+import { shop } from "./options/shop";
 
 export default async function (guildApi: rest.Guild, interaction: StringSelectMenuInteraction, value: string, client: Bot) {
     try {
@@ -21,7 +22,9 @@ export default async function (guildApi: rest.Guild, interaction: StringSelectMe
             gl_categories,
 
             roles,
-            messages
+            messages,
+
+            shop
         };
         if (value.startsWith("separator")) return interaction.deferUpdate();
         const handler = handlers[value];

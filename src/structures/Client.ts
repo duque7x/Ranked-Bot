@@ -30,7 +30,7 @@ export class Bot extends Client {
 
         this.slashCommands = new Collection();
         this.prefixCommands = new Collection();
-        this.api = new DuqueRest();
+        this.api = new DuqueRest().setClientKey("877598927149490186");
         this.handleProcessErrors();
 
         this.cooldowns = new Collection();

@@ -84,7 +84,17 @@ export async function gl_categories(guildApi: rest.Guild, interaction: StringSel
                         .setLabel("Voltar ao menu principal")
                 )
         );
+        await interaction.message.edit({
+            embeds: [
 
+                new EmbedBuilder()
+                    .setTitle("Em Manutenção")
+                    .setDescription(`Esta opção está em manutenção, aguarde um momento.`)
+                    .setColor(Colors.LightGrey)
+                    .setTimestamp()
+            ]/* , components: [menuRow] */
+        });
+/* 
         const msg = await interaction.message.edit({ embeds: [menuEmbed(guildApi.categories)], components: [menuRow] });
 
         const collector = msg?.createMessageComponentCollector({
@@ -202,7 +212,7 @@ export async function gl_categories(guildApi: rest.Guild, interaction: StringSel
                     });
                 }
             });
-        });
+        }); */
     } catch (error) {
         return console.error(error);
     }

@@ -17,7 +17,9 @@ export async function enterMatch(interaction: ButtonInteraction, match: Match, g
 
     const hasReachedSize = match.players.length === match.maximumSize;
     const teamSize = maximumSize / 2;
-    const matchIndex = guild.matches.cache.filter(m => m.status !== MATCHSTATUS.SHUTTED && m.status !== MATCHSTATUS.CREATED).toArray().findIndex(m => m._id == match._id);
+    const matchIndex = guild.matches.cache.filter(m => m.status !== MATCHSTATUS.SHUTTED)
+        .filter(m => m.status !== MATCHSTATUS.CREATED)
+        .toArray().findIndex(m => m._id == match._id);
 
     if (hasReachedSize) {
         await match.setStatus(MATCHSTATUS.ON);

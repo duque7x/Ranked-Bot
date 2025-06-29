@@ -8,8 +8,9 @@ import { shutMatch } from "./options/shutMatch";
 
 export async function matchesHandler(client: Bot, interaction: ButtonInteraction, guild: Guild) {
     let [action, matchId] = interaction.customId.split("-");
-    const match = guild.matches.cache.get(matchId);
-
+    const match = await guild.matches.cache.get(matchId);
+    console.log({ match });
+    
     const actionMap: Record<string, (interaction: ButtonInteraction, match: Match, guild?: Guild, client?: Bot) => any> = {
         "enter_match": enterMatch,
         "leave_match": leaveMatch,
